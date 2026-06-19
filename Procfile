@@ -1,1 +1,1 @@
-worker: node ./ARQUIVES/connect.js
+web: node ./ARQUIVES/connect.js

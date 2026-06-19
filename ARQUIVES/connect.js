@@ -86,7 +86,7 @@ async function startConnect() {
 
     const keisen = makeWASocket({
         logger,        
-        browser: ['Linux', 'Opera', '10.0.22631'],
+        browser: ["Ubuntu", "Chrome", "20.0.04"],
         auth: {
             creds: state.creds,
             keys: makeCacheableSignalKeyStore(state.keys, logger),
@@ -94,8 +94,9 @@ async function startConnect() {
         msgRetryCounterCache,
         generateHighQualityLinkPreview: true,
         syncFullHistory: false,
-        keepAliveIntervalMs: 40000,
+        keepAliveIntervalMs: 30000,
         markOnlineOnConnect: true,
+        printQRInTerminal: true
     });
 
 if (!fs.existsSync(`${qrcode}/creds.json`)) {
@@ -132,7 +133,10 @@ keisen.ev.on("connection.update", (update) => {
                     else if (shouldReconnect == 500) console.log(colors.gray(mess.ErrorBaileys_500()));
                     else if (shouldReconnect == 503) console.log(colors.gray("Erro desconhecido! Error: 503."));
                     else if (shouldReconnect == 515) console.log(colors.gray(mess.ErrorBaileys_515()));
-                    else console.log(`${colors.red("[CONNECTION CLOSED]")} Conexão fechada por motivo: ${lastDisconnect?.error}`);
+                    else {
+                        console.log(`${colors.red("[CONNECTION CLOSED]")} Motivo: ${lastDisconnect?.error}`);
+                        webServer.updateStatus('Erro na conexão: ' + (lastDisconnect?.error || 'Desconhecido'));
+                    }
                     startConnect();
                 }
                 break;
