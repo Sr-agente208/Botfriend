@@ -1,0 +1,107 @@
+[
+  {
+    "grupo": "120363423767284996@g.us",
+    "usus": [
+      {
+        "id": "556993184370@s.whatsapp.net",
+        "coins": 100,
+        "data": "28/02/2026",
+        "chances": {
+          "cassino": 0,
+          "minerar": 0
+        }
+      },
+      {
+        "id": "258840470730@s.whatsapp.net",
+        "coins": 150,
+        "data": "01/03/2026",
+        "chances": {
+          "cassino": 0,
+          "minerar": 0
+        }
+      },
+      {
+        "id": "557388610011@s.whatsapp.net",
+        "coins": 50,
+        "data": "28/02/2026",
+        "chances": {
+          "cassino": 0,
+          "minerar": 0
+        }
+      },
+      {
+        "id": "556992860594@s.whatsapp.net",
+        "coins": 50,
+        "data": "28/02/2026",
+        "chances": {
+          "cassino": 0,
+          "minerar": 0
+        }
+      }
+    ]
+  },
+  {
+    "grupo": "120363405804709350@g.us",
+    "usus": [
+      {
+        "id": "556993184370@s.whatsapp.net",
+        "coins": 203,
+        "data": "23/04/2026",
+        "chances": {
+          "cassino": 0,
+          "minerar": 0
+        }
+      },
+      {
+        "id": "558393857232@s.whatsapp.net",
+        "coins": 95,
+        "data": "20/04/2026",
+        "chances": {
+          "cassino": 0,
+          "minerar": 0
+        }
+      },
+      {
+        "id": "556992860594@s.whatsapp.net",
+        "coins": 50,
+        "data": "19/04/2026",
+        "chances": {
+          "cassino": 0,
+          "minerar": 0
+        }
+      },
+      {
+        "id": "558481127358@s.whatsapp.net",
+        "coins": 50,
+        "data": "23/04/2026",
+        "chances": {
+          "cassino": 0,
+          "minerar": 0
+        }
+      }
+    ]
+  },
+  {
+    "grupo": "120363424681682549@g.us",
+    "usus": [
+      {
+        "id": "556993184370@s.whatsapp.net",
+        "coins": 50,
+        "data": "20/04/2026",
+        "chances": {
+          "cassino": 0,
+          "minerar": 0
+        }
+      },
+      {
+        "id": "556281921728@s.whatsapp.net",
+        "coins": 50,
+        "data": "20/04/2026",
+        "chances": {
+          "cassino": 0,
+          "minerar": 0
+        }
+      }
+    ]
+  }
+]

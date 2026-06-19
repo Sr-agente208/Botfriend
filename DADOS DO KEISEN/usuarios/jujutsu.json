@@ -1,0 +1,40 @@
+{
+  "556993184370@s.whatsapp.net": {
+    "personagem": "gojo",
+    "nomePersonagem": "Satoru Gojo",
+    "tipo": "feiticeiro",
+    "cla": "Gojo",
+    "tecnica": "Infinito / Seis Olhos",
+    "rank": "Grau 3",
+    "nivel": 5,
+    "exp": 25,
+    "expNecessaria": 206,
+    "energiaAmaldicoada": 85,
+    "hp": 930,
+    "hpMax": 930,
+    "atk": 116,
+    "def": 103,
+    "vitorias": 7,
+    "derrotas": 1,
+    "dataIngresso": "19/04/2026, 20:25:41"
+  },
+  "558189816230@s.whatsapp.net": {
+    "personagem": "yuta",
+    "nomePersonagem": "Yuta Okkotsu",
+    "tipo": "feiticeiro",
+    "cla": "Gojo",
+    "tecnica": "Rika / Cópia",
+    "rank": "Grau 4",
+    "nivel": 3,
+    "exp": 80,
+    "expNecessaria": 144,
+    "energiaAmaldicoada": 80,
+    "hp": 860,
+    "hpMax": 860,
+    "atk": 100,
+    "def": 91,
+    "vitorias": 1,
+    "derrotas": 0,
+    "dataIngresso": "19/04/2026, 21:02:08"
+  }
+}

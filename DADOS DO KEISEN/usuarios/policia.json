@@ -1,0 +1,16 @@
+{
+  "556993184370@s.whatsapp.net": {
+    "corporacao": "federal",
+    "nome": "Polícia Federal",
+    "sigla": "PF",
+    "matricula": "PF25761",
+    "rank": "Agente",
+    "xp": 0,
+    "xpNecessaria": 100,
+    "prisões": 0,
+    "multas": 0,
+    "tiros": 0,
+    "dataAlistamento": "19/04/2026, 21:50:09",
+    "arma": null
+  }
+}

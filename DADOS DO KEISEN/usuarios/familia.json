@@ -1,0 +1,70 @@
+{
+  "556993184370@s.whatsapp.net": {
+    "filhos": [
+      {
+        "id": "1776614466925",
+        "nome": "@164832707878933",
+        "tipo": "filha",
+        "idade": 0,
+        "dataAdocao": "19/04/2026, 12:01:06",
+        "pai": "556993184370@s.whatsapp.net",
+        "mae": "554998293763@s.whatsapp.net"
+      },
+      {
+        "id": "1776617500461",
+        "nome": "@188442378018872",
+        "tipo": "filha",
+        "idade": 0,
+        "dataAdocao": "19/04/2026, 12:51:40",
+        "pai": "556993184370@s.whatsapp.net",
+        "mae": "554998293763@s.whatsapp.net"
+      },
+      {
+        "id": "1776618291010",
+        "nome": "Teste",
+        "tipo": "filha",
+        "idadeMeses": 0,
+        "dataAdocao": "19/04/2026, 13:04:51",
+        "dataAdocaoISO": "2026-04-19T17:04:51.010Z",
+        "pai": "556993184370@s.whatsapp.net",
+        "mae": "554998293763@s.whatsapp.net",
+        "isUser": false
+      }
+    ],
+    "conjugue": "554998293763@s.whatsapp.net"
+  },
+  "554998293763@s.whatsapp.net": {
+    "filhos": [
+      {
+        "id": "1776614466925",
+        "nome": "@164832707878933",
+        "tipo": "filha",
+        "idade": 0,
+        "dataAdocao": "19/04/2026, 12:01:06",
+        "pai": "556993184370@s.whatsapp.net",
+        "mae": "554998293763@s.whatsapp.net"
+      },
+      {
+        "id": "1776617500461",
+        "nome": "@188442378018872",
+        "tipo": "filha",
+        "idade": 0,
+        "dataAdocao": "19/04/2026, 12:51:40",
+        "pai": "556993184370@s.whatsapp.net",
+        "mae": "554998293763@s.whatsapp.net"
+      },
+      {
+        "id": "1776618291010",
+        "nome": "Teste",
+        "tipo": "filha",
+        "idadeMeses": 0,
+        "dataAdocao": "19/04/2026, 13:04:51",
+        "dataAdocaoISO": "2026-04-19T17:04:51.010Z",
+        "pai": "556993184370@s.whatsapp.net",
+        "mae": "554998293763@s.whatsapp.net",
+        "isUser": false
+      }
+    ],
+    "conjugue": "556993184370@s.whatsapp.net"
+  }
+}

@@ -1,0 +1,6 @@
+node_modules
+.env
+DADOS\ DO\ KEISEN/qr-code/creds.json
+*.bak
+*.crdownload
+/home/ubuntu/Botfriend_repo/ARQUIVES/funcoes/pix.js

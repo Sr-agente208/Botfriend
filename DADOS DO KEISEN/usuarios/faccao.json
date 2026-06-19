@@ -1,0 +1,25 @@
+{
+  "1776658080362": {
+    "id": "1776658080362",
+    "nome": "russo",
+    "dono": "556993184370@s.whatsapp.net",
+    "dataCriacao": "20/04/2026, 00:08:00",
+    "membros": {
+      "556993184370@s.whatsapp.net": {
+        "cargo": "Líder",
+        "dataEntrada": "20/04/2026, 00:08:00",
+        "crimes": 0
+      },
+      "558189816230@s.whatsapp.net": {
+        "cargo": "Vice-Líder",
+        "dataEntrada": "20/04/2026, 00:20:03",
+        "crimes": 0
+      }
+    },
+    "dinheiro": 0,
+    "armas": 0,
+    "drogas": 0,
+    "reputacao": 0,
+    "convites": {}
+  }
+}

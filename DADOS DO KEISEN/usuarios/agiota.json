@@ -1,0 +1,18 @@
+{
+  "558393857232@s.whatsapp.net": {
+    "valor": 200,
+    "juros": 40,
+    "totalPagar": 240,
+    "data": "19/04/2026, 16:40:15",
+    "dataISO": "2026-04-19T20:40:15.636Z",
+    "ativo": true
+  },
+  "556993184370@s.whatsapp.net": {
+    "valor": 1000,
+    "juros": 200,
+    "totalPagar": 1200,
+    "data": "20/04/2026, 00:41:58",
+    "dataISO": "2026-04-20T04:41:58.288Z",
+    "ativo": true
+  }
+}

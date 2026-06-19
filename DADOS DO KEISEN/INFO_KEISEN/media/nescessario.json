@@ -1,0 +1,32 @@
+{
+  "antipv": false,
+  "antipv2": false,
+  "antipv3": true,
+  "consoleoff": true,
+  "menu_audio": false,
+  "verificado": false,
+  "channel": false,
+  "anticall": false,
+  "aluguel": false,
+  "visualizarmsg": false,
+  "botoes": true,
+  "listanegraG": [
+    "5511967187224@s.whatsapp.net",
+    "5511982303280@s.whatsapp.net"
+  ],
+  "listabrancaG": [],
+  "cmd_vip": [],
+  "blockCmdG": [],
+  "msgantipv1": "Sinto muito *#nome#*, mas meu dono não permitiu eu responder ninguém, então terei que bloquear você... ;)",
+  "msgantipv2": "Não pode mandar mensagem para o bot, ele está programado para não responder, tente falar com meu dono... ;)",
+  "TEMPO_DE_CMD": "Aguarde #tempo# segundos até executar outro comando, tempo a concluir:\n• #tempocmd#",
+  "API_KEY_INVERTEXTO": "6117|oJqDz5g3Uf91zuiAo8FiZzXpHlLGrVEV",
+  "numero_dono1": "5549933805907",
+  "numero_dono2": "5549933805907",
+  "numero_dono3": "5549933805907",
+  "numero_dono4": "5549933805907",
+  "numero_dono5": "5549933805907",
+  "numero_dono6": "5549933805907",
+  "botoff": false,
+  "Odelete": true
+}

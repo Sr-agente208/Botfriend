@@ -1,0 +1,18 @@
+1 PRIMEIRO COMANDO!!
+- Permitir que o termux acesse seus arquivos
+
+termux-setup-storage
+
+2 SEGUNDO COMANDO!!
+- Atenção!!! Se aparecer "(Y/I/N/O/D/Z) [default=N] ?", use Y e após Enter ou pular linha no seu teclado.
+
+pkg upgrade -y && pkg update -y
+
+
+3 TERCEIRO COMANDO!!
+
+pkg install -y ffmpeg nodejs-lts wget tesseract git
+
+4 QUARTO COMANDO
+cd /sdcard/CAMINHO_AONDE_O_BOT_ESTÁ!!!
+
