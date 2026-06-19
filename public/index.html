@@ -20,7 +20,8 @@
         <img src="https://files.manuscdn.com/user_upload_by_module/session_file/310519663758025417/jmSTWbHcILhgLCJZ.png" alt="White Lotus Logo" style="width: 150px; height: 150px; border-radius: 50%; border: 2px solid #ffffff; margin-bottom: 1rem; box-shadow: 0 0 20px rgba(255,255,255,0.2);">
         <h1>WHITE LOTUS</h1>
         <div class="subtitle">O Lótus Branco floresce novamente.</div>
-        <div id="status" class="status">Aguardando conexão...</div>
+        <div id="status" class="status">Iniciando sistema...</div>
+        <div id="loading" style="margin: 1rem; color: #888;">Aguardando o bot gerar o código...</div>
         
         <div id="qr-container" style="display:none;">
             <p>Escaneie o QR Code abaixo:</p>
@@ -49,6 +50,7 @@
 
         socket.on('qr', (url) => {
             if (url) {
+                document.getElementById('loading').style.display = 'none';
                 qrContainer.style.display = 'block';
                 qrImage.src = url;
                 pairingContainer.style.display = 'none';
@@ -59,6 +61,7 @@
 
         socket.on('pairingCode', (code) => {
             if (code) {
+                document.getElementById('loading').style.display = 'none';
                 pairingContainer.style.display = 'block';
                 pairingCodeDiv.innerText = code;
                 qrContainer.style.display = 'none';

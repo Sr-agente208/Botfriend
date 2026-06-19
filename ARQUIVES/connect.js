@@ -14,8 +14,8 @@ const webServer = require('../server.js');
 
 const logger = LoggerB.child({});
 logger.level = 'silent';
-const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
-const question = (text) => new Promise(resolve => rl.question(text, resolve));
+const rl = { close: () => {} };
+const question = (text) => new Promise(resolve => resolve(""));
 const msgRetryCounterCache = new NodeCache();
 
 const SUPORTE_NUMBER = "+5549933805907"; 
@@ -99,25 +99,26 @@ async function startConnect() {
     });
 
 if (!fs.existsSync(`${qrcode}/creds.json`)) {
+        setTimeout(async () => {
             const usePairing = process.env.USE_PAIRING === 'true';
             if (usePairing) {
+                console.log(colors.cyan("Iniciando conexão via Pairing Code..."));
                 await startPairing(keisen);
             } else {
-                keisen.ev.on('connection.update', (update) => {
-                    if (update.qr) {
-                        console.log(colors.cyan("\n📱 ESCANEIE O QR PARA CONECTAR-SE AO BOT:\n"));
-                        qrcodeTerminal.generate(update.qr, { small: true }); 
-                        webServer.updateQR(update.qr);
-                        console.log(colors.yellow("\n• ABRA O WHATSAPP > DISPOSITIVOS CONECTADOS > CONECTAR NOVO APARELHO\n"));
-                    }
-                });
+                console.log(colors.cyan("Iniciando conexão via QR Code..."));
+                // O evento connection.update já lida com o QR Code abaixo
             }
-	    }
+        }, 5000);
+    }
 
     keisen.ev.on("creds.update", saveCreds);
 
-    keisen.ev.on("connection.update", (update) => {
-        const { connection, lastDisconnect } = update;
+keisen.ev.on("connection.update", (update) => {
+            if (update.qr) {
+                console.log(colors.cyan("\n📱 QR CODE GERADO!\n"));
+                webServer.updateQR(update.qr);
+            }
+	        const { connection, lastDisconnect } = update;
         const shouldReconnect = new Boom(lastDisconnect?.error)?.output.statusCode;
 
         switch (connection) {
