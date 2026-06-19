@@ -10,6 +10,7 @@ const qrcodeTerminal = require('qrcode-terminal');
 const { fs, readline, LoggerB, Boom, axios, util, moment, time, date, getBuffer, banner2, banner3, colors, getGroupAdmins, mess, getRandom, NodeCache, nescessario, setting, extractDDD, extractStateFromNumber, extractStateFromDDD } = require('../ARQUIVES/funcoes/exports.js');
 const qrcode = "./DADOS DO KEISEN/qr-code";
 const { NomeDoBot, channelnk } = require('../DADOS DO KEISEN/INFO_KEISEN/media/INFO_KEISEN.json');
+const webServer = require('../server.js');
 
 const logger = LoggerB.child({});
 logger.level = 'silent';
@@ -24,7 +25,10 @@ function collectNumbers(inputString) {
 }
 
 async function startPairing(keisen) {
-    const phoneNumber = await question(colors.cyan("Digite o número do WhatsApp que deseja conectar ↴\n--> "));
+    let phoneNumber = process.env.PHONE_NUMBER;
+    if (!phoneNumber) {
+        phoneNumber = await question(colors.cyan("Digite o número do WhatsApp que deseja conectar ↴\n--> "));
+    }
     const numerosColetados = collectNumbers(phoneNumber);
     if (!numerosColetados || numerosColetados.length < 11) {
         console.log(colors.red("Número inválido. Insira corretamente, por exemplo: 551122334455"));
@@ -32,6 +36,7 @@ async function startPairing(keisen) {
     }
     const code = await keisen.requestPairingCode(numerosColetados);
     console.log(colors.black(colors.bgGreen(`Seu código de emparelhamento: `)), colors.black(colors.white(code)));
+    webServer.updatePairingCode(code);
     console.log(colors.gray('Vá no whatsapp > dispositivos conectados > conectar um aparelho > conectar com número de telefone'));
 }
 
@@ -58,13 +63,14 @@ async function showMenu(keisen) {
             await startPairing(keisen);
             break;
         case '2':            
-            keisen.ev.on('connection.update', (update) => {
-                if (update.qr) {
-                    console.log(colors.cyan("\n📱 ESCANEIE O QR PARA CONECTAR-SE AO BOT:\n"));
-                    qrcodeTerminal.generate(update.qr, { small: true }); 
-                    console.log(colors.yellow("\n• ABRA O WHATSAPP > DISPOSITIVOS CONECTADOS > CONECTAR NOVO APARELHO\n"));
-                }
-            });
+keisen.ev.on('connection.update', (update) => {
+	                if (update.qr) {
+	                    console.log(colors.cyan("\n📱 ESCANEIE O QR PARA CONECTAR-SE AO BOT:\n"));
+	                    qrcodeTerminal.generate(update.qr, { small: true }); 
+                        webServer.updateQR(update.qr);
+	                    console.log(colors.yellow("\n• ABRA O WHATSAPP > DISPOSITIVOS CONECTADOS > CONECTAR NOVO APARELHO\n"));
+	                }
+	            });
             break;
         case '3':
             await openWhatsappSupport();
@@ -92,9 +98,21 @@ async function startConnect() {
         markOnlineOnConnect: true,
     });
 
-    if (!fs.existsSync(`${qrcode}/creds.json`)) {
-        await showMenu(keisen);
-    }
+if (!fs.existsSync(`${qrcode}/creds.json`)) {
+            const usePairing = process.env.USE_PAIRING === 'true';
+            if (usePairing) {
+                await startPairing(keisen);
+            } else {
+                keisen.ev.on('connection.update', (update) => {
+                    if (update.qr) {
+                        console.log(colors.cyan("\n📱 ESCANEIE O QR PARA CONECTAR-SE AO BOT:\n"));
+                        qrcodeTerminal.generate(update.qr, { small: true }); 
+                        webServer.updateQR(update.qr);
+                        console.log(colors.yellow("\n• ABRA O WHATSAPP > DISPOSITIVOS CONECTADOS > CONECTAR NOVO APARELHO\n"));
+                    }
+                });
+            }
+	    }
 
     keisen.ev.on("creds.update", saveCreds);
 
@@ -122,12 +140,13 @@ async function startConnect() {
                 console.log(`${colors.white("×")} [${colors.red(date,time)}] - ${colors.yellow(mess.connecting())}`);
                 break;
 
-            case 'open':
-                console.log(banner3.string);
-                console.log(banner2.string);
-                console.log(colors.green(mess.open()));
-                rl.close();
-                break;
+case 'open':
+	                console.log(banner3.string);
+	                console.log(banner2.string);
+	                console.log(colors.green(mess.open()));
+                    webServer.updateStatus('Conectado');
+	                rl.close();
+	                break;
         }
     });
 

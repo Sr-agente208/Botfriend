@@ -8,10 +8,12 @@ Bot de WhatsApp configurado para deploy no Railway.
 2. **Railway**:
    - Crie um novo projeto no [Railway](https://railway.app/).
    - Conecte este repositório GitHub.
-   - O Railway usará o `Procfile` automaticamente para iniciar o bot.
-3. **Conexão**:
-   - Como o Railway é um ambiente headless (sem terminal interativo fácil para QR Code), o bot está configurado para usar **Pairing Code**.
-   - Verifique os logs do Railway para ver o código de emparelhamento e digite seu número quando solicitado (ou configure via variáveis de ambiente se o código permitir).
+   - Adicione uma variável de ambiente chamada `PORT` (geralmente o Railway já faz isso).
+   - Se quiser usar Código de Emparelhamento, adicione `USE_PAIRING=true` e `PHONE_NUMBER=seu_numero_com_ddi`.
+3. **Conexão via Site**:
+   - Após o deploy, o Railway gerará um domínio (ex: `botfriend-production.up.railway.app`).
+   - Acesse esse link no seu navegador.
+   - Você verá o **QR Code** ou o **Código de Emparelhamento** diretamente na página, facilitando o login.
 
 ## Configurações:
 As configurações principais estão em `DADOS DO KEISEN/INFO_KEISEN/media/INFO_KEISEN.json`.

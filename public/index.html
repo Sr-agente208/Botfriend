@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Botfriend - Login WhatsApp</title>
+    <style>
+        body { font-family: Arial, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; background-color: #f0f2f5; }
+        .container { background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align: center; max-width: 400px; width: 100%; }
+        h1 { color: #128c7e; }
+        #qr-container img { width: 250px; height: 250px; margin-top: 1rem; }
+        #pairing-container { font-size: 2rem; font-weight: bold; color: #075e54; margin-top: 1rem; letter-spacing: 5px; }
+        .status { margin-top: 1rem; font-weight: bold; color: #666; }
+        .instructions { margin-top: 1rem; font-size: 0.9rem; color: #555; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Conectar Botfriend</h1>
+        <div id="status" class="status">Aguardando conexão...</div>
+        
+        <div id="qr-container" style="display:none;">
+            <p>Escaneie o QR Code abaixo:</p>
+            <img id="qr-image" src="" alt="QR Code">
+        </div>
+
+        <div id="pairing-container" style="display:none;">
+            <p>Seu código de emparelhamento:</p>
+            <div id="pairing-code"></div>
+        </div>
+
+        <div class="instructions">
+            <p id="instruction-text">Inicie o bot no Railway para gerar o acesso.</p>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        const statusDiv = document.getElementById('status');
+        const qrContainer = document.getElementById('qr-container');
+        const qrImage = document.getElementById('qr-image');
+        const pairingContainer = document.getElementById('pairing-container');
+        const pairingCodeDiv = document.getElementById('pairing-code');
+        const instructionText = document.getElementById('instruction-text');
+
+        socket.on('qr', (url) => {
+            if (url) {
+                qrContainer.style.display = 'block';
+                qrImage.src = url;
+                pairingContainer.style.display = 'none';
+                statusDiv.innerText = 'QR Code Gerado';
+                instructionText.innerText = 'Abra o WhatsApp > Dispositivos Conectados > Conectar um Aparelho';
+            }
+        });
+
+        socket.on('pairingCode', (code) => {
+            if (code) {
+                pairingContainer.style.display = 'block';
+                pairingCodeDiv.innerText = code;
+                qrContainer.style.display = 'none';
+                statusDiv.innerText = 'Código de Emparelhamento Gerado';
+                instructionText.innerText = 'Vá no WhatsApp > Dispositivos Conectados > Conectar com número de telefone';
+            }
+        });
+
+        socket.on('status', (status) => {
+            statusDiv.innerText = 'Status: ' + status;
+            if (status === 'Conectado') {
+                qrContainer.style.display = 'none';
+                pairingContainer.style.display = 'none';
+                instructionText.innerText = 'O bot está online e pronto para uso!';
+            }
+        });
+    </script>
+</body>
+</html>
