@@ -3,7 +3,7 @@
   "version": "2.0.0",
   "main": "connect.js",
   "scripts": {
-    "start": "node ./ARQUIVES/connect.js",
+    "start": "node ./ARQUIVES/connect_new.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
