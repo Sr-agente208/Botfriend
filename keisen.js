@@ -8900,6 +8900,30 @@ case 'conselhobiblico': case 'conselhosbiblico': case 'conselhosb': case 'consel
 });
 break
 
+case 'vidente': case 'futuro': case 'previsao': {
+const previsoesVidente = [
+"🪷 Os astros sussurram que algo bom está prestes a cruzar seu caminho. Fique de olhos abertos.",
+"🪷 Uma decisão que você anda enrolando vai se resolver sozinha nos próximos dias.",
+"🪷 Cuidado com promessas vazias essa semana — nem tudo que reluz é lótus.",
+"🪷 Uma conversa antiga vai voltar à tona. Escute mais do que fala.",
+"🪷 O universo está pedindo paciência. As coisas boas estão a caminho, só não no seu tempo.",
+"🪷 Alguém está pensando em você nesse exato momento.",
+"🪷 Uma surpresa financeira pode aparecer, mas não conte com ela ainda.",
+"🪷 Seu instinto está certo dessa vez. Confie nele.",
+"🪷 Um ciclo está se encerrando — e isso é bom, mesmo que pareça estranho agora.",
+"🪷 Evite decisões importantes às pressas nos próximos 3 dias.",
+"🪷 Uma amizade vai se fortalecer de um jeito que você não esperava.",
+"🪷 Os sinais apontam pra uma virada positiva no fim do mês.",
+"🪷 Tome cuidado com fofocas — algumas bocas não merecem sua confiança agora.",
+"🪷 Você está mais perto de uma resposta do que imagina.",
+"🪷 Uma viagem ou mudança de ares está nos seus horizontes.",
+];
+const escolhida = previsoesVidente[Math.floor(Math.random() * previsoesVidente.length)];
+await keisen.sendMessage(from, { react: { text: "🔮", key: info.key } });
+await reply(`╭🪷━ 𝙴𝙴𝙼 𝙻𝙴𝙴𝙴𝚄𝙳𝙴𝚒... ━🪷╮\n\n${escolhida}\n\n╰🪷━ 𝚆𝙷𝙸𝚃𝙴 𝙻𝙾𝚃𝚄𝚂 ━🪷╯`);
+break;
+}
+
 case 'conselhos': case 'conselho':
 /* [Reagir a mensagem + enviar mensagem pré-definida] -> */ await replyWithReaction(advices.commonAdvices[Math.floor(Math.random() * advices.commonAdvices.length)], {react: {text: '😌', key: info.key}}).catch(async(error) => {
 /* [Reagir a mensagem + enviar mensagem pré-definida] -> */ await replyWithReaction(mess.error(), {react: {text: '😿', key: info.key}});
@@ -15530,32 +15554,13 @@ case 'alugarbot':
 case 'alugar': 
 try {
 await reagir(from, "💎");
-const Nk = {male: img1, female: img2, thirdImage: img3};
+const Nk = {male: "./DADOS DO KEISEN/INFO_KEISEN/LOGOS/fotoaluguel.png", female: "./DADOS DO KEISEN/INFO_KEISEN/LOGOS/fotoaluguel.png", thirdImage: "./DADOS DO KEISEN/INFO_KEISEN/LOGOS/fotoaluguel.png"};
 
-const maleMedia = await prepareWAMessageMedia({ 
-            video: { url: Nk.male }, 
-            gifPlayback: true,
-            mimetype: 'video/mp4'
-}, { upload: keisen.waUploadToServer }).catch(async () => {
+const maleMedia = await prepareWAMessageMedia({ image: { url: Nk.male } }, { upload: keisen.waUploadToServer });
 
-            return await prepareWAMessageMedia({ image: { url: Nk.male } }, { upload: keisen.waUploadToServer });
-});
+const femaleMedia = await prepareWAMessageMedia({ image: { url: Nk.female } }, { upload: keisen.waUploadToServer });
 
-const femaleMedia = await prepareWAMessageMedia({ 
-            video: { url: Nk.female }, 
-            gifPlayback: true,
-            mimetype: 'video/mp4'
-}, { upload: keisen.waUploadToServer }).catch(async () => {
-            return await prepareWAMessageMedia({ image: { url: Nk.female } }, { upload: keisen.waUploadToServer });
-});
-
-const thirdMedia = await prepareWAMessageMedia({ 
-            video: { url: Nk.thirdImage }, 
-            gifPlayback: true,
-            mimetype: 'video/mp4'
-}, { upload: keisen.waUploadToServer }).catch(async () => {
-            return await prepareWAMessageMedia({ image: { url: Nk.thirdImage } }, { upload: keisen.waUploadToServer });
-});
+const thirdMedia = await prepareWAMessageMedia({ image: { url: Nk.thirdImage } }, { upload: keisen.waUploadToServer });
 
 const maleHeader = maleMedia.videoMessage 
             ? { hasMediaAttachment: true, videoMessage: maleMedia.videoMessage }
@@ -16286,103 +16291,13 @@ sendAudio: true
 });
 break;
 
-case 'menu': {
-try {
-reagir(from, "🪷");
-if (isAudioMenu) {
-const audioPath = "./DADOS DO KEISEN/data/media/audios/menu.mp3";
-if (fs.existsSync(audioPath)) {
-const audioBuffer = fs.readFileSync(audioPath);
-await keisen.sendMessage(from, {
-audio: audioBuffer,
-mimetype: 'audio/mpeg',
-ptt: false
-}, { quoted: selo });
-} else {
-console.log("Arquivo de áudio não encontrado em:", audioPath);
-}
-}
-
-const caminhoVideo = "./DADOS DO KEISEN/INFO_KEISEN/LOGOS/fotomenu.mp4";
-const caminhoImagem = "./DADOS DO KEISEN/INFO_KEISEN/LOGOS/fotomenu.png";
-let mediaMenu;
-if (fs.existsSync(caminhoVideo)) {
-mediaMenu = await prepareWAMessageMedia({ video: { url: caminhoVideo }, mimetype: "video/mp4", gifPlayback: true, seconds: 8 }, { upload: keisen.waUploadToServer });
-} else {
-mediaMenu = await prepareWAMessageMedia({ image: { url: caminhoImagem } }, { upload: keisen.waUploadToServer });
-}
-const listaMenus = {
-title: "🪷 MENU-LISTAS 🪷",
-sections: [
-{
-title: "🪷 MENUS DIVERSOS 🪷",
-highlight_label: "White Lotus",
-rows: [
-{ header: "🪷 MENU PRINCIPAL 🪷", title: "ᴄᴏᴍᴀɴᴅᴏs ɢᴇʀᴀɪs ᴅᴏ ʙᴏᴛ", id: prefix + "menuzz" },
-{ header: "🪷 MENU-ALTERADORES 🪷", title: "ᴀʟᴛᴇʀᴀᴅᴏʀᴇs ᴅᴇ ᴀᴜᴅɪᴏs, ᴇᴛᴄ...", id: prefix + "menualt" },
-{ header: "🪷 MENU +18 🪷", title: "ꜰᴜɴᴄ̧ᴏᴇs +18 sᴏ́ ᴘʀᴀ ᴠɪᴘs", id: prefix + "menu18" },
-{ header: "🪷 MENU-ADM 🪷", title: "ᴍᴇɴᴜ ᴘᴀʀᴀ ᴀᴅᴍɪɴs ᴅᴏ ɢʀᴜᴘᴏ", id: prefix + "menuadm" },
-{ header: "🪷 MENU-ZOEIRA 🪷", title: "ᴊᴏɢᴏs ᴇ ʙʀɪɴᴄᴀᴅᴇɪʀᴀs", id: prefix + "brincadeira" },
-{ header: "🪷 MENU COINS 🪷", title: "sᴀʟᴅᴏ • ʟᴏᴊᴀ • ᴇᴄᴏɴᴏᴍɪᴀ", id: prefix + "menucoins" },
-{ header: "🪷 MENU PETS 🪷", title: "ᴀᴅᴏᴛᴀʀ • ɪɴᴛᴇʀᴀɢɪʀ • ᴜᴘᴀʀ", id: prefix + "menupets" },
-{ header: "🪷 MENU-DONO 🪷", title: "ꜰᴜɴᴄ̧ᴏᴇs ᴘᴀʀᴀ ᴏ ᴅᴏɴᴏ", id: prefix + "menudono" }
-]},
-{
-title: "🪷 FUNÇÕES EXTRAS 🪷",
-rows: [
-{ header: "🪷 CRIADOR 🪷", title: "ɪɴғᴏʀᴍᴀᴄ̧ᴏᴇs ᴅᴏ ᴄʀɪᴀᴅᴏʀ", id: prefix + "criador" },
-{ header: "🪷 PERFIL 🪷", title: "ᴅᴀᴅᴏs ᴅᴏ ᴜsᴜᴀ́ʀɪᴏ", id: prefix + "perfil" },
-{ header: "🪷 PING 🪷", title: "ʟᴀᴛᴇ̂ɴᴄɪᴀ", id: prefix + "ping" },
-{ header: "🪷 DONOS 🪷", title: "ʟɪsᴛᴀ ᴅᴇ ᴅᴏɴᴏs", id: prefix + "donos" },
-{ header: "🪷 ALUGAR BOT 🪷", title: "ᴘʟᴀɴᴏs ᴇ ᴘʀᴇᴄ̧ᴏs", id: prefix + "alugar" }
-]}
-]}
-const botoes = [{
-name: "single_select",
-buttonParamsJson: JSON.stringify(listaMenus)
-}];
-const textok = `╭✘━𑁁━🪷₊˚✮𝆺𝅥✿𝆺𝅥✮˚₊‧🪷━𑁁━✘╮
-┃ │⌇˚₊· ͟͟͞͞🤍▪︎👤 *𝚄𝚂𝚄Á𝚁𝙸𝙾: ${pushname}*
-┃ │⌇˚₊· ͟͟͞͞🤍▪︎ *𝙱𝙾𝚃: ${NomeDoBot}*
-┃ │⌇˚₊· ͟͟͞͞🤍▪︎ *𝙲𝙰𝚁𝙶𝙾: ${isGroupAdmins ? "Adm" : "Membro"}*
-┃ │⌇˚₊· ͟͟͞͞🤍▪︎ *𝙳𝙾𝙽𝙾: ${ownerName}*
-┃ │⌇˚₊· ͟͟͞͞🤍▪︎ *𝙿𝚁𝙴𝙵𝙸𝚇𝙾: ${prefix}*
-┃ │⌇˚₊· ͟͟͞͞🤍▪︎ *𝚅𝙴𝚁𝚂Ã𝙾: ${require('./package').version}*
-┃ │⌇˚₊· ͟͟͞͞🤍▪︎ *𝙷𝙾𝚁𝙰: ${time}*
-┃ │⌇˚₊· ͟͟͞͞🤍▪︎ *𝙳𝙸𝚂𝙿𝙾𝚂𝙸𝚃𝙸𝚅𝙾: ${info.key.id.length > 21 ? 'Android' : info.key.id.substring(0, 2) == '3A' ? 'iPhone' : 'WhatsApp Web'}*
-╰━𑁁━🪷₊˚✮𝆺𝅥✿𝆺𝅥✮˚₊‧🪷━𑁁━✘╯`;
-const carouselMessage = {
-cards: [{
-header: {
-hasMediaAttachment: true,
-...(mediaMenu.videoMessage ? { videoMessage: mediaMenu.videoMessage } : { imageMessage: mediaMenu.imageMessage })
-},
-headerType: mediaMenu.videoMessage ? "VIDEO" : "IMAGE",
-body: { text: textok },
-footer: { text: "ᴇsᴄᴏʟʜᴀ ᴀ ᴏᴘçãᴏ ᴀʙᴀɪxᴏ" },
-nativeFlowMessage: { buttons: botoes }
-}]};
-const msg = generateWAMessageFromContent(from, {
-interactiveMessage: {
-contextInfo: {
-participant: sender,
-quotedMessage: { conversation: "🪷 ᴀǫᴜɪ ᴇsᴛᴀ sᴇᴜ ᴍᴇɴᴜ 🪷" }
-},
-body: { text: "*🪷 WHITE LOTUS · MENU INTERATIVO 🪷*" },
-carouselMessage
-}
-}, {});
-await keisen.relayMessage(from, msg.message, { messageId: msg.key.id });
-} catch (error) {
-console.error("Erro menu:", error);
+case 'menu':
 await sendMenu(from, selo, {
 reaction: "🪷",
 caption: linguagem.menu(prefix),
-sendAudio: false
+sendAudio: true
 });
-}
 break;
-}
 
 case 'menuzz':
 await sendMenu(from, selo, {
