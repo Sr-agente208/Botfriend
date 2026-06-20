@@ -6859,6 +6859,61 @@ reply(`*ᴍᴇɴᴄɪᴏɴᴇ ᴜᴍᴀ ɪᴍᴀɢᴇᴍ ᴘᴀʀᴀ ᴀᴘʟɪ�
 }
 break;
 
+case 'testapis': case 'apistatus': {
+if (!SoDono) return reply(mess.onlyOwner());
+await reply("🔎 Testando todas as APIs configuradas, aguenta uns segundinhos...");
+
+const apiTests = [
+{ nome: "Bronxys (signo/grupos/etc)", url: `https://api.bronxyshost.com.br/api-bronxys/horoscopo?signo=aries&apikey=${keisenBot}` },
+{ nome: "Tokito (perfil/levelcard)", url: `https://tokito-apis.site/canvas/perfil?fundo=https://tokito-apis.site/73c4fc.png&text=teste&subtext=teste&logo=https://i.imgur.com/0.png&cargo=teste&vip=❌&bio=teste&apikey=${API_KEY_TOKITO}` },
+{ nome: "KeisenAPIs (nicks)", url: `https://keisenapis.site/api/geradores/gerar-nicks?apitoken=${TOKEN}&text=teste` },
+{ nome: "Shizuku (upscale)", url: `https://shizuku-apis.online/api/upscale?img=${encodeURIComponent("https://i.imgur.com/0.png")}&apitoken=Nk-Petrov-And-Harunni-Petrov` },
+{ nome: "Apisnodz (IA llama)", url: `https://apisnodz.com.br/api/ias/dracarys-llama-3?prompt=teste` },
+{ nome: "Invertexto", url: `https://api.invertexto.com/v1/validator?token=${API_KEY_INVERTEXTO}&value=12345678909` },
+{ nome: "Hercai (text2image)", url: `https://hercai.onrender.com/v3/text2image?prompt=teste` },
+{ nome: "Delirius (noticias)", url: `https://delirius-api-oficial.vercel.app/api/noticias?language=pt-br&country=BR` },
+{ nome: "API própria (CREDENTIALS_USER.API_URL)", url: API_URL },
+];
+
+let relatorio = "📋 *RELATÓRIO DE APIS*\n\n";
+for (const api of apiTests) {
+try {
+const resp = await axios.get(api.url, { timeout: 10000, validateStatus: () => true });
+if (resp.status >= 200 && resp.status < 300) {
+relatorio += `✅ ${api.nome} — OK (${resp.status})\n`;
+} else if (resp.status === 401 || resp.status === 403) {
+relatorio += `🔑 ${api.nome} — KEY INVÁLIDA (${resp.status})\n`;
+} else if (resp.status === 404) {
+relatorio += `⚠️ ${api.nome} — ENDPOINT MUDOU (404)\n`;
+} else {
+relatorio += `⚠️ ${api.nome} — ERRO (${resp.status})\n`;
+}
+} catch (e) {
+relatorio += `❌ ${api.nome} — FORA DO AR (${e.code || e.message})\n`;
+}
+}
+
+try {
+const r = await axios.get('https://api.assemblyai.com/v2/transcript', {
+headers: { authorization: '22be3718b6bf42019d9cc59f70133b83' },
+timeout: 10000,
+validateStatus: () => true
+});
+if (r.status >= 200 && r.status < 300) {
+relatorio += `✅ AssemblyAI (transcrição áudio) — OK (${r.status})\n`;
+} else if (r.status === 401 || r.status === 403) {
+relatorio += `🔑 AssemblyAI (transcrição áudio) — KEY INVÁLIDA (${r.status})\n`;
+} else {
+relatorio += `⚠️ AssemblyAI (transcrição áudio) — ERRO (${r.status})\n`;
+}
+} catch (e) {
+relatorio += `❌ AssemblyAI (transcrição áudio) — FORA DO AR (${e.code || e.message})\n`;
+}
+
+await reply(relatorio);
+break;
+}
+
 case 'ping': { 
 try {
 await keisen.sendMessage(from, { react: { text: "💧", key: info.key } });
