@@ -6859,6 +6859,24 @@ reply(`*ᴍᴇɴᴄɪᴏɴᴇ ᴜᴍᴀ ɪᴍᴀɢᴇᴍ ᴘᴀʀᴀ ᴀᴘʟɪ�
 }
 break;
 
+case 'addai': {
+try {
+if (!SoDono) return reply(mess.onlyOwner());
+if (!isGroup) return reply(mess.onlyGroup());
+if (!isBotGroupAdmins) return reply(`*ᴏ ʙᴏᴛ ᴘʀᴇᴄɪsᴀ sᴇʀ ᴀᴅᴍɪɴ ᴘᴀʀᴀ ᴀᴅɪᴄɪᴏɴᴀʀ ᴀ ᴍᴇᴛᴀ ᴀɪ ᴀᴏ ɢʀᴜᴘᴏ.*`);
+await keisen.groupParticipantsUpdate(
+from,
+['867051314767696@bot'],
+'add'
+);
+reply('✅ ᴍᴇᴛᴀ ᴀɪ ꜰᴏɪ ᴀᴅɪᴄɪᴏɴᴀᴅᴀ ᴀᴏ ɢʀᴜᴘᴏ ᴄᴏᴍ sᴜᴄᴇssᴏ.');
+} catch (e) {
+console.error(e);
+reply('❌ ɴãᴏ ꜰᴏɪ ᴘᴏssíᴠᴇʟ ᴀᴅɪᴄɪᴏɴᴀʀ ᴀ ᴍᴇᴛᴀ ᴀɪ ᴀᴏ ɢʀᴜᴘᴏ.');
+}
+break;
+}
+
 case 'testapis': case 'apistatus': {
 if (!SoDono) return reply(mess.onlyOwner());
 await reply("🔎 Testando todas as APIs configuradas, aguenta uns segundinhos...");
