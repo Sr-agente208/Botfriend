@@ -1,1 +1,1 @@
-web: node ./ARQUIVES/connect_new.js
+web: node ./ARQUIVES/connect.js
