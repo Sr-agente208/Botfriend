@@ -16213,13 +16213,103 @@ sendAudio: true
 });
 break;
 
-case 'menu':
+case 'menu': {
+try {
+reagir(from, "🪷");
+if (isAudioMenu) {
+const audioPath = "./DADOS DO KEISEN/data/media/audios/menu.mp3";
+if (fs.existsSync(audioPath)) {
+const audioBuffer = fs.readFileSync(audioPath);
+await keisen.sendMessage(from, {
+audio: audioBuffer,
+mimetype: 'audio/mpeg',
+ptt: false
+}, { quoted: selo });
+} else {
+console.log("Arquivo de áudio não encontrado em:", audioPath);
+}
+}
+
+const caminhoVideo = "./DADOS DO KEISEN/INFO_KEISEN/LOGOS/fotomenu.mp4";
+const caminhoImagem = "./DADOS DO KEISEN/INFO_KEISEN/LOGOS/fotomenu.png";
+let mediaMenu;
+if (fs.existsSync(caminhoVideo)) {
+mediaMenu = await prepareWAMessageMedia({ video: { url: caminhoVideo }, mimetype: "video/mp4", gifPlayback: true, seconds: 8 }, { upload: keisen.waUploadToServer });
+} else {
+mediaMenu = await prepareWAMessageMedia({ image: { url: caminhoImagem } }, { upload: keisen.waUploadToServer });
+}
+const listaMenus = {
+title: "🪷 MENU-LISTAS 🪷",
+sections: [
+{
+title: "🪷 MENUS DIVERSOS 🪷",
+highlight_label: "White Lotus",
+rows: [
+{ header: "🪷 MENU PRINCIPAL 🪷", title: "ᴄᴏᴍᴀɴᴅᴏs ɢᴇʀᴀɪs ᴅᴏ ʙᴏᴛ", id: prefix + "menuzz" },
+{ header: "🪷 MENU-ALTERADORES 🪷", title: "ᴀʟᴛᴇʀᴀᴅᴏʀᴇs ᴅᴇ ᴀᴜᴅɪᴏs, ᴇᴛᴄ...", id: prefix + "menualt" },
+{ header: "🪷 MENU +18 🪷", title: "ꜰᴜɴᴄ̧ᴏᴇs +18 sᴏ́ ᴘʀᴀ ᴠɪᴘs", id: prefix + "menu18" },
+{ header: "🪷 MENU-ADM 🪷", title: "ᴍᴇɴᴜ ᴘᴀʀᴀ ᴀᴅᴍɪɴs ᴅᴏ ɢʀᴜᴘᴏ", id: prefix + "menuadm" },
+{ header: "🪷 MENU-ZOEIRA 🪷", title: "ᴊᴏɢᴏs ᴇ ʙʀɪɴᴄᴀᴅᴇɪʀᴀs", id: prefix + "brincadeira" },
+{ header: "🪷 MENU COINS 🪷", title: "sᴀʟᴅᴏ • ʟᴏᴊᴀ • ᴇᴄᴏɴᴏᴍɪᴀ", id: prefix + "menucoins" },
+{ header: "🪷 MENU PETS 🪷", title: "ᴀᴅᴏᴛᴀʀ • ɪɴᴛᴇʀᴀɢɪʀ • ᴜᴘᴀʀ", id: prefix + "menupets" },
+{ header: "🪷 MENU-DONO 🪷", title: "ꜰᴜɴᴄ̧ᴏᴇs ᴘᴀʀᴀ ᴏ ᴅᴏɴᴏ", id: prefix + "menudono" }
+]},
+{
+title: "🪷 FUNÇÕES EXTRAS 🪷",
+rows: [
+{ header: "🪷 CRIADOR 🪷", title: "ɪɴғᴏʀᴍᴀᴄ̧ᴏᴇs ᴅᴏ ᴄʀɪᴀᴅᴏʀ", id: prefix + "criador" },
+{ header: "🪷 PERFIL 🪷", title: "ᴅᴀᴅᴏs ᴅᴏ ᴜsᴜᴀ́ʀɪᴏ", id: prefix + "perfil" },
+{ header: "🪷 PING 🪷", title: "ʟᴀᴛᴇ̂ɴᴄɪᴀ", id: prefix + "ping" },
+{ header: "🪷 DONOS 🪷", title: "ʟɪsᴛᴀ ᴅᴇ ᴅᴏɴᴏs", id: prefix + "donos" },
+{ header: "🪷 ALUGAR BOT 🪷", title: "ᴘʟᴀɴᴏs ᴇ ᴘʀᴇᴄ̧ᴏs", id: prefix + "alugar" }
+]}
+]}
+const botoes = [{
+name: "single_select",
+buttonParamsJson: JSON.stringify(listaMenus)
+}];
+const textok = `╭✘━𑁁━🪷₊˚✮𝆺𝅥✿𝆺𝅥✮˚₊‧🪷━𑁁━✘╮
+┃ │⌇˚₊· ͟͟͞͞🤍▪︎👤 *𝚄𝚂𝚄Á𝚁𝙸𝙾: ${pushname}*
+┃ │⌇˚₊· ͟͟͞͞🤍▪︎ *𝙱𝙾𝚃: ${NomeDoBot}*
+┃ │⌇˚₊· ͟͟͞͞🤍▪︎ *𝙲𝙰𝚁𝙶𝙾: ${isGroupAdmins ? "Adm" : "Membro"}*
+┃ │⌇˚₊· ͟͟͞͞🤍▪︎ *𝙳𝙾𝙽𝙾: ${ownerName}*
+┃ │⌇˚₊· ͟͟͞͞🤍▪︎ *𝙿𝚁𝙴𝙵𝙸𝚇𝙾: ${prefix}*
+┃ │⌇˚₊· ͟͟͞͞🤍▪︎ *𝚅𝙴𝚁𝚂Ã𝙾: ${require('./package').version}*
+┃ │⌇˚₊· ͟͟͞͞🤍▪︎ *𝙷𝙾𝚁𝙰: ${time}*
+┃ │⌇˚₊· ͟͟͞͞🤍▪︎ *𝙳𝙸𝚂𝙿𝙾𝚂𝙸𝚃𝙸𝚅𝙾: ${info.key.id.length > 21 ? 'Android' : info.key.id.substring(0, 2) == '3A' ? 'iPhone' : 'WhatsApp Web'}*
+╰━𑁁━🪷₊˚✮𝆺𝅥✿𝆺𝅥✮˚₊‧🪷━𑁁━✘╯`;
+const carouselMessage = {
+cards: [{
+header: {
+hasMediaAttachment: true,
+...(mediaMenu.videoMessage ? { videoMessage: mediaMenu.videoMessage } : { imageMessage: mediaMenu.imageMessage })
+},
+headerType: mediaMenu.videoMessage ? "VIDEO" : "IMAGE",
+body: { text: textok },
+footer: { text: "ᴇsᴄᴏʟʜᴀ ᴀ ᴏᴘçãᴏ ᴀʙᴀɪxᴏ" },
+nativeFlowMessage: { buttons: botoes }
+}]};
+const msg = generateWAMessageFromContent(from, {
+interactiveMessage: {
+contextInfo: {
+participant: sender,
+quotedMessage: { conversation: "🪷 ᴀǫᴜɪ ᴇsᴛᴀ sᴇᴜ ᴍᴇɴᴜ 🪷" }
+},
+body: { text: "*🪷 WHITE LOTUS · MENU INTERATIVO 🪷*" },
+carouselMessage
+}
+}, {});
+await keisen.relayMessage(from, msg.message, { messageId: msg.key.id });
+} catch (error) {
+console.error("Erro menu:", error);
 await sendMenu(from, selo, {
-reaction: "🎉",
+reaction: "🪷",
 caption: linguagem.menu(prefix),
-sendAudio: true
+sendAudio: false
 });
+}
 break;
+}
 
 case 'menuzz':
 await sendMenu(from, selo, {
