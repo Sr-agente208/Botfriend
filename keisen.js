@@ -281,7 +281,7 @@ const botNumberLID = keisen?.user?.lid?.split(':')[0] + '@lid' || '';
 
 let sender = jidNormalizedUser(isGroup ? info?.key?.participantPn || info?.key?.senderPn || await keisen?.user?.id || info?.key?.participant : info?.key?.senderPn || info?.key?.participant ||info?.key?.remoteJid);
 
-if (sender.includes('@lid') && keisen?.user?.lid) {
+if (sender.includes('@lid') && keisen?.user?.lid && info?.key?.fromMe) {
 sender = keisen.user.id?.split(':')[0] + '@s.whatsapp.net' || sender;
 }
 
@@ -16671,13 +16671,96 @@ sendAudio: true
 });
 break;
 
-case 'menu':
+case 'menu': {
+try {
+reagir(from, "🪷");
+if (isAudioMenu) {
+const audioPath = "./DADOS DO KEISEN/data/media/audios/menu.mp3";
+if (fs.existsSync(audioPath)) {
+const audioBuffer = fs.readFileSync(audioPath);
+await keisen.sendMessage(from, {
+audio: audioBuffer,
+mimetype: 'audio/mpeg',
+ptt: false
+}, { quoted: selo });
+}
+}
+
+const caminhoImagem = "./DADOS DO KEISEN/INFO_KEISEN/LOGOS/fotomenu.png";
+const mediaMenu = await prepareWAMessageMedia({ image: { url: caminhoImagem } }, { upload: keisen.waUploadToServer });
+
+const listaMenus = {
+title: "🪷 MENU-LISTAS 🪷",
+sections: [
+{
+title: "🪷 MENUS DIVERSOS 🪷",
+highlight_label: "White Lotus",
+rows: [
+{ header: "🪷 MENU PRINCIPAL 🪷", title: "ᴄᴏᴍᴀɴᴅᴏs ɢᴇʀᴀɪs ᴅᴏ ʙᴏᴛ", id: prefix + "menuzz" },
+{ header: "🪷 MENU-ALTERADORES 🪷", title: "ᴀʟᴛᴇʀᴀᴅᴏʀᴇs ᴅᴇ ᴀᴜᴅɪᴏs, ᴇᴛᴄ...", id: prefix + "menualt" },
+{ header: "🪷 MENU +18 🪷", title: "ꜰᴜɴᴄ̧ᴏᴇs +18 sᴏ́ ᴘʀᴀ ᴠɪᴘs", id: prefix + "menu18" },
+{ header: "🪷 MENU-ADM 🪷", title: "ᴍᴇɴᴜ ᴘᴀʀᴀ ᴀᴅᴍɪɴs ᴅᴏ ɢʀᴜᴘᴏ", id: prefix + "menuadm" },
+{ header: "🪷 MENU-ZOEIRA 🪷", title: "ᴊᴏɢᴏs ᴇ ʙʀɪɴᴄᴀᴅᴇɪʀᴀs", id: prefix + "brincadeira" },
+{ header: "🪷 MENU COINS 🪷", title: "sᴀʟᴅᴏ • ʟᴏᴊᴀ • ᴇᴄᴏɴᴏᴍɪᴀ", id: prefix + "menucoins" },
+{ header: "🪷 MENU PETS 🪷", title: "ᴀᴅᴏᴛᴀʀ • ɪɴᴛᴇʀᴀɢɪʀ • ᴜᴘᴀʀ", id: prefix + "menupets" },
+{ header: "🪷 MENU-DONO 🪷", title: "ꜰᴜɴᴄ̧ᴏᴇs ᴘᴀʀᴀ ᴏ ᴅᴏɴᴏ", id: prefix + "menudono" }
+]},
+{
+title: "🪷 FUNÇÕES EXTRAS 🪷",
+rows: [
+{ header: "🪷 CRIADOR 🪷", title: "ɪɴғᴏʀᴍᴀᴄ̧ᴏᴇs ᴅᴏ ᴄʀɪᴀᴅᴏʀ", id: prefix + "criador" },
+{ header: "🪷 PERFIL 🪷", title: "ᴅᴀᴅᴏs ᴅᴏ ᴜsᴜᴀ́ʀɪᴏ", id: prefix + "perfil" },
+{ header: "🪷 PING 🪷", title: "ʟᴀᴛᴇ̂ɴᴄɪᴀ", id: prefix + "ping" },
+{ header: "🪷 DONOS 🪷", title: "ʟɪsᴛᴀ ᴅᴇ ᴅᴏɴᴏs", id: prefix + "donos" },
+{ header: "🪷 ALUGAR BOT 🪷", title: "ᴘʟᴀɴᴏs ᴇ ᴘʀᴇᴄ̧ᴏs", id: prefix + "alugar" }
+]}
+]}
+const botoes = [{
+name: "single_select",
+buttonParamsJson: JSON.stringify(listaMenus)
+}];
+const textok = `╭✘━𑁁━🪷₊˚✮𝆺𝅥✿𝆺𝅥✮˚₊‧🪷━𑁁━✘╮
+┃ │⌇˚₊· ͟͟͞͞🤍▪︎👤 *𝚄𝚂𝚄Á𝚁𝙸𝙾: ${pushname}*
+┃ │⌇˚₊· ͟͟͞͞🤍▪︎ *𝙱𝙾𝚃: ${NomeDoBot}*
+┃ │⌇˚₊· ͟͟͞͞🤍▪︎ *𝙲𝙰𝚁𝙶𝙾: ${isGroupAdmins ? "Adm" : "Membro"}*
+┃ │⌇˚₊· ͟͟͞͞🤍▪︎ *𝙳𝙾𝙽𝙾: ${ownerName}*
+┃ │⌇˚₊· ͟͟͞͞🤍▪︎ *𝙿𝚁𝙴𝙵𝙸𝚇𝙾: ${prefix}*
+┃ │⌇˚₊· ͟͟͞͞🤍▪︎ *𝚅𝙴𝚁𝚂Ã𝙾: ${require('./package').version}*
+┃ │⌇˚₊· ͟͟͞͞🤍▪︎ *𝙷𝙾𝚁𝙰: ${time}*
+╰━𑁁━🪷₊˚✮𝆺𝅥✿𝆺𝅥✮˚₊‧🪷━𑁁━✘╯`;
+const carouselMessage = {
+cards: [{
+header: {
+hasMediaAttachment: true,
+imageMessage: mediaMenu.imageMessage
+},
+body: { text: textok },
+footer: { text: "ᴇsᴄᴏʟʜᴀ ᴀ ᴏᴘçãᴏ ᴀʙᴀɪxᴏ" },
+nativeFlowMessage: { buttons: botoes, messageVersion: 1 }
+}],
+messageVersion: 1
+};
+const msg = generateWAMessageFromContent(from, {
+interactiveMessage: {
+contextInfo: {
+participant: sender,
+quotedMessage: { conversation: "🪷 ᴀǫᴜɪ ᴇsᴛᴀ sᴇᴜ ᴍᴇɴᴜ 🪷" }
+},
+body: { text: "*🪷 WHITE LOTUS · MENU INTERATIVO 🪷*" },
+carouselMessage
+}
+}, {});
+await keisen.relayMessage(from, msg.message, { messageId: msg.key.id });
+} catch (error) {
+console.error("Erro menu:", error);
 await sendMenu(from, selo, {
 reaction: "🪷",
 caption: linguagem.menu(prefix),
-sendAudio: true
+sendAudio: false
 });
+}
 break;
+}
 
 case 'menuzz':
 await sendMenu(from, selo, {
@@ -19043,8 +19126,7 @@ await reagir(from, "🎉")
 try {
 
 await keisen.sendMessage(from, {
-video: { url: infobot }, // 👈 USA LINK REAL AQUI
-gifPlayback: true,
+image: { url: "./DADOS DO KEISEN/INFO_KEISEN/LOGOS/fotomenu.png" },
 caption: linguagem.dono(
 prefix,
 NomeDoBot,
@@ -19054,7 +19136,7 @@ isBotoff,
 ownerName,
 botNumber
 ),
-contextInfo: canalInfo([])
+contextInfo: NkChannelKk
 }, { quoted: selo })
 
 } catch (e) {
@@ -19072,6 +19154,7 @@ ownerName,
 botNumber
 ),
 }, { quoted: selo })
+
 
 }
 
