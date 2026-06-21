@@ -1847,6 +1847,82 @@ await keisen.sendMessage(from, { text: caption, contextInfo: { ...NkChannelKk } 
 }
 }
 
+// ============================================================
+// SISTEMA RPG - ORDEM PARANORMAL (versão digital simplificada)
+// Adaptação própria e simplificada inspirada no sistema d20 de
+// Ordem Paranormal, com fórmulas e textos originais (não copia
+// tabelas/rituais/distúrbios do livro oficial).
+// ============================================================
+
+const opPath = './DADOS DO KEISEN/usuarios/ordemparanormal.json';
+const opCombatePath = './DADOS DO KEISEN/grupos/combate_op.json';
+
+function opLoad() {
+return fs.existsSync(opPath) ? JSON.parse(fs.readFileSync(opPath)) : {};
+}
+function opSave(db) {
+fs.writeFileSync(opPath, JSON.stringify(db, null, 2));
+}
+function opCombateLoad() {
+return fs.existsSync(opCombatePath) ? JSON.parse(fs.readFileSync(opCombatePath)) : {};
+}
+function opCombateSave(db) {
+fs.writeFileSync(opCombatePath, JSON.stringify(db, null, 2));
+}
+
+const opClasses = ["combatente", "especialista", "ocultista"];
+const opAtributosLista = ["FOR", "AGI", "INT", "VIG", "PRE"];
+
+function opNexTier(nex) {
+return Math.max(1, Math.floor(nex / 5));
+}
+
+function opBudgetPontos(nex) {
+return 6 + opNexTier(nex);
+}
+
+function opCalcularStats(ficha) {
+const tier = opNexTier(ficha.nex);
+const { FOR, AGI, INT, VIG, PRE } = ficha.atributos;
+let pvMax, peMax;
+const sanMax = Math.max(5, 20 + (PRE * 2) - tier);
+
+if (ficha.classe === "combatente") {
+pvMax = 20 + (VIG * 6) + (tier * 3);
+peMax = 2 + Math.floor(PRE / 2) + Math.floor(tier / 2);
+} else if (ficha.classe === "ocultista") {
+pvMax = 12 + (VIG * 3) + (tier * 2);
+peMax = 4 + (PRE * 2) + tier;
+} else {
+pvMax = 16 + (VIG * 4) + (tier * 2);
+peMax = 3 + (PRE * 1) + tier;
+}
+
+return { pvMax, sanMax, peMax };
+}
+
+function opFicha(idUsuario) {
+const db = opLoad();
+return db[idUsuario] || null;
+}
+
+function opRolarDado(lados = 20) {
+return Math.floor(Math.random() * lados) + 1;
+}
+
+function opBarra(atual, max, emoji = "🟪") {
+const total = 10;
+const cheio = Math.max(0, Math.min(total, Math.round((atual / max) * total)));
+return emoji.repeat(cheio) + "⬜".repeat(total - cheio);
+}
+
+function opTextoDisturbio(percentual) {
+if (percentual <= 0) return "🩸 *COLAPSO MENTAL* — a sanidade chegou a zero. O personagem entra em colapso e precisa de ajuda imediata (efeito narrativo grave, a critério do mestre).";
+if (percentual <= 25) return "😱 *Surto* — algo se rompeu. Reações erráticas e paranoia tomam conta (efeito narrativo, a critério do mestre).";
+if (percentual <= 50) return "😰 *Perturbação* — pesadelos e desconforto constante (efeito narrativo leve).";
+return null;
+}
+
 
 if (
 isAutoDl &&
@@ -6858,6 +6934,310 @@ return reply(mess.error());
 reply(`*ᴍᴇɴᴄɪᴏɴᴇ ᴜᴍᴀ ɪᴍᴀɢᴇᴍ ᴘᴀʀᴀ ᴀᴘʟɪᴄᴀʀ ᴏ ᴇғᴇɪᴛᴏ ʜᴅ* 🙇‍♂️`);
 }
 break;
+
+case 'opajuda': case 'ophelp': {
+await reply(`╭🪷━ 𝙾𝙺𝙻𝙼𝙴𝙼 ━🪷╮
+*ORDEM PARANORMAL — RPG (versão digital simplificada)*
+
+📜 *Personagem*
+${prefix}opcriar <combatente|especialista|ocultista>
+${prefix}opficha [@alguém]
+${prefix}opatributo <FOR|AGI|INT|VIG|PRE> <valor>
+${prefix}opresetar
+
+🎲 *Testes*
+${prefix}oprolar <FOR|AGI|INT|VIG|PRE> [ND]
+
+❤️ *Vida / Sanidade / Esforço*
+${prefix}opdano <valor>
+${prefix}opcurar <valor>
+${prefix}opsanidade <+valor|-valor>
+${prefix}opesforco <+valor|-valor>
+
+🎒 *Inventário*
+${prefix}opitem add <nome>
+${prefix}opitem remover <nome>
+${prefix}opitem listar
+
+⬆️ *Evolução*
+${prefix}opnex
+
+⚔️ *Combate em grupo*
+${prefix}opcombate iniciar
+${prefix}opcombate entrar
+${prefix}opcombate turno
+${prefix}opcombate atacar <dano> @alvo
+${prefix}opcombate finalizar
+
+Funciona em grupo (combate coletivo) e no privado, solo ou em dupla.
+╰🪷━━━━━━━━━━━🪷╯`);
+break;
+}
+
+case 'opcriar': {
+const db = opLoad();
+if (db[sender]) return reply("❌ Você já tem uma ficha de Ordem Paranormal. Use `" + prefix + "opficha` pra ver, ou `" + prefix + "opresetar` pra começar de novo.");
+const classeEscolhida = (q || "").trim().toLowerCase();
+if (!opClasses.includes(classeEscolhida)) {
+return reply(`Escolha uma classe: *combatente*, *especialista* ou *ocultista*.\nExemplo: ${prefix}opcriar combatente`);
+}
+const ficha = {
+classe: classeEscolhida,
+nex: 5,
+atributos: { FOR: 0, AGI: 0, INT: 0, VIG: 0, PRE: 0 },
+pv: 0, san: 0, pe: 0,
+inventario: [],
+criadoEm: new Date().toISOString()
+};
+const stats = opCalcularStats(ficha);
+ficha.pv = stats.pvMax;
+ficha.san = stats.sanMax;
+ficha.pe = stats.peMax;
+db[sender] = ficha;
+opSave(db);
+await reply(`🪷 Ficha criada! Classe: *${classeEscolhida.toUpperCase()}*, NEX 5%.\n\nVocê tem *${opBudgetPontos(5)} pontos* pra distribuir entre FOR, AGI, INT, VIG e PRE.\nUse: ${prefix}opatributo FOR 2\n\nVeja sua ficha com ${prefix}opficha.`);
+break;
+}
+
+case 'opficha': {
+const alvoFicha = menc_jid2?.[0] || sender;
+const ficha = opFicha(alvoFicha);
+if (!ficha) return reply(alvoFicha === sender ? `❌ Você ainda não tem ficha. Crie com ${prefix}opcriar <classe>.` : "❌ Essa pessoa não tem ficha de Ordem Paranormal.");
+const stats = opCalcularStats(ficha);
+const nome = alvoFicha === sender ? pushname : (getName(alvoFicha) || alvoFicha.split('@')[0]);
+await reply(`╭🪷━ 𝙵𝙸𝙲𝙷𝙰 — 𝙾𝙿 ━🪷╮
+👤 *${nome}*
+🎭 Classe: *${ficha.classe.toUpperCase()}*
+✨ NEX: *${ficha.nex}%*
+
+❤️ PV: ${ficha.pv}/${stats.pvMax}
+${opBarra(ficha.pv, stats.pvMax, "❤️")}
+🧠 SAN: ${ficha.san}/${stats.sanMax}
+${opBarra(ficha.san, stats.sanMax, "🟪")}
+⚡ PE: ${ficha.pe}/${stats.peMax}
+${opBarra(ficha.pe, stats.peMax, "⚡")}
+
+📊 *Atributos*
+FOR: ${ficha.atributos.FOR} | AGI: ${ficha.atributos.AGI} | INT: ${ficha.atributos.INT}
+VIG: ${ficha.atributos.VIG} | PRE: ${ficha.atributos.PRE}
+
+🎒 Inventário: ${ficha.inventario.length ? ficha.inventario.join(", ") : "vazio"}
+╰🪷━━━━━━━━━━━🪷╯`);
+break;
+}
+
+case 'opatributo': {
+const db = opLoad();
+const ficha = db[sender];
+if (!ficha) return reply(`❌ Crie sua ficha primeiro: ${prefix}opcriar <classe>`);
+const [attrRaw, valorRaw] = (q || "").trim().split(/\s+/);
+const attr = (attrRaw || "").toUpperCase();
+const valor = parseInt(valorRaw);
+if (!opAtributosLista.includes(attr) || isNaN(valor)) {
+return reply(`Use: ${prefix}opatributo <FOR|AGI|INT|VIG|PRE> <valor>\nExemplo: ${prefix}opatributo VIG 2`);
+}
+const maxPorAtributo = Math.min(5, opNexTier(ficha.nex) + 1);
+if (valor < 0 || valor > maxPorAtributo) {
+return reply(`❌ Esse atributo só pode ir de 0 a ${maxPorAtributo} no seu NEX atual.`);
+}
+const copiaAtributos = { ...ficha.atributos, [attr]: valor };
+const totalUsado = Object.values(copiaAtributos).reduce((a, b) => a + b, 0);
+const budget = opBudgetPontos(ficha.nex);
+if (totalUsado > budget) {
+return reply(`❌ Isso passaria do seu orçamento de pontos (${budget}). Você usaria ${totalUsado}.`);
+}
+ficha.atributos = copiaAtributos;
+const stats = opCalcularStats(ficha);
+ficha.pv = Math.min(ficha.pv, stats.pvMax) || stats.pvMax;
+ficha.san = Math.min(ficha.san, stats.sanMax) || stats.sanMax;
+ficha.pe = Math.min(ficha.pe, stats.peMax) || stats.peMax;
+db[sender] = ficha;
+opSave(db);
+await reply(`✅ ${attr} agora é ${valor}. Pontos usados: ${totalUsado}/${budget}.`);
+break;
+}
+
+case 'oprolar': {
+const ficha = opFicha(sender);
+if (!ficha) return reply(`❌ Crie sua ficha primeiro: ${prefix}opcriar <classe>`);
+const partes = (q || "").trim().split(/\s+/);
+const attr = (partes[0] || "").toUpperCase();
+const nd = parseInt(partes[1]) || 15;
+if (!opAtributosLista.includes(attr)) {
+return reply(`Use: ${prefix}oprolar <FOR|AGI|INT|VIG|PRE> [ND]\nND padrão: 15`);
+}
+const dado = opRolarDado(20);
+const total = dado + ficha.atributos[attr];
+let resultado;
+if (dado === 20) resultado = "🌟 *SUCESSO EXTREMO*";
+else if (dado === 1) resultado = "💀 *FALHA CRÍTICA*";
+else resultado = total >= nd ? "✅ *SUCESSO*" : "❌ *FALHA*";
+await reply(`🎲 Teste de *${attr}*\nd20 (${dado}) + ${attr} (${ficha.atributos[attr]}) = *${total}* vs ND ${nd}\n\n${resultado}`);
+break;
+}
+
+case 'opdano': {
+const db = opLoad();
+const ficha = db[sender];
+if (!ficha) return reply(`❌ Crie sua ficha primeiro: ${prefix}opcriar <classe>`);
+const dano = parseInt(q);
+if (isNaN(dano) || dano < 0) return reply(`Use: ${prefix}opdano <valor>`);
+ficha.pv = Math.max(0, ficha.pv - dano);
+opSave(db);
+let aviso = "";
+if (ficha.pv === 0) aviso = "\n\n💀 PV chegou a zero! Personagem incapacitado (a critério do mestre).";
+await reply(`💥 Você recebeu *${dano}* de dano.\n❤️ PV: ${ficha.pv}${aviso}`);
+break;
+}
+
+case 'opcurar': {
+const db = opLoad();
+const ficha = db[sender];
+if (!ficha) return reply(`❌ Crie sua ficha primeiro: ${prefix}opcriar <classe>`);
+const stats = opCalcularStats(ficha);
+const cura = parseInt(q);
+if (isNaN(cura) || cura < 0) return reply(`Use: ${prefix}opcurar <valor>`);
+ficha.pv = Math.min(stats.pvMax, ficha.pv + cura);
+opSave(db);
+await reply(`💚 Curou *${cura}* PV.\n❤️ PV: ${ficha.pv}/${stats.pvMax}`);
+break;
+}
+
+case 'opsanidade': {
+const db = opLoad();
+const ficha = db[sender];
+if (!ficha) return reply(`❌ Crie sua ficha primeiro: ${prefix}opcriar <classe>`);
+const stats = opCalcularStats(ficha);
+const delta = parseInt(q);
+if (isNaN(delta)) return reply(`Use: ${prefix}opsanidade <+valor|-valor>\nExemplo: ${prefix}opsanidade -5`);
+ficha.san = Math.max(0, Math.min(stats.sanMax, ficha.san + delta));
+opSave(db);
+const percentual = (ficha.san / stats.sanMax) * 100;
+const disturbio = opTextoDisturbio(percentual);
+await reply(`🧠 Sanidade: ${ficha.san}/${stats.sanMax}${disturbio ? "\n\n" + disturbio : ""}`);
+break;
+}
+
+case 'opesforco': {
+const db = opLoad();
+const ficha = db[sender];
+if (!ficha) return reply(`❌ Crie sua ficha primeiro: ${prefix}opcriar <classe>`);
+const stats = opCalcularStats(ficha);
+const delta = parseInt(q);
+if (isNaN(delta)) return reply(`Use: ${prefix}opesforco <+valor|-valor>`);
+ficha.pe = Math.max(0, Math.min(stats.peMax, ficha.pe + delta));
+opSave(db);
+await reply(`⚡ PE: ${ficha.pe}/${stats.peMax}`);
+break;
+}
+
+case 'opitem': {
+const db = opLoad();
+const ficha = db[sender];
+if (!ficha) return reply(`❌ Crie sua ficha primeiro: ${prefix}opcriar <classe>`);
+const [acao, ...restoArr] = (q || "").trim().split(/\s+/);
+const nomeItem = restoArr.join(" ");
+if (acao === "add" && nomeItem) {
+ficha.inventario.push(nomeItem);
+opSave(db);
+await reply(`🎒 *${nomeItem}* adicionado ao inventário.`);
+} else if (acao === "remover" && nomeItem) {
+const idx = ficha.inventario.findIndex(i => i.toLowerCase() === nomeItem.toLowerCase());
+if (idx === -1) return reply("❌ Item não encontrado no inventário.");
+ficha.inventario.splice(idx, 1);
+opSave(db);
+await reply(`🗑️ *${nomeItem}* removido do inventário.`);
+} else if (acao === "listar") {
+await reply(`🎒 *Inventário:*\n${ficha.inventario.length ? ficha.inventario.map(i => "• " + i).join("\n") : "vazio"}`);
+} else {
+await reply(`Use:\n${prefix}opitem add <nome>\n${prefix}opitem remover <nome>\n${prefix}opitem listar`);
+}
+break;
+}
+
+case 'opnex': {
+const db = opLoad();
+const ficha = db[sender];
+if (!ficha) return reply(`❌ Crie sua ficha primeiro: ${prefix}opcriar <classe>`);
+if (ficha.nex >= 100) return reply("🌟 Você já está no NEX máximo (100%).");
+ficha.nex = Math.min(100, ficha.nex + 5);
+const stats = opCalcularStats(ficha);
+ficha.pv = stats.pvMax;
+ficha.san = stats.sanMax;
+ficha.pe = stats.peMax;
+db[sender] = ficha;
+opSave(db);
+await reply(`⬆️ Subiu de NEX! Agora: *${ficha.nex}%*.\n\nNovos pontos de atributo disponíveis: ${opBudgetPontos(ficha.nex)} (use ${prefix}opatributo).\nPV/SAN/PE recalculados e restaurados ao máximo.`);
+break;
+}
+
+case 'opresetar': {
+const db = opLoad();
+if (!db[sender]) return reply("❌ Você não tem ficha pra resetar.");
+delete db[sender];
+opSave(db);
+await reply("🗑️ Ficha de Ordem Paranormal removida. Pode criar outra quando quiser.");
+break;
+}
+
+case 'opcombate': {
+if (!isGroup) return reply("⚔️ O combate coletivo só funciona em grupo. No privado, use os comandos normais (oprolar, opdano, etc.) direto, solo ou revezando com a dupla.");
+const combateDB = opCombateLoad();
+const acaoCombate = (q || "").trim().split(/\s+/)[0];
+
+if (acaoCombate === "iniciar") {
+if (combateDB[from]) return reply("⚔️ Já tem um combate rolando nesse grupo. Use `" + prefix + "opcombate finalizar` pra encerrar antes.");
+combateDB[from] = { participantes: [], turno: 0, iniciado: new Date().toISOString() };
+opCombateSave(combateDB);
+return reply("⚔️ Combate iniciado! Quem for participar manda `" + prefix + "opcombate entrar`.");
+}
+
+if (acaoCombate === "entrar") {
+if (!combateDB[from]) return reply("❌ Nenhum combate ativo. Inicie com `" + prefix + "opcombate iniciar`.");
+const ficha = opFicha(sender);
+if (!ficha) return reply(`❌ Crie sua ficha primeiro: ${prefix}opcriar <classe>`);
+if (combateDB[from].participantes.find(p => p.id === sender)) return reply("Você já está no combate.");
+const iniciativa = opRolarDado(20) + ficha.atributos.AGI;
+combateDB[from].participantes.push({ id: sender, iniciativa });
+combateDB[from].participantes.sort((a, b) => b.iniciativa - a.iniciativa);
+opCombateSave(combateDB);
+return keisen.sendMessage(from, { text: `⚔️ @${sender.split('@')[0]} entrou no combate! Iniciativa: *${iniciativa}*`, mentions: [sender] }, { quoted: selo });
+}
+
+if (acaoCombate === "turno") {
+if (!combateDB[from] || !combateDB[from].participantes.length) return reply("❌ Nenhum combate ativo com participantes.");
+const combate = combateDB[from];
+const ordem = combate.participantes.map((p, i) => `${i === combate.turno ? "👉" : "▫️"} @${p.id.split('@')[0]} (iniciativa ${p.iniciativa})`).join("\n");
+const mencoes = combate.participantes.map(p => p.id);
+return keisen.sendMessage(from, { text: `⚔️ *Ordem de turno:*\n${ordem}`, mentions: mencoes }, { quoted: selo });
+}
+
+if (acaoCombate === "atacar") {
+if (!combateDB[from] || !combateDB[from].participantes.length) return reply("❌ Nenhum combate ativo.");
+const combate = combateDB[from];
+const partes = (q || "").trim().split(/\s+/);
+const dano = parseInt(partes[1]);
+const alvo = menc_jid2?.[0];
+if (isNaN(dano) || !alvo) return reply(`Use: ${prefix}opcombate atacar <dano> @alvo`);
+const dbFichas = opLoad();
+const fichaAlvo = dbFichas[alvo];
+if (!fichaAlvo) return reply("❌ O alvo não tem ficha de Ordem Paranormal.");
+fichaAlvo.pv = Math.max(0, fichaAlvo.pv - dano);
+opSave(dbFichas);
+combate.turno = (combate.turno + 1) % combate.participantes.length;
+opCombateSave(combateDB);
+return keisen.sendMessage(from, { text: `💥 @${alvo.split('@')[0]} recebeu *${dano}* de dano!\n❤️ PV restante: ${fichaAlvo.pv}\n\nPróximo turno liberado.`, mentions: [alvo] }, { quoted: selo });
+}
+
+if (acaoCombate === "finalizar") {
+if (!combateDB[from]) return reply("❌ Nenhum combate ativo.");
+delete combateDB[from];
+opCombateSave(combateDB);
+return reply("🏁 Combate finalizado.");
+}
+
+return reply(`Use:\n${prefix}opcombate iniciar\n${prefix}opcombate entrar\n${prefix}opcombate turno\n${prefix}opcombate atacar <dano> @alvo\n${prefix}opcombate finalizar`);
+}
 
 case 'addai': {
 try {
