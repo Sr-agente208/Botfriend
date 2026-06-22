@@ -16791,13 +16791,69 @@ break;
 case 'ativar': {
 if (!isGroupAdmins && !SoDono) return reply(mess.onlyAdmins());
 if (!isBotGroupAdmins) return reply(mess.onlyBotAdmin());
+try {
+const listaAtivar = {
+title: "🪷 ATIVAR / DESATIVAR 🪷",
+sections: [
+{
+title: "🪷 PROTEÇÕES DE MÍDIA",
+rows: [
+{ header: "🪷 Anti-áudio", title: "Remove quem manda áudio", id: prefix + "antiaudio" },
+{ header: "🪷 Anti-vídeo", title: "Remove quem manda vídeo", id: prefix + "antivideo" },
+{ header: "🪷 Anti-imagem", title: "Remove quem manda imagem", id: prefix + "antiimg" },
+{ header: "🪷 Anti-figurinha (auto)", title: "Converte mídia em sticker automático", id: prefix + "autosticker" },
+{ header: "🪷 Anti-status", title: "Bloqueia visualização de status no grupo", id: prefix + "antistatus" },
+{ header: "🪷 Anti-contato", title: "Remove quem manda contato", id: prefix + "anticontato" },
+{ header: "🪷 Anti-localização", title: "Remove quem manda localização", id: prefix + "antiloc" },
+{ header: "🪷 Anti-notas/áudio único", title: "Bloqueia notas de voz/visualização única", id: prefix + "antinotas" }
+]},
+{
+title: "🪷 LINKS E SPAM",
+rows: [
+{ header: "🪷 Anti-link", title: "Remove links em geral", id: prefix + "antilink" },
+{ header: "🪷 Anti-link de grupo", title: "Remove links de outros grupos", id: prefix + "antilinkgp" },
+{ header: "🪷 Anti-link (fácil)", title: "Versão mais leve do anti-link", id: prefix + "antilinkeasy" },
+{ header: "🪷 Anti-catálogo", title: "Bloqueia mensagens de catálogo", id: prefix + "anticatalogo" },
+{ header: "🪷 Anti-fake", title: "Remove números fake/suspeitos", id: prefix + "antifake" },
+{ header: "🪷 Anti-DDD", title: "Remove DDDs específicos", id: prefix + "antiddd" },
+{ header: "🪷 Anti-palavrão", title: "Modera linguagem ofensiva", id: prefix + "antipalavrao" }
+]},
+{
+title: "🪷 ADMINISTRAÇÃO E EXTRAS",
+rows: [
+{ header: "🪷 Boas-vindas", title: "Mensagem de entrada no grupo", id: prefix + "bemvindo" },
+{ header: "🪷 Boas-vindas 2", title: "Estilo alternativo de boas-vindas", id: prefix + "bemvindo2" },
+{ header: "🪷 Só admin", title: "Só admins falam no grupo", id: prefix + "so_adm" },
+{ header: "🪷 X9 admin", title: "Avisa quando alguém sai do grupo", id: prefix + "x9adm" },
+{ header: "🪷 Auto-transcrição", title: "Transcreve áudios automaticamente", id: prefix + "autototext" },
+{ header: "🪷 Auto-download", title: "Baixa links automaticamente", id: prefix + "autodl" },
+{ header: "🪷 Multi-prefixo", title: "Permite mais de um prefixo no grupo", id: prefix + "multiprefixo" },
+{ header: "🪷 Modo BN", title: "Ativa o modo banco de números", id: prefix + "modobn" },
+{ header: "🪷 Modo coins", title: "Ativa a economia de coins no grupo", id: prefix + "modocoins" },
+{ header: "🪷 Ativar tudo", title: "Liga várias proteções de uma vez", id: prefix + "ativic" }
+]}
+]
+};
+const botoesAtivar = [{ name: "single_select", buttonParamsJson: JSON.stringify(listaAtivar) }];
+const msgAtivar = generateWAMessageFromContent(from, {
+interactiveMessage: {
+contextInfo: { participant: sender },
+body: { text: "*🪷 WHITE LOTUS · ATIVAR/DESATIVAR 🪷*\n\nEscolha a proteção que quer ligar ou desligar:" },
+nativeFlowMessage: { buttons: botoesAtivar, messageVersion: 1 }
+}
+}, {});
+await keisen.relayMessage(from, msgAtivar.message, { messageId: msgAtivar.key.id });
+} catch (error) {
+console.error("Erro ativar:", error);
 const user = sender;
 if (global.menuAzAtivos[user]) return reply('*ᴅᴇꜱᴄᴜʟᴩᴇ ꜱᴇɴʜᴏʀ(ᴀ), ᴍᴀꜱ ᴠᴏᴄᴇ ᴊᴀ ᴛᴇᴍ ᴜᴍᴀ ʟɪꜱᴛᴀ ᴅᴇ ᴀᴛɪᴠᴀᴄᴀᴏ ᴩᴇɴᴅᴇɴᴛᴇ 🤷‍♂️*');
 global.menuAzAtivos[user] = true;
 const texto = linguagem.ativic(prefix);
 await sendMenu(from, selo, { caption: texto });
 }
+}
 break;
+
 
 
 
