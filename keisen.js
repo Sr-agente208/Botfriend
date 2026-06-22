@@ -1923,6 +1923,52 @@ if (percentual <= 50) return "😰 *Perturbação* — pesadelos e desconforto c
 return null;
 }
 
+// ============================================================
+// SISTEMA DE PETS (próprio, original)
+// ============================================================
+
+const petsPath = './DADOS DO KEISEN/usuarios/pets.json';
+
+function petsLoad() {
+return fs.existsSync(petsPath) ? JSON.parse(fs.readFileSync(petsPath)) : {};
+}
+function petsSave(db) {
+fs.writeFileSync(petsPath, JSON.stringify(db, null, 2));
+}
+
+const especiesPet = ["Cachorro", "Gato", "Coelho", "Raposa", "Coruja", "Lince", "Corvo", "Tartaruga Mística", "Dragãozinho", "Fênix Bebê"];
+
+function petBarra(atual, max, emoji) {
+const total = 10;
+const cheio = Math.max(0, Math.min(total, Math.round((atual / max) * total)));
+return emoji.repeat(cheio) + "⬜".repeat(total - cheio);
+}
+
+function petAplicarDecaimento(pet) {
+const agora = Date.now();
+const horasFome = (agora - pet.ultimaAlimentacao) / 3600000;
+const horasFelicidade = (agora - pet.ultimoBrincar) / 3600000;
+pet.fome = Math.max(0, Math.round(pet.fome - horasFome * 2));
+pet.felicidade = Math.max(0, Math.round(pet.felicidade - horasFelicidade * 2));
+return pet;
+}
+
+function petXpNecessario(nivel) {
+return nivel * 100;
+}
+
+function petGanharXp(pet, quantidade) {
+pet.xp += quantidade;
+let subiu = false;
+while (pet.xp >= petXpNecessario(pet.nivel)) {
+pet.xp -= petXpNecessario(pet.nivel);
+pet.nivel += 1;
+subiu = true;
+}
+return subiu;
+}
+
+
 
 if (
 isAutoDl &&
@@ -6934,6 +6980,109 @@ return reply(mess.error());
 reply(`*ᴍᴇɴᴄɪᴏɴᴇ ᴜᴍᴀ ɪᴍᴀɢᴇᴍ ᴘᴀʀᴀ ᴀᴘʟɪᴄᴀʀ ᴏ ᴇғᴇɪᴛᴏ ʜᴅ* 🙇‍♂️`);
 }
 break;
+
+case 'menupets':
+await sendMenu(from, selo, {
+reaction: "🐾",
+caption: linguagem.pets(prefix),
+sendAudio: false
+});
+break;
+
+case 'petadotar': {
+const db = petsLoad();
+if (db[sender]) return reply(`❌ Você já tem um pet (*${db[sender].nome}*). Use ${prefix}petabandonar se quiser começar de novo.`);
+const nome = (q || "").trim();
+if (!nome) return reply(`Use: ${prefix}petadotar <nome>`);
+const especie = especiesPet[Math.floor(Math.random() * especiesPet.length)];
+const agora = Date.now();
+db[sender] = {
+nome,
+especie,
+nivel: 1,
+xp: 0,
+fome: 80,
+felicidade: 80,
+ultimaAlimentacao: agora,
+ultimoBrincar: agora,
+criadoEm: new Date().toISOString()
+};
+petsSave(db);
+await reply(`🐾 Parabéns! Você adotou um(a) *${especie}* chamado(a) *${nome}*!\n\nUse ${prefix}pet pra ver o status dele(a).`);
+break;
+}
+
+case 'pet': {
+const db = petsLoad();
+const pet = db[sender];
+if (!pet) return reply(`❌ Você ainda não tem pet. Adote um com ${prefix}petadotar <nome>.`);
+petAplicarDecaimento(pet);
+petsSave(db);
+await reply(`╭🪷━ 𝙼𝙴𝚄 𝙿𝙴𝚃 ━🪷╮
+🐾 *${pet.nome}* (${pet.especie})
+⭐ Nível: ${pet.nivel} (XP: ${pet.xp}/${petXpNecessario(pet.nivel)})
+
+🍖 Fome: ${pet.fome}/100
+${petBarra(pet.fome, 100, "🟠")}
+😺 Felicidade: ${pet.felicidade}/100
+${petBarra(pet.felicidade, 100, "💗")}
+╰🪷━━━━━━━━━━🪷╯`);
+break;
+}
+
+case 'petalimentar': {
+const db = petsLoad();
+const pet = db[sender];
+if (!pet) return reply(`❌ Você ainda não tem pet. Adote um com ${prefix}petadotar <nome>.`);
+petAplicarDecaimento(pet);
+const agora = Date.now();
+const minutosDesde = (agora - pet.ultimaAlimentacao) / 60000;
+if (pet.fome >= 95 && minutosDesde < 15) return reply(`🍖 *${pet.nome}* já está bem alimentado(a). Espera um pouco.`);
+pet.fome = Math.min(100, pet.fome + 30);
+pet.ultimaAlimentacao = agora;
+const subiu = petGanharXp(pet, 10);
+petsSave(db);
+await reply(`🍖 Você alimentou *${pet.nome}*! Fome: ${pet.fome}/100${subiu ? "\n\n⭐ Subiu de nível! Agora é nível " + pet.nivel + "!" : ""}`);
+break;
+}
+
+case 'petbrincar': {
+const db = petsLoad();
+const pet = db[sender];
+if (!pet) return reply(`❌ Você ainda não tem pet. Adote um com ${prefix}petadotar <nome>.`);
+petAplicarDecaimento(pet);
+const agora = Date.now();
+pet.felicidade = Math.min(100, pet.felicidade + 30);
+pet.ultimoBrincar = agora;
+const subiu = petGanharXp(pet, 10);
+petsSave(db);
+await reply(`🎾 Você brincou com *${pet.nome}*! Felicidade: ${pet.felicidade}/100${subiu ? "\n\n⭐ Subiu de nível! Agora é nível " + pet.nivel + "!" : ""}`);
+break;
+}
+
+case 'pettreinar': {
+const db = petsLoad();
+const pet = db[sender];
+if (!pet) return reply(`❌ Você ainda não tem pet. Adote um com ${prefix}petadotar <nome>.`);
+petAplicarDecaimento(pet);
+if (pet.fome < 15 || pet.felicidade < 15) return reply(`❌ *${pet.nome}* está cansado(a) ou com fome demais pra treinar. Alimente e brinque primeiro.`);
+pet.fome = Math.max(0, pet.fome - 10);
+pet.felicidade = Math.max(0, pet.felicidade - 10);
+const subiu = petGanharXp(pet, 30);
+petsSave(db);
+await reply(`💪 Você treinou com *${pet.nome}* e ganhou bastante XP!${subiu ? "\n\n⭐ Subiu de nível! Agora é nível " + pet.nivel + "!" : ""}`);
+break;
+}
+
+case 'petabandonar': {
+const db = petsLoad();
+if (!db[sender]) return reply("❌ Você não tem pet pra abandonar.");
+const nomeAntigo = db[sender].nome;
+delete db[sender];
+petsSave(db);
+await reply(`💔 Você deixou *${nomeAntigo}* ir. Pode adotar outro quando quiser.`);
+break;
+}
 
 case 'opajuda': case 'ophelp': {
 await reply(`╭🪷━ 𝙾𝙺𝙻𝙼𝙴𝙼 ━🪷╮
