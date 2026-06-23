@@ -16794,8 +16794,8 @@ if (!isBotGroupAdmins) return reply(mess.onlyBotAdmin());
 const user = sender;
 if (global.menuAzAtivos[user]) return reply('*ᴅᴇꜱᴄᴜʟᴩᴇ ꜱᴇɴʜᴏʀ(ᴀ), ᴍᴀꜱ ᴠᴏᴄᴇ ᴊᴀ ᴛᴇᴍ ᴜᴍᴀ ʟɪꜱᴛᴀ ᴅᴇ ᴀᴛɪᴠᴀᴄᴀᴏ ᴩᴇɴᴅᴇɴᴛᴇ 🤷‍♂️*');
 global.menuAzAtivos[user] = true;
-const texto = linguagem.ativic(prefix);
-await sendMenu(from, selo, { caption: texto });
+const textoAtivar = linguagem.ativic(prefix);
+await sendMenu(from, selo, { caption: textoAtivar });
 }
 break;
 
