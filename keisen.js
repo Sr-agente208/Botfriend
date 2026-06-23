@@ -14366,12 +14366,8 @@ case 'saldo': {
 
     let alvo = (typeof menc_os2 !== 'undefined' && menc_os2) ? menc_os2 : sender;
 
-    const fs = require('fs');
-    const coinsPath = './DADOS DO KEISEN/usuarios/coins.json';
-    let coinsDB = {};
-    if (fs.existsSync(coinsPath)) coinsDB = JSON.parse(fs.readFileSync(coinsPath));
-    if (!coinsDB[alvo]) coinsDB[alvo] = { coins: 0 };
-    const saldo = coinsDB[alvo].coins;
+    const usuCoins = ID_G_COINS >= 0 ? RG_SCOINS[ID_G_COINS]?.usus?.find(i => i.id === alvo) : null;
+    const saldo = usuCoins?.coins || 0;
 
     // Dados do extrato
     const dataAtual = new Date();
@@ -22182,20 +22178,17 @@ case 'rankingcoins':
 case 'topcoins': {
     if (!isGroup) return reply(mess.onlyGroup());
 
-    const fs = require('fs');
-    const coinsPath = './DADOS DO KEISEN/usuarios/coins.json';
-    let coinsDB = {};
-    if (fs.existsSync(coinsPath)) coinsDB = JSON.parse(fs.readFileSync(coinsPath));
+    const usuariosGrupo = ID_G_COINS >= 0 ? (RG_SCOINS[ID_G_COINS]?.usus || []) : [];
 
-    // Converte o objeto em array e ordena por coins (maior para menor)
-    const ranking = Object.entries(coinsDB)
-        .map(([userId, data]) => ({ id: userId, coins: data.coins || 0 }))
+    // Converte o array em ranking ordenado por coins (maior para menor)
+    const ranking = usuariosGrupo
+        .map(u => ({ id: u.id, coins: u.coins || 0 }))
         .filter(user => user.coins > 0) // remove quem tem 0 coins
         .sort((a, b) => b.coins - a.coins)
         .slice(0, 5); // top 5
 
     if (ranking.length === 0) {
-        return reply('📊 Ninguém tem N-Coins ainda. Use `!addcoins` para começar.');
+        return reply('📊 Ninguém tem N-Coins ainda neste grupo. Use `' + prefix + 'minerar` pra começar.');
     }
 
     let mentions = [];
