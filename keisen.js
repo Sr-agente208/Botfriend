@@ -20431,12 +20431,20 @@ case 'matar': case 'mata':
 if(!isGroup) return reply(mess.onlyGroup())
 if(!isModobn) return reply(mess.onlyGroupFun(prefix))
 if(!menc_os2 || menc_jid2[1]) return reply('marque o alvo que você quer matar, a mensagem ou o @')
+try {
 await keisen.sendMessage(from, {
 video: {url: matar},
 gifPlayback: true,
 caption: `Você acabou de matar o(a) *@${menc_os2.split('@')[0]}*, seu... 😵‍💫💅🏻`,
 contextInfo: {...NkChannelKk, mentionedJid: [menc_os2]}
 }, {quoted: selo})
+} catch (e) {
+console.error("Erro matar:", e);
+await keisen.sendMessage(from, {
+text: `🔪 Você acabou de matar o(a) *@${menc_os2.split('@')[0]}*, seu... 😵‍💫💅🏻`,
+contextInfo: {...NkChannelKk, mentionedJid: [menc_os2]}
+}, {quoted: selo})
+}
 break
 
 case 'leitada':
