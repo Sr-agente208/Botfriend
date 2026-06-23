@@ -16821,106 +16821,13 @@ sendAudio: true
 });
 break;
 
-case 'menu': {
-try {
-reagir(from, "🪷");
-if (isAudioMenu) {
-const audioPath = "./DADOS DO KEISEN/data/media/audios/menu.mp3";
-if (fs.existsSync(audioPath)) {
-const audioBuffer = fs.readFileSync(audioPath);
-await keisen.sendMessage(from, {
-audio: audioBuffer,
-mimetype: 'audio/mpeg',
-ptt: false
-}, { quoted: selo });
-}
-}
-
-const caminhoImagem = "./DADOS DO KEISEN/INFO_KEISEN/LOGOS/fotomenu.png";
-const mediaMenu = await prepareWAMessageMedia({ image: { url: caminhoImagem } }, { upload: keisen.waUploadToServer });
-
-const listaMenus = {
-title: "🪷 MENU-LISTAS 🪷",
-sections: [
-{
-title: "🪷 MENUS DIVERSOS 🪷",
-highlight_label: "White Lotus",
-rows: [
-{ header: "🪷 MENU PRINCIPAL 🪷", title: "ᴄᴏᴍᴀɴᴅᴏs ɢᴇʀᴀɪs ᴅᴏ ʙᴏᴛ", id: prefix + "menuzz" },
-{ header: "🪷 MENU-ALTERADORES 🪷", title: "ᴀʟᴛᴇʀᴀᴅᴏʀᴇs ᴅᴇ ᴀᴜᴅɪᴏs, ᴇᴛᴄ...", id: prefix + "menualt" },
-{ header: "🪷 MENU +18 🪷", title: "ꜰᴜɴᴄ̧ᴏᴇs +18 sᴏ́ ᴘʀᴀ ᴠɪᴘs", id: prefix + "menu18" },
-{ header: "🪷 MENU-ADM 🪷", title: "ᴍᴇɴᴜ ᴘᴀʀᴀ ᴀᴅᴍɪɴs ᴅᴏ ɢʀᴜᴘᴏ", id: prefix + "menuadm" },
-{ header: "🪷 MENU-ZOEIRA 🪷", title: "ᴊᴏɢᴏs ᴇ ʙʀɪɴᴄᴀᴅᴇɪʀᴀs", id: prefix + "brincadeira" },
-{ header: "🪷 MENU COINS 🪷", title: "sᴀʟᴅᴏ • ʟᴏᴊᴀ • ᴇᴄᴏɴᴏᴍɪᴀ", id: prefix + "menucoins" },
-{ header: "🪷 MENU PETS 🪷", title: "ᴀᴅᴏᴛᴀʀ • ɪɴᴛᴇʀᴀɢɪʀ • ᴜᴘᴀʀ", id: prefix + "menupets" },
-{ header: "🪷 MENU-DONO 🪷", title: "ꜰᴜɴᴄ̧ᴏᴇs ᴘᴀʀᴀ ᴏ ᴅᴏɴᴏ", id: prefix + "menudono" }
-]},
-{
-title: "🪷 FUNÇÕES EXTRAS 🪷",
-rows: [
-{ header: "🪷 CRIADOR 🪷", title: "ɪɴғᴏʀᴍᴀᴄ̧ᴏᴇs ᴅᴏ ᴄʀɪᴀᴅᴏʀ", id: prefix + "criador" },
-{ header: "🪷 PERFIL 🪷", title: "ᴅᴀᴅᴏs ᴅᴏ ᴜsᴜᴀ́ʀɪᴏ", id: prefix + "perfil" },
-{ header: "🪷 PING 🪷", title: "ʟᴀᴛᴇ̂ɴᴄɪᴀ", id: prefix + "ping" },
-{ header: "🪷 DONOS 🪷", title: "ʟɪsᴛᴀ ᴅᴇ ᴅᴏɴᴏs", id: prefix + "donos" },
-{ header: "🪷 ALUGAR BOT 🪷", title: "ᴘʟᴀɴᴏs ᴇ ᴘʀᴇᴄ̧ᴏs", id: prefix + "alugar" }
-]},
-{
-title: "🪷 NOVIDADES 🪷",
-rows: [
-{ header: "🪷 ORDEM PARANORMAL (RPG) 🪷", title: "ꜰɪᴄʜᴀ • ᴄᴏᴍʙᴀᴛᴇ • ɴᴇx", id: prefix + "opajuda" },
-{ header: "🪷 PETS 🪷", title: "ᴀᴅᴏᴛᴇ ᴇ ᴄᴜɪᴅᴇ ᴅᴏ sᴇᴜ ᴘᴇᴛ", id: prefix + "menupets" },
-{ header: "🪷 VIDENTE 🪷", title: "ʀᴇᴄᴇʙᴀ ᴜᴍᴀ ᴘʀᴇᴠɪsᴀᴏ", id: prefix + "vidente" },
-{ header: "🪷 ATIVAR/DESATIVAR 🪷", title: "ʟɪɢᴀ ᴏᴜ ᴅᴇsʟɪɢᴀ ᴘʀᴏᴛᴇᴄ̧ᴏ̃ᴇs ᴄᴏᴍ ᴜᴍ ᴄʟɪᴄ", id: prefix + "ativar" },
-{ header: "🪷 ADICIONAR META AI 🪷", title: "ᴀᴅɪᴄɪᴏɴᴀ ᴀ ᴍᴇᴛᴀ ᴀɪ ɴᴏ ɢʀᴜᴘᴏ (ᴅᴏɴᴏ)", id: prefix + "addai" },
-{ header: "🪷 STATUS DAS APIS 🪷", title: "ᴅɪᴀɢɴᴏ́sᴛɪᴄᴏ ᴇᴍ ᴛᴇᴍᴘᴏ ʀᴇᴀʟ (ᴅᴏɴᴏ)", id: prefix + "testapis" }
-]}
-]}
-const botoes = [{
-name: "single_select",
-buttonParamsJson: JSON.stringify(listaMenus)
-}];
-const textok = `╭✘━𑁁━🪷₊˚✮𝆺𝅥✿𝆺𝅥✮˚₊‧🪷━𑁁━✘╮
-┃ │⌇˚₊· ͟͟͞͞🤍▪︎👤 *𝚄𝚂𝚄Á𝚁𝙸𝙾: ${pushname}*
-┃ │⌇˚₊· ͟͟͞͞🤍▪︎ *𝙱𝙾𝚃: ${NomeDoBot}*
-┃ │⌇˚₊· ͟͟͞͞🤍▪︎ *𝙲𝙰𝚁𝙶𝙾: ${isGroupAdmins ? "Adm" : "Membro"}*
-┃ │⌇˚₊· ͟͟͞͞🤍▪︎ *𝙳𝙾𝙽𝙾: ${ownerName}*
-┃ │⌇˚₊· ͟͟͞͞🤍▪︎ *𝙿𝚁𝙴𝙵𝙸𝚇𝙾: ${prefix}*
-┃ │⌇˚₊· ͟͟͞͞🤍▪︎ *𝚅𝙴𝚁𝚂Ã𝙾: ${require('./package').version}*
-┃ │⌇˚₊· ͟͟͞͞🤍▪︎ *𝙷𝙾𝚁𝙰: ${time}*
-╰━𑁁━🪷₊˚✮𝆺𝅥✿𝆺𝅥✮˚₊‧🪷━𑁁━✘╯`;
-const carouselMessage = {
-cards: [{
-header: {
-hasMediaAttachment: true,
-imageMessage: mediaMenu.imageMessage
-},
-body: { text: textok },
-footer: { text: "ᴇsᴄᴏʟʜᴀ ᴀ ᴏᴘçãᴏ ᴀʙᴀɪxᴏ" },
-nativeFlowMessage: { buttons: botoes, messageVersion: 1 }
-}],
-messageVersion: 1
-};
-const msg = generateWAMessageFromContent(from, {
-interactiveMessage: {
-contextInfo: {
-participant: sender,
-quotedMessage: { conversation: "🪷 ᴀǫᴜɪ ᴇsᴛᴀ sᴇᴜ ᴍᴇɴᴜ 🪷" }
-},
-body: { text: "*🪷 WHITE LOTUS · MENU INTERATIVO 🪷*" },
-carouselMessage
-}
-}, {});
-await keisen.relayMessage(from, msg.message, { messageId: msg.key.id });
-} catch (error) {
-console.error("Erro menu:", error);
+case 'menu':
 await sendMenu(from, selo, {
 reaction: "🪷",
 caption: linguagem.menu(prefix),
-sendAudio: false
+sendAudio: true
 });
-}
 break;
-}
 
 case 'menuzz':
 await sendMenu(from, selo, {
@@ -19247,145 +19154,7 @@ case 'menubrincadeira':
 case 'menubrincadeiras':
 case 'brincadeiras':
 case 'brincadeira':
-case 'menubn': {
-try {
-const listaBrincadeira = {
-title: "🪷 MENU BRINCADEIRA 🪷",
-sections: [
-{
-title: "🪷 JOGOS",
-rows: [
-{ header: "🪷 jogodavelha", title: "Comando: " + prefix + "jogodavelha", id: prefix + "jogodavelha" },
-{ header: "🪷 vab", title: "Comando: " + prefix + "vab", id: prefix + "vab" },
-{ header: "🪷 eununca", title: "Comando: " + prefix + "eununca", id: prefix + "eununca" }
-]},
-{
-title: "🪷 CASAL-WEB",
-rows: [
-{ header: "🪷 namorar", title: "Comando: " + prefix + "namorar", id: prefix + "namorar" },
-{ header: "🪷 terminar", title: "Comando: " + prefix + "terminar", id: prefix + "terminar" },
-{ header: "🪷 divorciar", title: "Comando: " + prefix + "divorciar", id: prefix + "divorciar" },
-{ header: "🪷 cancelarpedido", title: "Comando: " + prefix + "cancelarpedido", id: prefix + "cancelarpedido" },
-{ header: "🪷 minhadupla", title: "Comando: " + prefix + "minhadupla", id: prefix + "minhadupla" },
-{ header: "🪷 dupla", title: "Comando: " + prefix + "dupla", id: prefix + "dupla" }
-]},
-{
-title: "🪷 FORCA",
-rows: [
-{ header: "🪷 forca", title: "Comando: " + prefix + "forca", id: prefix + "forca" },
-{ header: "🪷 rv-forca", title: "Comando: " + prefix + "rv-forca", id: prefix + "rv-forca" },
-{ header: "🪷 fc", title: "Comando: " + prefix + "fc", id: prefix + "fc" }
-]},
-{
-title: "🪷 INTERATIVO 1",
-rows: [
-{ header: "🪷 lindo", title: "Comando: " + prefix + "lindo", id: prefix + "lindo" },
-{ header: "🪷 linda", title: "Comando: " + prefix + "linda", id: prefix + "linda" },
-{ header: "🪷 fiel", title: "Comando: " + prefix + "fiel", id: prefix + "fiel" },
-{ header: "🪷 infiel", title: "Comando: " + prefix + "infiel", id: prefix + "infiel" },
-{ header: "🪷 gay", title: "Comando: " + prefix + "gay", id: prefix + "gay" },
-{ header: "🪷 feio", title: "Comando: " + prefix + "feio", id: prefix + "feio" },
-{ header: "🪷 corno", title: "Comando: " + prefix + "corno", id: prefix + "corno" },
-{ header: "🪷 vesgo", title: "Comando: " + prefix + "vesgo", id: prefix + "vesgo" },
-{ header: "🪷 bebado", title: "Comando: " + prefix + "bebado", id: prefix + "bebado" },
-{ header: "🪷 gostoso", title: "Comando: " + prefix + "gostoso", id: prefix + "gostoso" },
-{ header: "🪷 gostosa", title: "Comando: " + prefix + "gostosa", id: prefix + "gostosa" },
-{ header: "🪷 sigma", title: "Comando: " + prefix + "sigma", id: prefix + "sigma" },
-{ header: "🪷 beta", title: "Comando: " + prefix + "beta", id: prefix + "beta" },
-{ header: "🪷 baiano", title: "Comando: " + prefix + "baiano", id: prefix + "baiano" },
-{ header: "🪷 baiana", title: "Comando: " + prefix + "baiana", id: prefix + "baiana" },
-{ header: "🪷 carioca", title: "Comando: " + prefix + "carioca", id: prefix + "carioca" }
-]},
-{
-title: "🪷 INTERATIVO 2",
-rows: [
-{ header: "🪷 louco", title: "Comando: " + prefix + "louco", id: prefix + "louco" },
-{ header: "🪷 louca", title: "Comando: " + prefix + "louca", id: prefix + "louca" },
-{ header: "🪷 safada", title: "Comando: " + prefix + "safada", id: prefix + "safada" },
-{ header: "🪷 safado", title: "Comando: " + prefix + "safado", id: prefix + "safado" },
-{ header: "🪷 macaco", title: "Comando: " + prefix + "macaco", id: prefix + "macaco" },
-{ header: "🪷 macaca", title: "Comando: " + prefix + "macaca", id: prefix + "macaca" },
-{ header: "🪷 puta", title: "Comando: " + prefix + "puta", id: prefix + "puta" },
-{ header: "🪷 beijo", title: "Comando: " + prefix + "beijo", id: prefix + "beijo" },
-{ header: "🪷 matar", title: "Comando: " + prefix + "matar", id: prefix + "matar" },
-{ header: "🪷 tapa", title: "Comando: " + prefix + "tapa", id: prefix + "tapa" },
-{ header: "🪷 chute", title: "Comando: " + prefix + "chute", id: prefix + "chute" },
-{ header: "🪷 dogolpe", title: "Comando: " + prefix + "dogolpe", id: prefix + "dogolpe" },
-{ header: "🪷 nazista", title: "Comando: " + prefix + "nazista", id: prefix + "nazista" },
-{ header: "🪷 chance", title: "Comando: " + prefix + "chance", id: prefix + "chance" },
-{ header: "🪷 surubao", title: "Comando: " + prefix + "surubao", id: prefix + "surubao" },
-{ header: "🪷 casal", title: "Comando: " + prefix + "casal", id: prefix + "casal" }
-]},
-{
-title: "🪷 INTERATIVO 3",
-rows: [
-{ header: "🪷 quando", title: "Comando: " + prefix + "quando", id: prefix + "quando" },
-{ header: "🪷 mencionar", title: "Comando: " + prefix + "mencionar", id: prefix + "mencionar" },
-{ header: "🪷 death", title: "Comando: " + prefix + "death", id: prefix + "death" },
-{ header: "🪷 tirarft", title: "Comando: " + prefix + "tirarft", id: prefix + "tirarft" },
-{ header: "🪷 lavarlouca", title: "Comando: " + prefix + "lavarlouca", id: prefix + "lavarlouca" },
-{ header: "🪷 comer", title: "Comando: " + prefix + "comer", id: prefix + "comer" },
-{ header: "🪷 capinarlote", title: "Comando: " + prefix + "capinarlote", id: prefix + "capinarlote" },
-{ header: "🪷 carinho", title: "Comando: " + prefix + "carinho", id: prefix + "carinho" },
-{ header: "🪷 abraco", title: "Comando: " + prefix + "abraco", id: prefix + "abraco" },
-{ header: "🪷 pgpeito", title: "Comando: " + prefix + "pgpeito", id: prefix + "pgpeito" },
-{ header: "🪷 pgpau", title: "Comando: " + prefix + "pgpau", id: prefix + "pgpau" },
-{ header: "🪷 sentar", title: "Comando: " + prefix + "sentar", id: prefix + "sentar" },
-{ header: "🪷 morder", title: "Comando: " + prefix + "morder", id: prefix + "morder" },
-{ header: "🪷 pgbunda", title: "Comando: " + prefix + "pgbunda", id: prefix + "pgbunda" },
-{ header: "🪷 vord", title: "Comando: " + prefix + "vord", id: prefix + "vord" },
-{ header: "🪷 obesidade", title: "Comando: " + prefix + "obesidade", id: prefix + "obesidade" },
-{ header: "🪷 contardias", title: "Comando: " + prefix + "contardias", id: prefix + "contardias" },
-{ header: "🪷 cu", title: "Comando: " + prefix + "cu", id: prefix + "cu" },
-{ header: "🪷 leitada", title: "Comando: " + prefix + "leitada", id: prefix + "leitada" },
-{ header: "🪷 boquete", title: "Comando: " + prefix + "boquete", id: prefix + "boquete" },
-{ header: "🪷 cagar", title: "Comando: " + prefix + "cagar", id: prefix + "cagar" }
-]},
-{
-title: "🪷 RANK'S 1",
-rows: [
-{ header: "🪷 rankgay", title: "Comando: " + prefix + "rankgay", id: prefix + "rankgay" },
-{ header: "🪷 rankgado", title: "Comando: " + prefix + "rankgado", id: prefix + "rankgado" },
-{ header: "🪷 rankcorno", title: "Comando: " + prefix + "rankcorno", id: prefix + "rankcorno" },
-{ header: "🪷 rankgostoso", title: "Comando: " + prefix + "rankgostoso", id: prefix + "rankgostoso" },
-{ header: "🪷 rankgostosa", title: "Comando: " + prefix + "rankgostosa", id: prefix + "rankgostosa" },
-{ header: "🪷 ranknazista", title: "Comando: " + prefix + "ranknazista", id: prefix + "ranknazista" },
-{ header: "🪷 rankotaku", title: "Comando: " + prefix + "rankotaku", id: prefix + "rankotaku" },
-{ header: "🪷 rankpau", title: "Comando: " + prefix + "rankpau", id: prefix + "rankpau" },
-{ header: "🪷 ranksigma", title: "Comando: " + prefix + "ranksigma", id: prefix + "ranksigma" },
-{ header: "🪷 rankbeta", title: "Comando: " + prefix + "rankbeta", id: prefix + "rankbeta" },
-{ header: "🪷 rankbaiano", title: "Comando: " + prefix + "rankbaiano", id: prefix + "rankbaiano" },
-{ header: "🪷 rankbaiana", title: "Comando: " + prefix + "rankbaiana", id: prefix + "rankbaiana" },
-{ header: "🪷 rankcarioca", title: "Comando: " + prefix + "rankcarioca", id: prefix + "rankcarioca" }
-]},
-{
-title: "🪷 RANK'S 2",
-rows: [
-{ header: "🪷 ranksafado", title: "Comando: " + prefix + "ranksafado", id: prefix + "ranksafado" },
-{ header: "🪷 ranksafada", title: "Comando: " + prefix + "ranksafada", id: prefix + "ranksafada" },
-{ header: "🪷 ranklouco", title: "Comando: " + prefix + "ranklouco", id: prefix + "ranklouco" },
-{ header: "🪷 ranklouca", title: "Comando: " + prefix + "ranklouca", id: prefix + "ranklouca" },
-{ header: "🪷 rankmacaco", title: "Comando: " + prefix + "rankmacaco", id: prefix + "rankmacaco" },
-{ header: "🪷 rankmacaca", title: "Comando: " + prefix + "rankmacaca", id: prefix + "rankmacaca" },
-{ header: "🪷 rankputa", title: "Comando: " + prefix + "rankputa", id: prefix + "rankputa" },
-{ header: "🪷 rankcu", title: "Comando: " + prefix + "rankcu", id: prefix + "rankcu" },
-{ header: "🪷 rankbct", title: "Comando: " + prefix + "rankbct", id: prefix + "rankbct" },
-{ header: "🪷 rankfalido", title: "Comando: " + prefix + "rankfalido", id: prefix + "rankfalido" },
-{ header: "🪷 rankcasal", title: "Comando: " + prefix + "rankcasal", id: prefix + "rankcasal" }
-]}
-]
-};
-const botoesBrinc = [{ name: "single_select", buttonParamsJson: JSON.stringify(listaBrincadeira) }];
-const msgBrinc = generateWAMessageFromContent(from, {
-interactiveMessage: {
-contextInfo: { participant: sender },
-body: { text: "*🪷 WHITE LOTUS · BRINCADEIRAS 🪷*\n\nEscolha a brincadeira:" },
-nativeFlowMessage: { buttons: botoesBrinc, messageVersion: 1 }
-}
-}, {});
-await keisen.relayMessage(from, msgBrinc.message, { messageId: msgBrinc.key.id });
-} catch (error) {
-console.error("Erro brincadeira:", error);
+case 'menubn':
 await sendMenu(from, selo, {
 reaction: "🎉",
 caption: linguagem.brincadeiras(prefix),
@@ -19393,9 +19162,7 @@ isGroupRequired: true,
 isModoBnRequired: true,
 sendAudio: true
 });
-}
 break;
-}
 
 case 'donos': {
 await reagir(from, "🎉")
