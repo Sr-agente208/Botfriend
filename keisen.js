@@ -1539,43 +1539,55 @@ function CoinsUpdate(index){
 fs.writeFileSync("./DADOS DO KEISEN/func/coins.json", JSON.stringify(index, null, 2) + "\n")
 }
 
+function getUserCoinsEntry(groupId, user) {
+let idxGrupo = RG_SCOINS.findIndex(i => i.grupo === groupId);
+if (idxGrupo === -1) {
+RG_SCOINS.push({ grupo: groupId, usus: [] });
+idxGrupo = RG_SCOINS.length - 1;
+}
+let entry = RG_SCOINS[idxGrupo].usus.find(i => i.id === user);
+if (!entry) {
+entry = { id: user, coins: 0, data: 0, chances: { cassino: 0, minerar: 0 } };
+RG_SCOINS[idxGrupo].usus.push(entry);
+}
+if (!entry.chances) entry.chances = { cassino: 0, minerar: 0 };
+return entry;
+}
+
 const SYSTEM_COIN = {
 
 AdicionarCoins: async function(user, quant) {
-CoinsUser_ = RG_SCOINS[ID_G_COINS].usus.find(i => i.id === user);
-if(!CoinsUser_) return reply("O(a) usuário(a) nunca enviou uma mensagem neste grupo! Então não é possível adicionar ou transferir coins à um membro que não possuí registro!");
+const CoinsUser_ = getUserCoinsEntry(from, user);
 CoinsUser_["coins"] += quant;
 CoinsUpdate(RG_SCOINS);
 },
 
 transferCoins: async function(transferidor, recebidor, quantidade) {
-DM_ = RG_SCOINS[ID_G_COINS].usus.find(i => i.id === transferidor)
-DM_2 = RG_SCOINS[ID_G_COINS].usus.find(i => i.id === recebidor)
+const DM_ = getUserCoinsEntry(from, transferidor);
+const DM_2 = getUserCoinsEntry(from, recebidor);
 if((DM_?.coins || 0) < quantidade) return mention(`A quantidade que você tem é inferior a que você deseja transferir ao usuário: @${recebidor.split("@")[0]}`)
-if(!DM_2) return mention(`O(a) usuário(a) '@${recebidor.split("@")[0]}' nunca enviou uma mensagem neste grupo! Então não é possível adicionar ou transferir coins à um usuário não registrado no meu sistema!`);
 DM_["coins"] -= quantidade;
 DM_2["coins"] += quantidade;
 CoinsUpdate(RG_SCOINS);
 },
 
 Adicionar_2: async function(A, Q, X, X2) {
-DM_ = RG_SCOINS[ID_G_COINS].usus.find(i => i.id === A);
-if(!DM_) return reply("O(a) usuário(a) nunca enviou uma mensagem neste grupo! Então não é possível atualizar a carteira!");
+const DM_ = getUserCoinsEntry(from, A);
 DM_["coins"] += Q;
 DM_[X] = X2
 CoinsUpdate(RG_SCOINS);
 },
 
 RemoverCoins: async function(user, quant) {
-CoinsUser = RG_SCOINS[ID_G_COINS].usus.find(i => i.id === user)
-if(!CoinsUser) return reply("O(a) usuário(a) nunca enviou uma mensagem neste grupo! Então não é possível remover coins de membro inativo que não possuí registro!");
+const CoinsUser = getUserCoinsEntry(from, user);
 if((CoinsUser?.coins || 0) < quant) return reply(`O usuário possuí '${CoinsUser?.coins} N-Coins', este valor não é suficiente para realizar a transação de remoção de ${quant}.`);
 CoinsUser["coins"] -= quant;
 CoinsUpdate(RG_SCOINS);
 },
 
 VerificarCampo: function(user, parameter) {
-return RG_SCOINS[ID_G_COINS].usus.find(i => i.id === user)[parameter] || null;
+const entry = getUserCoinsEntry(from, user);
+return entry[parameter] || null;
 },
 
 }
@@ -22073,7 +22085,7 @@ case 'slot':
 if (!isGroup) return reply(mess.onlyGroup());
 if (!isModoCoins) return reply(`*ᴇssᴇ ᴄᴏᴍᴀɴᴅᴏ sᴏ ᴘᴏᴅᴇ sᴇʀ ᴀᴛɪᴠᴏ ǫᴜᴀɴᴅᴏ ᴏ sɪᴛᴇᴍᴀ ${prefix}ᴍᴏᴅᴏᴄᴏɪɴs ᴇsᴛɪᴠᴇʀ ᴀᴛɪᴠᴏ 🤷‍♂️*`);
 
-const usuario = RG_SCOINS[ID_G_COINS].usus[ID_USU_COINS];
+const usuario = getUserCoinsEntry(from, sender);
 
 if (usuario.chances.cassino >= 5) {
 return reply(`Volte amanhã! Você consumiu todas suas 5 chances do dia no cassino.`);
@@ -22116,17 +22128,29 @@ await slotMensagem(mensagensDerrota[Math.floor(Math.random() * mensagensDerrota.
 break;
 
 case 'minerar':
-case 'minerarcoins':
+case 'minerarcoins': {
 if (!isGroup) return reply(mess.onlyGroup());
 if (!isModoCoins) return reply(`*ᴇssᴇ ᴄᴏᴍᴀɴᴅᴏ sᴏ ᴘᴏᴅᴇ sᴇʀ ᴀᴛɪᴠᴏ ǫᴜᴀɴᴅᴏ ᴏ sɪᴛᴇᴍᴀ ${prefix}ᴍᴏᴅᴏᴄᴏɪɴs ᴇsᴛɪᴠᴇʀ ᴀᴛɪᴠᴏ 🤷‍♂️*`);
-if (RG_SCOINS[ID_G_COINS].usus[ID_USU_COINS].chances.minerar >= 6) {
+
+// Auto-registro defensivo: garante que grupo e usuário existem em RG_SCOINS antes de usar
+let idxGrupo = RG_SCOINS.findIndex(i => i.grupo === from);
+if (idxGrupo === -1) {
+RG_SCOINS.push({ grupo: from, usus: [] });
+idxGrupo = RG_SCOINS.length - 1;
+}
+let idxUser = RG_SCOINS[idxGrupo].usus.findIndex(i => i.id === sender);
+if (idxUser === -1) {
+RG_SCOINS[idxGrupo].usus.push({ id: sender, coins: 0, data: 0, chances: { cassino: 0, minerar: 0 } });
+idxUser = RG_SCOINS[idxGrupo].usus.length - 1;
+}
+if (!RG_SCOINS[idxGrupo].usus[idxUser].chances) RG_SCOINS[idxGrupo].usus[idxUser].chances = { cassino: 0, minerar: 0 };
+if (typeof RG_SCOINS[idxGrupo].usus[idxUser].chances.minerar !== 'number') RG_SCOINS[idxGrupo].usus[idxUser].chances.minerar = 0;
+CoinsUpdate(RG_SCOINS);
+
+if (RG_SCOINS[idxGrupo].usus[idxUser].chances.minerar >= 6) {
 return reply(`Sinto muito, você não tem mais chance para minerar hoje, porque você completou: 6/6.`);
 }
-if (!RG_SCOINS[ID_G_COINS].usus[ID_USU_COINS]) {
-RG_SCOINS[ID_G_COINS].usus[ID_USU_COINS].chances.minerar = 1;
-} else {
-RG_SCOINS[ID_G_COINS].usus[ID_USU_COINS].chances.minerar += 1;
-}
+RG_SCOINS[idxGrupo].usus[idxUser].chances.minerar += 1;
 CoinsUpdate(RG_SCOINS);
 const aleatValor = Math.floor(Math.random() * 2);
 const rndg = Math.floor(Math.random() * 300); 
@@ -22146,12 +22170,13 @@ const miningFailureRX = [
 "⛏️💎 Em Minas Gerais, famosa por suas minas de diamantes, você não encontrou nada desta vez.",
 ];
 let miningFailure = miningFailureRX[Math.floor(Math.random() * miningFailureRX.length)];
-miningFailure += RG_SCOINS[ID_G_COINS].usus[ID_USU_COINS].chances.minerar >= 6 
+miningFailure += RG_SCOINS[idxGrupo].usus[idxUser].chances.minerar >= 6 
 ? "\n> Infelizmente você não tem mais chances para minerar hoje, volte amanhã..." 
-: `\n> Ainda restam ${6 - RG_SCOINS[ID_G_COINS].usus[ID_USU_COINS].chances.minerar} tentativas para minerar hoje.`;
+: `\n> Ainda restam ${6 - RG_SCOINS[idxGrupo].usus[idxUser].chances.minerar} tentativas para minerar hoje.`;
 await reply(miningFailure);
 }
 break;
+}
 
 case 'revelargartic':
 if (!isGroupAdmins) return reply('Somente adms podem ver a(s) resposta(s) do jogos!')
