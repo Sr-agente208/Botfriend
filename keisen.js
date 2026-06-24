@@ -15177,8 +15177,10 @@ reply("*Ocorreu um erro ao acessar os logs!*");
 break;
 
 case 'instagram':
+case 'instagram2':
 case 'insta':
-case 'insta_video': {
+case 'insta_video':
+case 'insta_video2': {
 await reagir(from, "⏳");
 try {
 if (!q || q.length < 5)
@@ -15197,6 +15199,7 @@ return reply(mess.error());
 break;
 
 case 'insta_audio':
+case 'insta_audio2':
 case 'instagram_audio': {
 await reagir(from, "⏳");
 try {
@@ -15216,7 +15219,10 @@ return reply(mess.error());
 break;
 
 case 'ttkd':
+case 'tiktok':
+case 'tiktok2':
 case 'tiktok_video':
+case 'tiktok_video2':
 case 'tiktoksearch': {
 await reagir(from, "⏳")
 try {
@@ -15267,6 +15273,7 @@ return reply(`⚠️ Erro ao processar TikTok.`)
 break;
 case 'tiktokaudio':
 case 'tiktok_audio':
+case 'tiktok_audio2':
 await reagir(from, "⏳")
 try {
 if (!q) return reply(`${prefix + command} link do Tiktok`);
