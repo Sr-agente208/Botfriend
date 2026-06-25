@@ -8926,9 +8926,8 @@ boij = isQuotedImage
 mime = 'image/jpeg'
 
 } else if (
-(isMedia && info.message.videoMessage && info.message.videoMessage.seconds < 30) ||
-(isQuotedVideo &&
-info.message.extendedTextMessage.contextInfo.quotedMessage.videoMessage.seconds < 30)
+(isMedia && info.message.videoMessage) ||
+isQuotedVideo
 ) {
 tipo = 'video'
 boij = isQuotedVideo
@@ -8945,8 +8944,24 @@ boij = isQuotedAudio
 : info.message.audioMessage
 mime = 'audio/mpeg'
 
+} else if ((isMedia && info.message.documentMessage) || isQuotedDocument) {
+tipo = 'document'
+boij = isQuotedDocument
+? JSON.parse(JSON.stringify(info).replace('quotedM', 'm'))
+            .message.extendedTextMessage.contextInfo.message.documentMessage
+: info.message.documentMessage
+mime = boij?.mimetype || 'application/octet-stream'
+
+} else if ((isMedia && info.message.stickerMessage) || isQuotedSticker) {
+tipo = 'sticker'
+boij = isQuotedSticker
+? JSON.parse(JSON.stringify(info).replace('quotedM', 'm'))
+            .message.extendedTextMessage.contextInfo.message.stickerMessage
+: info.message.stickerMessage
+mime = 'image/webp'
+
 } else {
-return reply('📎 Marque uma imagem, vídeo (até 30s) ou áudio.')
+return reply('📎 Marque uma imagem, vídeo, áudio, figurinha ou documento (qualquer tipo: pdf, apk, zip, docx, etc).')
 }
 
 await reagir(from, '⏳')
@@ -8960,6 +8975,7 @@ from,
 {
 text:
 `✅ *Link gerado com sucesso!*\n\n` +
+(tipo === 'document' && boij?.fileName ? `📄 Arquivo: ${boij.fileName}\n` : '') +
 `📂 Link: ${link}`,
 },
 { quoted: selo }
