@@ -8730,6 +8730,30 @@ reply("• Marque uma Imagem, video ou áudio em visualização única.");
 break//Yuka Modz
 
 case 'calculadora':
+case 'traduzir': {
+try {
+if (!q) return reply(`Use: ${prefix}traduzir <idioma> | <texto>\nExemplo: ${prefix}traduzir en | bom dia\n\nSe não marcar o idioma, traduz pro português automaticamente.`);
+let idioma = 'pt';
+let texto = q;
+if (q.includes('|')) {
+const partes = q.split('|');
+idioma = partes[0].trim().toLowerCase();
+texto = partes.slice(1).join('|').trim();
+}
+const resp = await axios.get('https://translate.googleapis.com/translate_a/single', {
+params: { client: 'gtx', sl: 'auto', tl: idioma, dt: 't', q: texto },
+timeout: 15000
+});
+const traduzido = resp.data[0].map(p => p[0]).join('');
+const idiomaDetectado = resp.data[2];
+await reply(`🌐 *Tradução* (${idiomaDetectado} → ${idioma})\n\n${traduzido}`);
+} catch (e) {
+console.error("Erro traduzir:", e);
+reply(mess.error());
+}
+break;
+}
+
 case 'calcular':
 case 'calc':
 rsp = q.replace("x", "*").replace('"', ":").replace(new RegExp("[()abcdefghijklmnopqrstwuvxyz]", "gi"), "").replace("÷", "/")
