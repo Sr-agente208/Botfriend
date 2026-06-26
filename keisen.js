@@ -16440,12 +16440,20 @@ break;
 case 'signo':
 try {
 if(!q.trim()) return reply(`Digite seu signo, exemplo: ${prefix+command} virgem`);
-ABC = await fetchJson(keisen_URL + `/api-bronxys/horoscopo?signo=${q}&apikey=` + keisenBot)
-keisen.sendMessage(from, {image: {url: ABC.img}, caption: `Signo: ${q}\n\n${ABC.title}\n${ABC.body}`}).catch(e => {
-return reply(mess.error());
-})
+const urlSignoIA = process.env.SIGNO_API_URL;
+if (!urlSignoIA) {
+return reply(`*⚠️ A API de signo ainda não foi configurada.*\nO dono precisa definir a variável de ambiente SIGNO_API_URL no Railway.`);
+}
+const respSigno = await axios.post(urlSignoIA, {
+chatId: sender,
+nome: pushname || sender.split('@')[0],
+signo: q.trim()
+}, { timeout: 20000 });
+const textoSigno = respSigno.data?.texto || "Os astros estão nublados por aqui... Tente novamente em instantes! 🌌";
+await reply(`🔮 *Signo: ${q.trim()}*\n\n${textoSigno}`);
 } catch (e) {
-return reply(mess.error());
+console.error("Erro signo:", e);
+return reply("Os astros estão nublados por aqui... Tente novamente em instantes! 🌌");
 }
 break;
 
