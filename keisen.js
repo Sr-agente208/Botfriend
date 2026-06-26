@@ -14938,24 +14938,34 @@ case 'brat2': {
 try {
 if (!q?.trim())
 return reply(`Exemplo: ${prefix + command} keisen`)
-reply("Aguarde um momento..")
-const pack = mess.fig(ownerName, NomeDoBot)
-const author = mess.fig2(pushname, groupName, isGroup)
-const isVideo = command === 'brat2'
-const apiUrl = isVideo ? `https://keisenapis.site/api/stickers/brat-vid?text=${encodeURIComponent(q)}&apitoken=${TOKEN}` : `https://keisenapis.site/api/stickers/brat-img?text=${encodeURIComponent(q)}&apitoken=${TOKEN}`
-const buffer = await getBuffer(apiUrl)
-if (!buffer) return reply("Erro ao gerar figurinha.")
-let encmedia
-if (isVideo) {
-encmedia = await sendVideoAsSticker2(keisen, from, buffer, selo, { packname: "keisen", author: "API's" })
-} else {
-encmedia = await sendImageAsSticker2(keisen, from, buffer, selo, { packname: "keisen", author: "API's" }
-)
-}
+const isVideo = command === 'brat2';
+if (isVideo) return reply("⚠️ A versão em vídeo (brat2) precisa de uma API externa que ainda não foi configurada. Use ${prefix}brat pro modelo de imagem, que funciona 100% local.".replace("${prefix}", prefix));
+
+const { Jimp, loadFont, HorizontalAlign, VerticalAlign, measureTextHeight } = require('jimp');
+const { SANS_64_BLACK } = require('jimp/fonts');
+
+const size = 512;
+const margin = 40;
+const texto = q.trim().toLowerCase();
+const img = new Jimp({ width: size, height: size, color: 0x8ace00ff });
+const font = await loadFont(SANS_64_BLACK);
+const alturaTexto = measureTextHeight(font, texto, size - margin * 2);
+const yPos = Math.max(margin, (size - alturaTexto) / 2);
+img.print({
+font,
+x: margin,
+y: yPos,
+text: { text: texto, alignmentX: HorizontalAlign.LEFT, alignmentY: VerticalAlign.TOP },
+maxWidth: size - margin * 2,
+maxHeight: size - margin * 2
+});
+const buffer = await img.getBuffer('image/png');
+
+const encmedia = await sendImageAsSticker2(keisen, from, buffer, selo, { packname: NomeDoBot, author: ownerName });
 await DLT_FL(encmedia)
 } catch (e) {
 console.log(e)
-reply("❌ Erro ao processar.\n- Acesse: https://keisenapis.site e verifique se ainda contém requests no seu token.")
+reply("❌ Erro ao gerar a figurinha.")
 }
 }
 break;
