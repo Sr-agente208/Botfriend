@@ -14886,20 +14886,22 @@ case 'gerarnick':
 case 'nick': {
 try {
 if (!q?.trim()) return reply(`Exemplo: ${prefix + command} Nk Petrov`)
+const groqKey = process.env.GROQ_API_KEY;
+if (!groqKey) return reply("❌ A IA ainda não foi configurada. O dono precisa definir GROQ_API_KEY no Railway.");
 reply("Aguarde um momento..")
-const url = `https://keisenapis.site/api/geradores/gerar-nicks?apitoken=${TOKEN}&text=${encodeURIComponent(q)}`
-const { status, resultado } = await fetchJson(url)
-
-if (!status || !resultado?.length)
-return reply("Não foi possível gerar nicks.")
-let msg = "*✨ GERADOR DE NICKS ✨*\n\n"
-resultado.forEach((item, index) => {
-if (item.result) msg += `(${index + 1}) ${item.result}\n`
-})
-reply(msg.trim())
+const respNick = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
+model: 'llama-3.3-70b-versatile',
+messages: [
+{ role: 'system', content: 'Você gera nicknames estilizados pra jogos/redes sociais usando símbolos unicode, letras estilizadas e combinações criativas. Responda APENAS com uma lista numerada de 8 nicks, sem nenhuma explicação.' },
+{ role: 'user', content: `Gere 8 nicks estilizados baseados em: ${q.trim()}` }
+],
+temperature: 1
+}, { headers: { Authorization: `Bearer ${groqKey}` }, timeout: 30000 });
+const textoNick = respNick.data?.choices?.[0]?.message?.content || "Não foi possível gerar nicks.";
+reply(`*✨ GERADOR DE NICKS ✨*\n\n${textoNick}`);
 } catch (e) {
-console.log(e)
-reply("❌ Erro ao processar.\n- Acesse: https://keisenapis.site e verifique se ainda contém requests no seu token.")
+console.error(e?.response?.data || e);
+reply("❌ Erro ao processar.")
 }
 }
 break
@@ -16539,11 +16541,16 @@ if (!q) return reply('• Por favor, insira um texto ao ' +
 'lado do comando para que eu possa gerar ' +
 'uma resposta!');
 try { 
-const response = await fetchJson(`https://keisenapis.site/api/ias/gpt?apitoken=${TOKEN}&query=${encodeURIComponent(q.trim())}`);
-reply(response.resultado.data[0].resposta);
+const groqKey = process.env.GROQ_API_KEY;
+if (!groqKey) return reply("❌ A IA ainda não foi configurada. O dono precisa definir GROQ_API_KEY no Railway.");
+const respGpt = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
+model: 'llama-3.3-70b-versatile',
+messages: [{ role: 'user', content: q.trim() }]
+}, { headers: { Authorization: `Bearer ${groqKey}` }, timeout: 30000 });
+reply(respGpt.data?.choices?.[0]?.message?.content || mess.error());
 } catch (error) {
-console.error(error);
-reply("❌ Erro ao processar.\n- Acesse: https://keisenapis.site e verifique se ainda contém requests no seu token.")
+console.error(error?.response?.data || error);
+reply("❌ Erro ao processar.")
 }
 break;
 }
@@ -16553,12 +16560,16 @@ if (!q) return reply('• Para conversar com o gemini, ' +
 'primeiro você deve inserir um texto ao lado ' +
 ' do comando!');
 try { 
-const GEMINI_RESPONSE = await fetchJson(`https://keisenapis.site/api/ias/gemini?apitoken=${TOKEN}&query=${encodeURIComponent(q.trim())}`);
-
-reply(GEMINI_RESPONSE.resposta);
+const groqKey = process.env.GROQ_API_KEY;
+if (!groqKey) return reply("❌ A IA ainda não foi configurada. O dono precisa definir GROQ_API_KEY no Railway.");
+const respGemini = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
+model: 'llama-3.3-70b-versatile',
+messages: [{ role: 'user', content: q.trim() }]
+}, { headers: { Authorization: `Bearer ${groqKey}` }, timeout: 30000 });
+reply(respGemini.data?.choices?.[0]?.message?.content || mess.error());
 } catch (error) {
-console.error(error);
-reply("❌ Erro ao processar.\n- Acesse: https://keisenapis.site e verifique se ainda contém requests no seu token.")
+console.error(error?.response?.data || error);
+reply("❌ Erro ao processar.")
 }
 break;
 }
@@ -16568,11 +16579,16 @@ if (!q) return reply('• Para conversar com o gemini-pro, ' +
 'primeiro você deve inserir um texto ao lado ' +
 ' do comando!');
 try { 
-const GEMPRO_RESPONSE = await fetchJson(`https://keisenapis.site/api/ias/gemini-pro?apitoken=${TOKEN}&query=${encodeURIComponent(q.trim())}`);
-reply(GEMPRO_RESPONSE.resposta.resposta);
+const groqKey = process.env.GROQ_API_KEY;
+if (!groqKey) return reply("❌ A IA ainda não foi configurada. O dono precisa definir GROQ_API_KEY no Railway.");
+const respGeminiPro = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
+model: 'llama-3.3-70b-versatile',
+messages: [{ role: 'user', content: q.trim() }]
+}, { headers: { Authorization: `Bearer ${groqKey}` }, timeout: 30000 });
+reply(respGeminiPro.data?.choices?.[0]?.message?.content || mess.error());
 } catch (error) {
-console.error(error);
-reply("❌ Erro ao processar.\n- Acesse: https://keisenapis.site e verifique se ainda contém requests no seu token.")
+console.error(error?.response?.data || error);
+reply("❌ Erro ao processar.")
 }
 break;
 }
