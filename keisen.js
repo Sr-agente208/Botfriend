@@ -16440,9 +16440,9 @@ break;
 case 'signo':
 try {
 if(!q.trim()) return reply(`Digite seu signo, exemplo: ${prefix+command} virgem`);
-const urlSignoIA = process.env.SIGNO_API_URL;
+const urlSignoIA = process.env.URL_API_SIGNO;
 if (!urlSignoIA) {
-return reply(`*⚠️ A API de signo ainda não foi configurada.*\nO dono precisa definir a variável de ambiente SIGNO_API_URL no Railway.`);
+return reply(`*⚠️ A API de signo ainda não foi configurada.*\nO dono precisa definir a variável de ambiente URL_API_SIGNO no Railway.`);
 }
 const respSigno = await axios.post(urlSignoIA, {
 chatId: sender,
