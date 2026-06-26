@@ -16440,19 +16440,33 @@ break;
 case 'signo':
 try {
 if(!q.trim()) return reply(`Digite seu signo, exemplo: ${prefix+command} virgem`);
-const urlSignoIA = process.env.URL_API_SIGNO;
-if (!urlSignoIA) {
-return reply(`*⚠️ A API de signo ainda não foi configurada.*\nO dono precisa definir a variável de ambiente URL_API_SIGNO no Railway.`);
+const groqKey = process.env.GROQ_API_KEY;
+if (!groqKey) {
+return reply(`*⚠️ A API de signo ainda não foi configurada.*\nO dono precisa definir a variável de ambiente GROQ_API_KEY no Railway.`);
 }
-const respSigno = await axios.post(urlSignoIA, {
-chatId: sender,
-nome: pushname || sender.split('@')[0],
-signo: q.trim()
-}, { timeout: 20000 });
-const textoSigno = respSigno.data?.texto || "Os astros estão nublados por aqui... Tente novamente em instantes! 🌌";
-await reply(`🔮 *Signo: ${q.trim()}*\n\n${textoSigno}`);
+const nomeUsuario = pushname || sender.split('@')[0];
+const signoUsuario = q.trim();
+const respGroq = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
+model: 'llama-3.3-70b-versatile',
+messages: [
+{
+role: 'system',
+content: 'Você é um astrólogo pop, prático e acolhedor. Use a linguagem do WhatsApp: parágrafos curtos, espaçados e emojis moderados. Trate o usuário pelo nome. Retorne obrigatoriamente um conselho e um número da sorte no final.'
+},
+{
+role: 'user',
+content: `Gere a previsão astrológica de hoje para o usuário chamado ${nomeUsuario}, que é do signo de ${signoUsuario}.`
+}
+],
+temperature: 0.9
+}, {
+headers: { Authorization: `Bearer ${groqKey}`, 'Content-Type': 'application/json' },
+timeout: 20000
+});
+const textoSigno = respGroq.data?.choices?.[0]?.message?.content || "Os astros estão nublados por aqui... Tente novamente em instantes! 🌌";
+await reply(`🔮 *Signo: ${signoUsuario}*\n\n${textoSigno}`);
 } catch (e) {
-console.error("Erro signo:", e);
+console.error("Erro signo:", e?.response?.data || e);
 return reply("Os astros estão nublados por aqui... Tente novamente em instantes! 🌌");
 }
 break;
