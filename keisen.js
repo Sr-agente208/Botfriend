@@ -6960,15 +6960,26 @@ documentos: userData.documentos || 0
 
 const cardPerfil = `https://tokito-apis.site/canvas/perfil?fundo=https://tokito-apis.site/73c4fc.png&text=${encodeURIComponent(pushname)}&subtext=${encodeURIComponent('Membro')}&logo=${encodeURIComponent(avatarUrl)}&cargo=${encodeURIComponent(isGroupAdmins ? 'ADM' : 'Membro')}&vip=${encodeURIComponent(isVip ? '✅' : '❌')}&bio=${encodeURIComponent(status)}&apikey=${API_KEY_TOKITO}`;
 
+const caption = mess.perfilkeisen(pushname, sender, status, isChVip, isCargo, dadosUser, pct, programa, conselho, NomeDoBot);
+
+try {
 await keisen.sendMessage(from, {
 image: { url: cardPerfil },
-caption: mess.perfilkeisen(pushname, sender, status, isChVip, isCargo, dadosUser, pct, programa, conselho, NomeDoBot),
+caption,
 contextInfo: { ...NkChannelKk }
 }, { quoted: selo })
+} catch (errCard) {
+console.log("Erro ao gerar carteirinha (Tokito), usando avatar simples:", errCard?.message);
+await keisen.sendMessage(from, {
+image: { url: avatarUrl },
+caption,
+contextInfo: { ...NkChannelKk }
+}, { quoted: selo })
+}
 
 } catch (e) {
 console.log(e);
-reply("❌ Erro ao processar.\n- Acesse: https://keisenapis.site e verifique se ainda contém requests no seu token.")
+reply("❌ Erro ao processar o perfil.")
 }
 break;
 }
@@ -15807,36 +15818,30 @@ case 'yt-info': {
 try {
 if (!q?.trim()) 
 return reply(`🔎 Exemplo: ${prefix + command} baixo`)
-const { status, resultado } = await fetchJson(`https://keisenapis.site/api/pesquisas/yt-search?query=${encodeURIComponent(q)}&apitoken=${TOKEN}`)
-if (!status || !resultado?.length)
+const ytSearch = require('yt-search');
+const resultadoBusca = await ytSearch(q.trim());
+const video = resultadoBusca?.videos?.[0];
+if (!video)
 return reply("❌ Nenhum resultado encontrado.")
-const video = resultado[0].resultados
-const card = `https://keisenapis.site/canvas/cardmusic?apitoken=${TOKEN}` +
-`&fundo=${encodeURIComponent(video.thumbnail)}` +
-`&avatar=${encodeURIComponent(video.thumbnail)}` +
-`&titulo=${encodeURIComponent(video.title)}` +
-`&author=${encodeURIComponent(video.author.name)}` +
-`&atual=0:00` +
-`&total=${encodeURIComponent(video.duration.timestamp || "0:00")}`
 
 const msg = `🎬 *TÍTULO:* ${video.title}
-⏱️ *DURAÇÃO:* ${video.duration.timestamp || "❌ Não disponível"}
-👁️ *VIEWS:* ${video.views || "❌ Não disponível"}
-👤 *AUTOR:* ${video.author.name}
-🔗 *CANAL:* ${video.author.url}
+⏱️ *DURAÇÃO:* ${video.timestamp || "❌ Não disponível"}
+👁️ *VIEWS:* ${video.views ? Number(video.views).toLocaleString('pt-BR') : "❌ Não disponível"}
+👤 *AUTOR:* ${video.author?.name || "❌ Não disponível"}
+🔗 *CANAL:* ${video.author?.url || ""}
 
 🌐 *URL:* ${video.url}
 
 📝 *DESCRIÇÃO:*
 ${video.description || "❌ Não disponível"}`
 await keisen.sendMessage(from, { 
-image: { url: card }, 
+image: { url: video.thumbnail }, 
 caption: msg 
 }, { quoted: selo })
 
 } catch (err) {
 console.log(err)
-reply("❌ Erro ao processar.\n- Acesse: https://keisenapis.site e verifique se ainda contém requests no seu token.")
+reply("❌ Erro ao processar.")
 }
 }
 break;
