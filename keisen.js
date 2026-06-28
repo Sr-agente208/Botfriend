@@ -263,6 +263,16 @@ var prefix = jsonGp[0]?.prefixos[jsonGp[0]?.prefixos?.indexOf(String(body)?.trim
 if(isGroup && fs.existsSync(`./DADOS DO KEISEN/grupos/ATIVAÇÕES-keisen/${from}.json`) && !jsonGp[0].multiprefix) {var prefix = setting.prefix} else if(!isGroup) {var prefix = setting.prefix};
 let isCmd = body.startsWith(prefix);
 
+if (!isCmd && typeof body === 'string' && body.trim().length > 0 && !info.key.fromMe) {
+const apenasEmojiRegex = /^(\s*(\p{Extended_Pictographic}|\p{Regional_Indicator}|[\u{1F3FB}-\u{1F3FF}]|\u200d|\ufe0f)\s*)+$/u;
+if (apenasEmojiRegex.test(body)) {
+const primeiroEmoji = Array.from(body.trim().matchAll(/(\p{Extended_Pictographic}|\p{Regional_Indicator})([\u200d\ufe0f]|\p{Extended_Pictographic}|\p{Regional_Indicator}|[\u{1F3FB}-\u{1F3FF}])*/gu))[0]?.[0];
+if (primeiroEmoji) {
+reagir(from, primeiroEmoji);
+}
+}
+}
+
 const args = isCmd ? body.slice(prefix.length).trim().split(/[ \t]+/) : body.split(/[ \t]+/);
 
 let command = isCmd ? args.shift().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/ç/g, "c") : null;
