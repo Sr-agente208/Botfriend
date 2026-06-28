@@ -263,16 +263,6 @@ var prefix = jsonGp[0]?.prefixos[jsonGp[0]?.prefixos?.indexOf(String(body)?.trim
 if(isGroup && fs.existsSync(`./DADOS DO KEISEN/grupos/ATIVAÇÕES-keisen/${from}.json`) && !jsonGp[0].multiprefix) {var prefix = setting.prefix} else if(!isGroup) {var prefix = setting.prefix};
 let isCmd = body.startsWith(prefix);
 
-if (!isCmd && typeof body === 'string' && body.trim().length > 0 && !info.key.fromMe) {
-const apenasEmojiRegex = /^(\s*(\p{Extended_Pictographic}|\p{Regional_Indicator}|[\u{1F3FB}-\u{1F3FF}]|\u200d|\ufe0f)\s*)+$/u;
-if (apenasEmojiRegex.test(body)) {
-const primeiroEmoji = Array.from(body.trim().matchAll(/(\p{Extended_Pictographic}|\p{Regional_Indicator})([\u200d\ufe0f]|\p{Extended_Pictographic}|\p{Regional_Indicator}|[\u{1F3FB}-\u{1F3FF}])*/gu))[0]?.[0];
-if (primeiroEmoji) {
-reagir(from, primeiroEmoji);
-}
-}
-}
-
 const args = isCmd ? body.slice(prefix.length).trim().split(/[ \t]+/) : body.split(/[ \t]+/);
 
 let command = isCmd ? args.shift().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/ç/g, "c") : null;
@@ -681,6 +671,24 @@ await keisen.sendMessage(from, {text: mess.error()}, {quoted: selo});
 
 const reagir = async (idgp, emj) => {
 await keisen.sendMessage(idgp, {react: {text: emj, key: info.key}});
+}
+
+if (!isCmd && typeof body === 'string' && body.trim().length > 0 && !info.key.fromMe) {
+const apenasEmojiRegex = /^(\s*(\p{Extended_Pictographic}|\p{Regional_Indicator}|[\u{1F3FB}-\u{1F3FF}]|\u200d|\ufe0f)\s*)+$/u;
+if (apenasEmojiRegex.test(body)) {
+const primeiroEmoji = Array.from(body.trim().matchAll(/(\p{Extended_Pictographic}|\p{Regional_Indicator})([\u200d\ufe0f]|\p{Extended_Pictographic}|\p{Regional_Indicator}|[\u{1F3FB}-\u{1F3FF}])*/gu))[0]?.[0];
+if (primeiroEmoji) {
+const animadoAtivo = isGroup && dataGp?.[0]?.emojianimado;
+if (animadoAtivo) {
+const framesAnimacao = ['⚪', '🔵', '🟣', '💥'];
+for (const frame of framesAnimacao) {
+await reagir(from, frame);
+await sleep(350);
+}
+}
+reagir(from, primeiroEmoji);
+}
+}
 }
 
 const verificarN = async(sla) => {
@@ -5760,6 +5768,22 @@ if (i) {reagir(from, "⏳"); return salvar(await upload(await getFileBuffer(i, '
 reply('*ᴍᴀɴᴅᴇ ᴜᴍᴀ ɪᴍᴀɢᴇᴍ ᴏᴜ ᴠɪ́ᴅᴇᴏ ᴘᴀʀᴀ ᴀᴛᴜᴀʟɪᴢᴀʀ ᴏ ғᴜɴᴅᴏ 🙇‍♂️*');
 }
 break;
+
+case 'emojianimado':
+case 'reacaoanimada':
+if(!isGroup) return reply(mess.onlyGroup())
+if(!isGroupAdmins) return reply(mess.onlyAdmins())
+if(!isBotGroupAdmins) return reply(mess.onlyBotAdmin())
+if(dataGp[0].emojianimado) {
+dataGp[0].emojianimado = false
+setGp(dataGp)
+reply('*ᴀ ʀᴇᴀᴄ̧ᴀ̃ᴏ ᴀɴɪᴍᴀᴅᴀ ᴇᴍ ᴇᴍᴏᴊɪs ғᴏɪ ᴅᴇsᴀᴛɪᴠᴀᴅᴀ 🙅‍♂️*');
+} else {
+dataGp[0].emojianimado = true
+setGp(dataGp)
+reply('*ᴀ ʀᴇᴀᴄ̧ᴀ̃ᴏ ᴀɴɪᴍᴀᴅᴀ ᴇᴍ ᴇᴍᴏᴊɪs ғᴏɪ ᴀᴛɪᴠᴀᴅᴀ ✨ ᴍᴀɴᴅᴇ ᴜᴍ ᴇᴍᴏᴊɪ ᴘʀᴀ ᴛᴇsᴛᴀʀ!*')
+}
+break
 
 case 'antiaudio':
 if(!isGroup) return reply(mess.onlyGroup())
