@@ -7933,6 +7933,7 @@ break;
 }
 
 case 'testapis': case 'apistatus': {
+const axios = require('axios');
 if (!SoDono) return reply(mess.onlyOwner());
 await reply("🔎 Testando todas as APIs configuradas, aguenta uns segundinhos...");
 
@@ -9246,6 +9247,7 @@ break//Yuka Modz
 case 'calculadora':
 case 'traduzir': {
 try {
+const axios = require('axios');
 if (!q) return reply(`Use: ${prefix}traduzir <idioma> | <texto>\nExemplo: ${prefix}traduzir en | bom dia\n\nSe não marcar o idioma, traduz pro português automaticamente.`);
 let idioma = 'pt';
 let texto = q;
@@ -15399,6 +15401,7 @@ case 'documentos': {
 case 'gerarnick':
 case 'nick': {
 try {
+const axios = require('axios');
 if (!q?.trim()) return reply(`Exemplo: ${prefix + command} Nk Petrov`)
 const groqKey = process.env.GROQ_API_KEY;
 if (!groqKey) return reply("❌ A IA ainda não foi configurada. O dono precisa definir GROQ_API_KEY no Railway.");
@@ -16959,6 +16962,7 @@ break;
 
 case 'signo':
 try {
+const axios = require('axios');
 if(!q.trim()) return reply(`Digite seu signo, exemplo: ${prefix+command} virgem`);
 const groqKey = process.env.GROQ_API_KEY;
 if (!groqKey) {
@@ -17059,6 +17063,7 @@ if (!q) return reply('• Por favor, insira um texto ao ' +
 'lado do comando para que eu possa gerar ' +
 'uma resposta!');
 try { 
+const axios = require('axios');
 const groqKey = process.env.GROQ_API_KEY;
 if (!groqKey) return reply("❌ A IA ainda não foi configurada. O dono precisa definir GROQ_API_KEY no Railway.");
 const respGpt = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
@@ -17078,6 +17083,7 @@ if (!q) return reply('• Para conversar com o gemini, ' +
 'primeiro você deve inserir um texto ao lado ' +
 ' do comando!');
 try { 
+const axios = require('axios');
 const groqKey = process.env.GROQ_API_KEY;
 if (!groqKey) return reply("❌ A IA ainda não foi configurada. O dono precisa definir GROQ_API_KEY no Railway.");
 const respGemini = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
@@ -17097,6 +17103,7 @@ if (!q) return reply('• Para conversar com o gemini-pro, ' +
 'primeiro você deve inserir um texto ao lado ' +
 ' do comando!');
 try { 
+const axios = require('axios');
 const groqKey = process.env.GROQ_API_KEY;
 if (!groqKey) return reply("❌ A IA ainda não foi configurada. O dono precisa definir GROQ_API_KEY no Railway.");
 const respGeminiPro = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
