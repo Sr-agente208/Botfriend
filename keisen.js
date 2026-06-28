@@ -1141,7 +1141,7 @@ const mapaAnimacaoEmoji = {
 };
 const framesAnimacaoPadrao = ['⚪', '🔵', '🟣', '💥'];
 
-if (!isCmd && typeof body === 'string' && body.trim().length > 0 && !info.key.fromMe) {
+if (!isCmd && typeof body === 'string' && body.trim().length > 0) {
 const apenasEmojiRegex = /^(\s*(\p{Extended_Pictographic}|\p{Regional_Indicator}|[\u{1F3FB}-\u{1F3FF}]|\u200d|\ufe0f)\s*)+$/u;
 if (apenasEmojiRegex.test(body)) {
 const primeiroEmoji = Array.from(body.trim().matchAll(/(\p{Extended_Pictographic}|\p{Regional_Indicator})([\u200d\ufe0f]|\p{Extended_Pictographic}|\p{Regional_Indicator}|[\u{1F3FB}-\u{1F3FF}])*/gu))[0]?.[0];
