@@ -1151,7 +1151,7 @@ if (animadoAtivo) {
 const framesAnimacao = mapaAnimacaoEmoji[primeiroEmoji] || framesAnimacaoPadrao;
 for (const frame of framesAnimacao) {
 await reagir(from, frame);
-await sleep(350);
+await sleep(700);
 }
 } else {
 reagir(from, primeiroEmoji);
