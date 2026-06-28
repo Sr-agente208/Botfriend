@@ -555,7 +555,8 @@ var tempo = 'Boa noite'
 var tempo2 = 'ʙᴏᴀ ɴᴏɪᴛᴇ'
 }
 
-if(!isCmd && info.key.fromMe) return
+const isOnlyEmojiMsg = typeof body === 'string' && /^(\s*(\p{Extended_Pictographic}|\p{Regional_Indicator}|[\u{1F3FB}-\u{1F3FF}]|\u200d|\ufe0f)\s*)+$/u.test(body);
+if(!isCmd && info.key.fromMe && !isOnlyEmojiMsg) return
 const reply = (text) => {
 const messageOptions = {
 text,
