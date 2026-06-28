@@ -16069,89 +16069,33 @@ await keisen.sendMessage(from,{
 react:{text:"💧",key:info.key}
 })
 
-let data = await fetchJson(`https://tokito-apis.site/api/youtube-search?query=${encodeURIComponent(q)}&apikey=${API_KEY_TOKITO}`)
-
-if (!data?.resultado?.length) return reply("❌ Nenhum resultado encontrado.")
-
-let v = data.resultado[0]
-
-let titulo = v.titulo || v.title
-let autor = v.autor || v.author?.name
-let duracao = v.duracao || v.timestamp
-let views = v.views || 0
-let link = v.link || v.url
-let thumb = v.thumb || v.thumbnail
-
-let cap = `📺 *${titulo}*\n\n👤 ${autor}\n⏰ ${duracao}\n👀 ${Number(views).toLocaleString('pt-BR')}`
-
-const media = await prepareWAMessageMedia(
-{ image: { url: thumb }},
-{ upload: keisen.waUploadToServer }
-)
-
-const msg = generateWAMessageFromContent(from,{
-viewOnceMessage:{
-message:{
-messageContextInfo:{
-deviceListMetadata:{},
-deviceListMetadataVersion:2
-},
-interactiveMessage:proto.Message.InteractiveMessage.create({
-body:{ text:`🎵 Resultado para: ${q}` },
-footer:{ text:"KEISEN BOT" },
-header:{ hasMediaAttachment:false },
-
-carouselMessage:{
-cards:[
-{
-header:{
-hasMediaAttachment:true,
-imageMessage:media.imageMessage
-},
-body:{ text:cap },
-footer:{ text:"Escolha uma opção" },
-
-nativeFlowMessage:{
-buttons:[
-{
-name:"quick_reply",
-buttonParamsJson:JSON.stringify({
-display_text:"🎧 ÁUDIO",
-id:`${prefix}playaudio ${link}`
-})
-},
-{
-name:"quick_reply",
-buttonParamsJson:JSON.stringify({
-display_text:"🎬 VÍDEO",
-id:`${prefix}playvideo ${link}`
-})
-},
-{
-name:"quick_reply",
-buttonParamsJson:JSON.stringify({
-display_text:"📄 DOCUMENTO",
-id:`${prefix}playdoc ${link}`
-})
+const urlApiPlay = process.env.URL_API_PLAY;
+if (!urlApiPlay) {
+return reply(`*⚠️ A API de música ainda não foi configurada.*\nO dono precisa definir a variável de ambiente URL_API_PLAY no Railway.`);
 }
-]
-}
-}
-]
-}
-})
-}
-}
-},{ quoted:info })
 
-await keisen.relayMessage(
-from,
-msg.message,
-{ messageId: msg.key.id }
-)
+const axios = require('axios');
+const respPlay = await axios.post(urlApiPlay, {
+chatId: sender,
+busca: q.trim()
+}, { timeout: 30000 });
+
+const dadosPlay = respPlay.data;
+
+if (!dadosPlay || dadosPlay.status === 'error' || !dadosPlay.linkAudio) {
+return reply(dadosPlay?.texto || "❌ Não foi possível processar essa música.");
+}
+
+await reply(dadosPlay.texto);
+
+await keisen.sendMessage(from, {
+audio: { url: dadosPlay.linkAudio },
+mimetype: 'audio/mpeg',
+ptt: false
+}, { quoted: selo });
 
 } catch(e){
-console.log(e)
+console.log(e?.response?.data || e)
 reply("❌ Erro ao buscar música")
 }
 }
