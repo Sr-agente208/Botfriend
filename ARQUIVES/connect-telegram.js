@@ -54,12 +54,43 @@ async function imgParaWebp(buffer, texto) {
     img.resize({ w: 512, h: 512 });
 
     if (texto) {
-        const font = await loadFont(SANS_64_BLACK);
-        const h = measureTextHeight(font, texto, 452);
-        const y = Math.max(30, (512 - h) / 2);
-        img.print({ font, x: 30, y, text: { text: texto, alignmentX: HorizontalAlign.LEFT, alignmentY: VerticalAlign.TOP }, maxWidth: 452, maxHeight: 452 });
+        try {
+            const font = await loadFont(SANS_64_BLACK);
+            const h = measureTextHeight(font, texto, 452);
+            const y = Math.max(30, (512 - h) / 2);
+            img.print({ font, x: 30, y, text: { text: texto, alignmentX: HorizontalAlign.LEFT, alignmentY: VerticalAlign.TOP }, maxWidth: 452, maxHeight: 452 });
+        } catch (e) {
+            console.error('Erro ao adicionar texto:', e.message);
+        }
     }
 
+    // Salva como PNG temporário e converte pra WebP com ffmpeg
+    const tmpDir = path.join(__dirname, '../temp/pacotes');
+    fs.ensureDirSync(tmpDir);
+    const tmpPng = path.join(tmpDir, `tmp_${Date.now()}.png`);
+    const tmpWebp = path.join(tmpDir, `tmp_${Date.now()}.webp`);
+
+    await img.write(tmpPng);
+
+    await new Promise((resolve, reject) => {
+        const ffmpeg = require('fluent-ffmpeg');
+        ffmpeg(tmpPng)
+            .outputOptions(['-vf', 'scale=512:512', '-quality', '80'])
+            .output(tmpWebp)
+            .on('end', resolve)
+            .on('error', reject)
+            .run();
+    });
+
+    const webpBuf = fs.readFileSync(tmpWebp);
+    fs.removeSync(tmpPng);
+    fs.removeSync(tmpWebp);
+    return webpBuf;
+}
+
+async function criarTray(stickerBuf) {
+    const img = await Jimp.read(stickerBuf);
+    img.resize({ w: 96, h: 96 });
     return img.getBuffer('image/png');
 }
 
@@ -68,6 +99,9 @@ async function criarWastickers(pacoteInfo) {
     fs.ensureDirSync(dir);
     const outPath = path.join(dir, `${pacoteInfo.id}.wastickers`);
 
+    // Gera o tray (ícone 96x96) a partir do primeiro sticker
+    const trayBuf = await criarTray(pacoteInfo.stickers[0]);
+
     return new Promise((resolve, reject) => {
         const output = fs.createWriteStream(outPath);
         const archive = archiver('zip');
@@ -75,8 +109,8 @@ async function criarWastickers(pacoteInfo) {
         archive.on('error', reject);
         archive.pipe(output);
 
-        // tray.png — ícone do pacote (64x64)
-        archive.append(pacoteInfo.stickers[0], { name: 'tray.png' });
+        // tray.png — ícone do pacote (96x96 PNG)
+        archive.append(trayBuf, { name: 'tray.png' });
 
         // stickers
         pacoteInfo.stickers.forEach((buf, i) => {
