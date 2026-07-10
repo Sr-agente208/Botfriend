@@ -16264,6 +16264,52 @@ reply(mess.error());
 break;
 
 case 'pesquisa_yt': 
+case 'spotifys': case 'spotifybusca': case 'spbusca': {
+try {
+if (!q?.trim()) return reply(`🎵 Exemplo: ${prefix}spotifys <nome da música ou artista>`);
+reagir('⌛');
+reply('🔍 Buscando no Spotify, aguarda...');
+const ytSearch = require('yt-search');
+const resultado = await ytSearch(q.trim() + ' spotify');
+const v = resultado?.videos?.[0];
+if (!v) return reply('❌ Nenhum resultado encontrado.');
+reagir('✅');
+const txt = `🎵 *${v.title}*\n\n👤 *Artista:* ${v.author?.name || 'N/A'}\n⏱️ *Duração:* ${v.timestamp || 'N/A'}\n👁️ *Views:* ${v.views ? Number(v.views).toLocaleString('pt-BR') : 'N/A'}\n🔗 *Link:* ${v.url}`;
+await keisen.sendMessage(from, { image: { url: v.thumbnail }, caption: txt }, { quoted: selo });
+} catch (e) { console.log(e); reply('❌ Erro ao buscar no Spotify. Tente novamente.'); }
+}
+break;
+
+case 'spotifys2': case 'spdown': {
+try {
+if (!q?.trim()) return reply(`🎵 Exemplo: ${prefix}spotifys2 <nome da música ou artista>`);
+reagir('⌛');
+reply('🔍 Buscando música, aguarda...');
+const ytSearch2 = require('yt-search');
+const resultado2 = await ytSearch2(q.trim() + ' spotify');
+const v2 = resultado2?.videos?.[0];
+if (!v2) return reply('❌ Nenhum resultado encontrado.');
+const txt2 = `🎵 *${v2.title}*\n\n👤 *Artista:* ${v2.author?.name || 'N/A'}\n⏱️ *Duração:* ${v2.timestamp || 'N/A'}\n👁️ *Views:* ${v2.views ? Number(v2.views).toLocaleString('pt-BR') : 'N/A'}\n🔗 *Link:* ${v2.url}`;
+await keisen.sendMessage(from, { image: { url: v2.thumbnail }, caption: txt2 }, { quoted: selo });
+
+// Download via API do usuário se disponível
+const urlApiPlay = process.env.URL_API_PLAY;
+if (urlApiPlay) {
+const axios = require('axios');
+reply('📥 Baixando áudio...');
+const res = await axios.post(urlApiPlay, { chatId: from, busca: q.trim() }, { timeout: 30000 });
+if (res.data?.linkAudio) {
+await keisen.sendMessage(from, { audio: { url: res.data.linkAudio }, mimetype: 'audio/mpeg', ptt: false }, { quoted: selo });
+} else {
+reply('⚠️ Download indisponível no momento. Use `' + prefix + 'play ' + q + '` para tentar.');
+}
+} else {
+reply('ℹ️ _Download de áudio não configurado. Use `' + prefix + 'play ' + q + '`._');
+}
+} catch (e) { console.log(e); reply('❌ Erro ao processar. Tente novamente.'); }
+}
+break;
+
 case 'ytsearch':
 case 'yt-info': {
 try {
