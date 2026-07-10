@@ -58,34 +58,18 @@ async function imgParaWebp(buffer, texto) {
             const font = await loadFont(SANS_64_BLACK);
             const h = measureTextHeight(font, texto, 452);
             const y = Math.max(30, (512 - h) / 2);
-            img.print({ font, x: 30, y, text: { text: texto, alignmentX: HorizontalAlign.LEFT, alignmentY: VerticalAlign.TOP }, maxWidth: 452, maxHeight: 452 });
+            img.print({
+                font, x: 30, y,
+                text: { text: texto, alignmentX: HorizontalAlign.LEFT, alignmentY: VerticalAlign.TOP },
+                maxWidth: 452, maxHeight: 452
+            });
         } catch (e) {
-            console.error('Erro ao adicionar texto:', e.message);
+            console.error('Erro texto:', e.message);
         }
     }
 
-    // Salva como PNG temporário e converte pra WebP com ffmpeg
-    const tmpDir = path.join(__dirname, '../temp/pacotes');
-    fs.ensureDirSync(tmpDir);
-    const tmpPng = path.join(tmpDir, `tmp_${Date.now()}.png`);
-    const tmpWebp = path.join(tmpDir, `tmp_${Date.now()}.webp`);
-
-    await img.write(tmpPng);
-
-    await new Promise((resolve, reject) => {
-        const ffmpeg = require('fluent-ffmpeg');
-        ffmpeg(tmpPng)
-            .outputOptions(['-vf', 'scale=512:512', '-quality', '80'])
-            .output(tmpWebp)
-            .on('end', resolve)
-            .on('error', reject)
-            .run();
-    });
-
-    const webpBuf = fs.readFileSync(tmpWebp);
-    fs.removeSync(tmpPng);
-    fs.removeSync(tmpWebp);
-    return webpBuf;
+    // Retorna PNG (o Sticker Maker/WhatsApp aceita via .wastickers)
+    return img.getBuffer('image/png');
 }
 
 async function criarTray(stickerBuf) {
@@ -404,7 +388,8 @@ bot.on('photo', async (ctx) => {
     try {
         const foto = ctx.message.photo[ctx.message.photo.length - 1];
         const fileLink = await ctx.telegram.getFileLink(foto.file_id);
-        const resp = await axios.get(fileLink.href, { responseType: 'arraybuffer' });
+        const url = typeof fileLink === 'string' ? fileLink : (fileLink.href || String(fileLink));
+        const resp = await axios.get(url, { responseType: 'arraybuffer' });
         const buffer = Buffer.from(resp.data);
         const texto = s.pacote.aguardandoTexto ? (ctx.message.caption || null) : null;
         if (s.pacote.aguardandoTexto) s.pacote.aguardandoTexto = false;
