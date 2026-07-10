@@ -50,32 +50,31 @@ const groqChat = async (system, user) => {
 };
 
 async function imgParaWebp(buffer, texto) {
-    const img = await Jimp.read(buffer);
-    img.resize({ w: 512, h: 512 });
+    const sharp = require('sharp');
+
+    // Redimensiona e converte pra WebP real 512x512
+    let sharpImg = sharp(buffer).resize(512, 512, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } });
 
     if (texto) {
-        try {
-            const font = await loadFont(SANS_64_BLACK);
-            const h = measureTextHeight(font, texto, 452);
-            const y = Math.max(30, (512 - h) / 2);
-            img.print({
-                font, x: 30, y,
-                text: { text: texto, alignmentX: HorizontalAlign.LEFT, alignmentY: VerticalAlign.TOP },
-                maxWidth: 452, maxHeight: 452
-            });
-        } catch (e) {
-            console.error('Erro texto:', e.message);
-        }
+        // Adiciona texto via SVG overlay
+        const svgText = `
+        <svg width="512" height="512">
+            <rect x="0" y="400" width="512" height="112" fill="rgba(0,0,0,0.55)" rx="0"/>
+            <text x="256" y="465" font-family="Arial Black, Arial" font-size="48" font-weight="900"
+                fill="white" text-anchor="middle" dominant-baseline="middle"
+                stroke="black" stroke-width="2">${texto.replace(/[<>&"]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]))}</text>
+        </svg>`;
+        sharpImg = sharp(buffer)
+            .resize(512, 512, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
+            .composite([{ input: Buffer.from(svgText), gravity: 'south' }]);
     }
 
-    // Retorna PNG (o Sticker Maker/WhatsApp aceita via .wastickers)
-    return img.getBuffer('image/png');
+    return sharpImg.webp({ quality: 80, lossless: false }).toBuffer();
 }
 
 async function criarTray(stickerBuf) {
-    const img = await Jimp.read(stickerBuf);
-    img.resize({ w: 96, h: 96 });
-    return img.getBuffer('image/png');
+    const sharp = require('sharp');
+    return sharp(stickerBuf).resize(96, 96).png().toBuffer();
 }
 
 async function criarWastickers(pacoteInfo) {
@@ -379,28 +378,68 @@ async function executarPet(ctx, command, q) {
 }
 
 // ====== HANDLER DE IMAGENS (sticker pack) ======
-bot.on('photo', async (ctx) => {
+// Controle de media_group (álbuns) pra não processar duplicado
+const mediaGroupVisto = new Set();
+
+bot.on(['photo', 'document'], async (ctx) => {
     const sid = String(ctx.from.id);
     const s = getSessao(sid);
-    if (!s.pacote) return;
-    if (s.pacote.aguardandoNome) return;
+
+    if (!s.pacote) {
+        return ctx.reply('❌ Nenhum pacote ativo.\n\nPrimeiro clique em *©pacote* → "Criar novo pacote" e defina o nome. Depois mande as imagens.', { parse_mode: 'Markdown' });
+    }
+
+    if (s.pacote.aguardandoNome) {
+        return ctx.reply('⏳ Primeiro defina o nome do pacote respondendo a mensagem anterior.');
+    }
+
+    // Evita processar a mesma foto duas vezes em álbuns
+    const mediaGroupId = ctx.message.media_group_id;
+    if (mediaGroupId) {
+        const chave = `${sid}_${mediaGroupId}_${ctx.message.message_id}`;
+        if (mediaGroupVisto.has(chave)) return;
+        mediaGroupVisto.add(chave);
+        setTimeout(() => mediaGroupVisto.delete(chave), 60000);
+    }
 
     try {
-        const foto = ctx.message.photo[ctx.message.photo.length - 1];
-        const fileLink = await ctx.telegram.getFileLink(foto.file_id);
+        let fileId;
+        if (ctx.message.photo) {
+            // Pega a maior resolução da foto
+            fileId = ctx.message.photo[ctx.message.photo.length - 1].file_id;
+        } else if (ctx.message.document) {
+            // Aceita documentos de imagem (jpg/png enviados como arquivo)
+            const doc = ctx.message.document;
+            if (!doc.mime_type?.startsWith('image/')) return;
+            fileId = doc.file_id;
+        }
+
+        if (!fileId) return;
+
+        if (s.pacote.stickers.length >= 30) {
+            return ctx.reply('📦 Limite de 30 figurinhas atingido. Clique em *Finalizar*.', { parse_mode: 'Markdown' });
+        }
+
+        const fileLink = await ctx.telegram.getFileLink(fileId);
         const url = typeof fileLink === 'string' ? fileLink : (fileLink.href || String(fileLink));
         const resp = await axios.get(url, { responseType: 'arraybuffer' });
         const buffer = Buffer.from(resp.data);
+
         const texto = s.pacote.aguardandoTexto ? (ctx.message.caption || null) : null;
         if (s.pacote.aguardandoTexto) s.pacote.aguardandoTexto = false;
 
         const webp = await imgParaWebp(buffer, texto);
         s.pacote.stickers.push(webp);
         const n = s.pacote.stickers.length;
-        await ctx.reply(`✅ Figurinha ${n}/30 adicionada${texto ? ` com texto: _${texto}_` : ''}!\n${n >= 30 ? '📦 Limite atingido. Clique em Finalizar.' : `Mande mais imagens ou clique em *Finalizar*.`}`, { parse_mode: 'Markdown' });
+
+        await ctx.reply(
+            `✅ Figurinha ${n}/30 adicionada${texto ? ` com texto: _${texto}_` : ''}!\n` +
+            (n >= 30 ? '📦 Limite atingido. Clique em *Finalizar*.' : 'Mande mais ou clique em *©pacote* → Finalizar.'),
+            { parse_mode: 'Markdown' }
+        );
     } catch (e) {
-        console.error(e);
-        ctx.reply('❌ Erro ao processar a imagem.');
+        console.error('[ERRO foto]:', e?.message || e);
+        ctx.reply('❌ Erro ao processar esta imagem. Tente outra.');
     }
 });
 

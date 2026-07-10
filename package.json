@@ -31,6 +31,7 @@
     "socket.io": "^4.7.2",
     "qrcode": "^1.5.3",
     "telegraf": "^4.16.3",
-    "archiver": "^6.0.1"
+    "archiver": "^6.0.1",
+    "sharp": "^0.33.4"
   }
 }
