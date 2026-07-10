@@ -68,42 +68,65 @@ function upload(midia) {
   });
 }
 
+/**
+ * Converte e adiciona EXIF metadata a uma figurinha WebP
+ * @param {Buffer|String} webpSticker - Buffer ou base64 da imagem
+ * @param {String} author - Autor do pacote de figurinhas
+ * @param {String} packname - Nome do pacote de figurinhas
+ * @param {Array} categories - Emojis para categorizar a figurinha
+ * @param {Object} extra - Dados extras para o EXIF
+ */
 function convertSticker(webpSticker, author, packname, categories = [''], extra = {}) {
     return new Promise((resolve, reject) => {
         try {
-            // Validar se o parâmetro foi informado
+            // Validações
             if (!webpSticker) {
                 throw new Error("webpSticker não fornecido");
             }
+            if (!author || author.trim() === '') {
+                throw new Error("author (criador) não fornecido");
+            }
+            if (!packname || packname.trim() === '') {
+                throw new Error("packname (nome do pacote) não fornecido");
+            }
 
             const img = new webp.Image();
-            const stickerPackId = crypto.randomBytes(32).toString('hex');
+            
+            // Gera um UUID válido para o pack ID
+            const stickerPackId = `com.sticker.pack.${crypto.randomBytes(8).toString('hex')}`;
+            
+            // Monta o JSON do EXIF
             const json = { 
                 'sticker-pack-id': stickerPackId, 
-                'sticker-pack-name': packname, 
-                'sticker-pack-publisher': author, 
-                'emojis': categories, 
+                'sticker-pack-name': packname.substring(0, 128), // Limite de 128 caracteres
+                'sticker-pack-publisher': author.substring(0, 128), // Limite de 128 caracteres
+                'emojis': Array.isArray(categories) && categories.length > 0 ? categories : ['🎨'],
+                'android-app-store-link': 'https://play.google.com/store/apps/details?id=com.whatsapp',
+                'ios-app-store-link': 'https://apps.apple.com/app/whatsapp-messenger/id310633997',
                 ...extra 
             };
         
+            // Header EXIF correto
             const exifAttr = Buffer.from([0x49, 0x49, 0x2A, 0x00, 0x08, 0x00, 0x00, 0x00, 0x01, 0x00, 0x41, 0x57, 0x07, 0x00, 0x00, 0x00, 0x00, 0x00, 0x16, 0x00, 0x00, 0x00]);
             const jsonBuffer = Buffer.from(JSON.stringify(json), 'utf8');
             const exif = Buffer.concat([exifAttr, jsonBuffer]);
 
+            // Define o tamanho do JSON no EXIF (offset 14)
             exif.writeUIntLE(jsonBuffer.length, 14, 4);
             
-            // Corrigir: aceitar tanto base64 webp quanto jpeg, e buffers diretos
+            // Processa o buffer de entrada
             let bufferSticker;
             if (typeof webpSticker === 'string') {
-                // Remove os prefixos de data URI se existirem
-                let base64String = webpSticker.replace(/^data:image\/(webp|jpeg|png);base64,/, '');
+                // Remove prefixos de data URI
+                let base64String = webpSticker.replace(/^data:image\/(webp|jpeg|png|jpg);base64,/, '');
                 bufferSticker = Buffer.from(base64String, 'base64');
             } else if (Buffer.isBuffer(webpSticker)) {
                 bufferSticker = webpSticker;
             } else {
-                throw new Error("webpSticker deve ser uma string base64 ou um Buffer");
+                throw new Error("webpSticker deve ser um Buffer ou string base64");
             }
 
+            // Carrega, adiciona EXIF e salva
             img.load(bufferSticker).then(() => {
                 img.exif = exif;
                 img.save(null).then((result) => {
@@ -112,7 +135,7 @@ function convertSticker(webpSticker, author, packname, categories = [''], extra 
                     reject(new Error("Erro ao salvar figurinha: " + err.message));
                 });
             }).catch((err) => {
-                reject(new Error("Erro ao carregar figurinha: " + err.message));
+                reject(new Error("Erro ao carregar figurinha WebP: " + err.message));
             });
 
         } catch (err) {
