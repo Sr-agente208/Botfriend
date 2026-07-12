@@ -52,29 +52,40 @@ const groqChat = async (system, user) => {
 async function imgParaWebp(buffer, texto) {
     const sharp = require('sharp');
 
-    // Redimensiona e converte pra WebP real 512x512
-    let sharpImg = sharp(buffer).resize(512, 512, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } });
+    // Garante canal alpha pra transparência
+    let sharpImg = sharp(buffer)
+        .resize(512, 512, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
+        .ensureAlpha();
 
-    if (texto) {
-        // Adiciona texto via SVG overlay
-        const svgText = `
-        <svg width="512" height="512">
-            <rect x="0" y="400" width="512" height="112" fill="rgba(0,0,0,0.55)" rx="0"/>
-            <text x="256" y="465" font-family="Arial Black, Arial" font-size="48" font-weight="900"
-                fill="white" text-anchor="middle" dominant-baseline="middle"
-                stroke="black" stroke-width="2">${texto.replace(/[<>&"]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]))}</text>
-        </svg>`;
+    if (texto && texto.trim()) {
+        // SVG sem fontes externas — usa fonte genérica do sistema
+        const textoSeguro = texto.slice(0, 40).replace(/[<>&"']/g, c =>
+            ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&apos;' }[c])
+        );
+        const svgOverlay = Buffer.from(`
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512">
+  <rect x="0" y="390" width="512" height="122" fill="rgba(0,0,0,0.6)"/>
+  <text x="256" y="460" 
+    font-family="sans-serif" font-size="44" font-weight="bold"
+    fill="white" text-anchor="middle"
+    stroke="#000" stroke-width="1.5" paint-order="stroke">${textoSeguro}</text>
+</svg>`);
         sharpImg = sharp(buffer)
             .resize(512, 512, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
-            .composite([{ input: Buffer.from(svgText), gravity: 'south' }]);
+            .ensureAlpha()
+            .composite([{ input: svgOverlay, blend: 'over' }]);
     }
 
-    return sharpImg.webp({ quality: 80, lossless: false }).toBuffer();
+    return sharpImg.webp({ quality: 85 }).toBuffer();
 }
 
 async function criarTray(stickerBuf) {
     const sharp = require('sharp');
-    return sharp(stickerBuf).resize(96, 96).png().toBuffer();
+    // Tray precisa ser PNG 96x96
+    return sharp(stickerBuf)
+        .resize(96, 96, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
+        .png()
+        .toBuffer();
 }
 
 async function criarWastickers(pacoteInfo) {
@@ -181,7 +192,7 @@ function menuZoeira() {
         text: '😄 *ZOEIRA*',
         ...Markup.inlineKeyboard([
             [Markup.button.callback('🔮 Vidente', 'cmd_vidente'), Markup.button.callback('💡 Conselho', 'cmd_conselho')],
-            [Markup.button.callback('😏 Cantada', 'cmd_cantada')],
+            [Markup.button.callback('📖 Conselho Bíblico', 'cmd_conselhobiblico'), Markup.button.callback('😏 Cantada', 'cmd_cantada')],
             [Markup.button.callback('◀️ Voltar', 'menu_principal')]
         ])
     };
@@ -204,6 +215,7 @@ function menuUtil() {
         text: '⚙️ *UTILIDADES*',
         ...Markup.inlineKeyboard([
             [Markup.button.callback('🏓 Ping', 'cmd_ping'), Markup.button.callback('ℹ️ Info', 'cmd_info')],
+            [Markup.button.callback('🔗 Gerar Link', 'cmd_gerarlink')],
             [Markup.button.callback('◀️ Voltar', 'menu_principal')]
         ])
     };
@@ -240,6 +252,11 @@ bot.action('menu_util', async (ctx) => {
 });
 
 // Botões de ação rápida
+bot.action('cmd_gerarlink', async (ctx) => {
+    await ctx.answerCbQuery();
+    await ctx.reply('🔗 *Gerar Link*\n\nMande um arquivo (imagem, vídeo, áudio, documento) com o comando:\n`©gerarlink` ou `©link`\n\nOu responda a uma mensagem com mídia usando o mesmo comando.', { parse_mode: 'Markdown' });
+});
+
 bot.action('cmd_ping', async (ctx) => { await ctx.answerCbQuery('🏓 Pong!'); await ctx.reply('🏓 *Pong!* Bot online! 🪷', { parse_mode: 'Markdown' }); });
 bot.action('cmd_info', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('🪷 *WHITE LOTUS*\nTelegram Edition\nPrefix: `©`', { parse_mode: 'Markdown' }); });
 bot.action('cmd_vidente', async (ctx) => {
@@ -252,6 +269,18 @@ bot.action('cmd_conselho', async (ctx) => {
     const c = ['💡 Não adie para amanhã o que pode te fazer bem hoje.','💡 Silêncio às vezes é a resposta mais inteligente.','💡 Cuide de você primeiro.','💡 O processo importa tanto quanto o resultado.'];
     await ctx.reply(c[Math.floor(Math.random()*c.length)]);
 });
+bot.action('cmd_conselhobiblico', async (ctx) => {
+    await ctx.answerCbQuery();
+    const pc = [
+        '📖 "Tudo posso naquele que me fortalece." — Filipenses 4:13',
+        '📖 "O Senhor é o meu pastor e nada me faltará." — Salmos 23:1',
+        '📖 "Entrega o teu caminho ao Senhor, confia nele." — Salmos 37:5',
+        '📖 "Sede fortes e corajosos. O Senhor vosso Deus estará com vocês." — Josué 1:9',
+        '📖 "Buscai primeiro o Reino de Deus e todas essas coisas vos serão acrescentadas." — Mateus 6:33',
+    ];
+    await ctx.reply(pc[Math.floor(Math.random() * pc.length)]);
+});
+
 bot.action('cmd_cantada', async (ctx) => {
     await ctx.answerCbQuery();
     const ca = ['😏 Você tem GPS? Porque me perdi nos seus olhos.','😏 Você é química? Porque temos uma reação.','😏 Posso te seguir? Minha mãe disse pra seguir meus sonhos.'];
@@ -378,22 +407,20 @@ async function executarPet(ctx, command, q) {
 }
 
 // ====== HANDLER DE IMAGENS (sticker pack) ======
-// Controle de media_group (álbuns) pra não processar duplicado
 const mediaGroupVisto = new Set();
 
 bot.on(['photo', 'document'], async (ctx) => {
     const sid = String(ctx.from.id);
     const s = getSessao(sid);
 
-    if (!s.pacote) {
-        return ctx.reply('❌ Nenhum pacote ativo.\n\nPrimeiro clique em *©pacote* → "Criar novo pacote" e defina o nome. Depois mande as imagens.', { parse_mode: 'Markdown' });
-    }
+    // Se não tem pacote ativo, ignora silenciosamente
+    if (!s.pacote) return;
 
     if (s.pacote.aguardandoNome) {
-        return ctx.reply('⏳ Primeiro defina o nome do pacote respondendo a mensagem anterior.');
+        return ctx.reply('⏳ Antes mande o *nome do pacote* como texto.');
     }
 
-    // Evita processar a mesma foto duas vezes em álbuns
+    // Evita processar a mesma foto duas vezes em álbuns (media_group)
     const mediaGroupId = ctx.message.media_group_id;
     if (mediaGroupId) {
         const chave = `${sid}_${mediaGroupId}_${ctx.message.message_id}`;
@@ -405,19 +432,16 @@ bot.on(['photo', 'document'], async (ctx) => {
     try {
         let fileId;
         if (ctx.message.photo) {
-            // Pega a maior resolução da foto
             fileId = ctx.message.photo[ctx.message.photo.length - 1].file_id;
         } else if (ctx.message.document) {
-            // Aceita documentos de imagem (jpg/png enviados como arquivo)
             const doc = ctx.message.document;
             if (!doc.mime_type?.startsWith('image/')) return;
             fileId = doc.file_id;
         }
-
         if (!fileId) return;
 
         if (s.pacote.stickers.length >= 30) {
-            return ctx.reply('📦 Limite de 30 figurinhas atingido. Clique em *Finalizar*.', { parse_mode: 'Markdown' });
+            return ctx.reply('📦 Limite de 30 figurinhas. Clique em *Finalizar*.', { parse_mode: 'Markdown' });
         }
 
         const fileLink = await ctx.telegram.getFileLink(fileId);
@@ -433,13 +457,13 @@ bot.on(['photo', 'document'], async (ctx) => {
         const n = s.pacote.stickers.length;
 
         await ctx.reply(
-            `✅ Figurinha ${n}/30 adicionada${texto ? ` com texto: _${texto}_` : ''}!\n` +
-            (n >= 30 ? '📦 Limite atingido. Clique em *Finalizar*.' : 'Mande mais ou clique em *©pacote* → Finalizar.'),
+            `✅ Figurinha *${n}/30* adicionada${texto ? ` com texto: _${texto}_` : ''}!\n` +
+            (n >= 30 ? '📦 Limite atingido. Use o menu `/pacote` → Finalizar.' : 'Mande mais ou use `/pacote` → Finalizar.'),
             { parse_mode: 'Markdown' }
         );
     } catch (e) {
         console.error('[ERRO foto]:', e?.message || e);
-        ctx.reply('❌ Erro ao processar esta imagem. Tente outra.');
+        ctx.reply('❌ Erro ao processar esta imagem. Tente mandar como arquivo (não comprimido).');
     }
 });
 
@@ -468,6 +492,38 @@ bot.on('text', async (ctx) => {
             case 'start': case 'menu': case 'ajuda': {
                 const m = menuPrincipal();
                 await ctx.reply(m.text, { parse_mode: 'Markdown', ...Markup.inlineKeyboard(m.reply_markup.inline_keyboard) });
+                break;
+            }
+
+            case 'ajuda2': case 'comandos': {
+                await ctx.reply(
+`🪷 *WHITE LOTUS — COMANDOS*\n
+*🤖 IA*
+${PREFIX}gpt <pergunta>
+${PREFIX}gemini <pergunta>
+${PREFIX}signo <signo>
+${PREFIX}traduzir <idioma> | <texto>
+${PREFIX}nick <nome>\n
+*🎵 MÚSICA*
+${PREFIX}play <música>\n
+*😄 ZOEIRA*
+${PREFIX}vidente
+${PREFIX}conselho
+${PREFIX}conselhobiblico
+${PREFIX}cantada\n
+*🐾 PETS*
+${PREFIX}petadotar <nome>
+${PREFIX}pet
+${PREFIX}petalimentar
+${PREFIX}petbrincar
+${PREFIX}pettreinar
+${PREFIX}petabandonar\n
+*🎨 STICKER PACK (WhatsApp)*
+${PREFIX}pacote — abre o gerenciador\n
+*🔗 UTILIDADES*
+${PREFIX}gerarlink — mande com mídia ou responda a uma
+${PREFIX}ping
+${PREFIX}info`, { parse_mode: 'Markdown' });
                 break;
             }
             case 'ping':
@@ -529,20 +585,128 @@ bot.on('text', async (ctx) => {
                 } catch { ctx.reply('❌ Erro ao buscar música.'); }
                 break;
 
-            case 'vidente': case 'futuro':
-                const pv = ['🪷 Algo bom está prestes a cruzar seu caminho.','🪷 Seu instinto está certo. Confie nele.','🪷 Alguém pensa em você agora.','🪷 Um ciclo se encerra — e isso é bom.'];
-                await ctx.reply(pv[Math.floor(Math.random()*pv.length)]);
+            case 'vidente': case 'futuro': case 'previsao': {
+                const pv = [
+                    '🪷 Os astros sussurram que algo bom está prestes a cruzar seu caminho. Fique de olhos abertos.',
+                    '🪷 Uma decisão que você anda enrolando vai se resolver sozinha nos próximos dias.',
+                    '🪷 Cuidado com promessas vazias essa semana — nem tudo que reluz é lótus.',
+                    '🪷 Uma conversa antiga vai voltar à tona. Escute mais do que fala.',
+                    '🪷 O universo está pedindo paciência. As coisas boas estão a caminho.',
+                    '🪷 Alguém está pensando em você nesse exato momento.',
+                    '🪷 Uma surpresa pode aparecer — mas não conte com ela ainda.',
+                    '🪷 Seu instinto está certo dessa vez. Confie nele.',
+                    '🪷 Um ciclo está se encerrando — e isso é bom, mesmo que pareça estranho.',
+                    '🪷 Evite decisões importantes às pressas nos próximos 3 dias.',
+                    '🪷 Uma amizade vai se fortalecer de um jeito que você não esperava.',
+                    '🪷 Os sinais apontam pra uma virada positiva no fim do mês.',
+                    '🪷 Tome cuidado com fofocas — algumas bocas não merecem sua confiança agora.',
+                    '🪷 Você está mais perto de uma resposta do que imagina.',
+                    '🪷 Uma viagem ou mudança de ares está nos seus horizontes.',
+                    '🪷 O que você plantou com esforço está prestes a florescer.',
+                    '🪷 Alguém do seu passado vai reaparecer — pense bem antes de abrir a porta.',
+                    '🪷 Sua energia está diferente. As pessoas ao redor estão notando.',
+                    '🪷 Não force o que não quer fluir. Deixe o universo agir.',
+                    '🪷 Um número vai aparecer repetidamente na sua semana — preste atenção.',
+                ];
+                const escolhida = pv[Math.floor(Math.random() * pv.length)];
+                await ctx.reply(`╭🔮 *VIDENTE* 🔮╮\n\n${escolhida}\n\n╰🪷 *White Lotus* 🪷╯`, { parse_mode: 'Markdown' });
                 break;
+            }
 
-            case 'conselho':
-                const pc = ['💡 Não adie o que pode te fazer bem hoje.','💡 Silêncio é a resposta mais inteligente às vezes.','💡 O processo importa tanto quanto o resultado.'];
-                await ctx.reply(pc[Math.floor(Math.random()*pc.length)]);
+            case 'conselho': case 'conselhos': case 'conselhobiblico': {
+                const isBiblico = command === 'conselhobiblico';
+                const pc = isBiblico ? [
+                    '📖 "Não te deixes vencer pelo mal, mas vence o mal com o bem." — Romanos 12:21',
+                    '📖 "Tudo posso naquele que me fortalece." — Filipenses 4:13',
+                    '📖 "O Senhor é o meu pastor e nada me faltará." — Salmos 23:1',
+                    '📖 "Entrega o teu caminho ao Senhor, confia nele, e ele tudo fará." — Salmos 37:5',
+                    '📖 "Porque sou eu que conheço os planos que tenho a vosso respeito." — Jeremias 29:11',
+                    '📖 "Sede fortes e corajosos. Não vos assusteis, pois o Senhor vosso Deus estará com vocês." — Josué 1:9',
+                    '📖 "Buscai primeiro o Reino de Deus e a sua justiça, e todas essas coisas vos serão acrescentadas." — Mateus 6:33',
+                ] : [
+                    '💡 Não adie para amanhã o que pode te fazer bem hoje.',
+                    '💡 Quem aprende com os erros dos outros economiza muito tempo.',
+                    '💡 Silêncio às vezes é a resposta mais inteligente.',
+                    '💡 Cuide de você primeiro. Não é egoísmo, é necessidade.',
+                    '💡 O processo importa tanto quanto o resultado.',
+                    '💡 Não explique demais. Quem precisa entender, entende.',
+                    '💡 Sua paz de espírito vale mais do que qualquer briga.',
+                    '💡 Seja selectivo com sua energia. Nem todo mundo merece o seu melhor.',
+                    '💡 O silêncio fala mais do que mil palavras quando você sabe usá-lo.',
+                    '💡 Pare de tentar ser aprovado por quem nunca vai te aprovar.',
+                    '💡 Errar faz parte. Ficar no erro é uma escolha.',
+                    '💡 Não confunda solidão com fracasso. Às vezes você só está crescendo.',
+                    '💡 Sua reação ao problema é maior do que o problema em si.',
+                    '💡 Foque no que você pode controlar. O resto é perda de energia.',
+                    '💡 Quem ri por último ri melhor — mas quem ri de si mesmo ri sempre.',
+                ];
+                await ctx.reply(pc[Math.floor(Math.random() * pc.length)]);
                 break;
+            }
 
-            case 'cantada':
-                const pca = ['😏 Você tem GPS? Me perdi nos seus olhos.','😏 Posso te seguir? Minha mãe disse pra seguir meus sonhos.'];
-                await ctx.reply(pca[Math.floor(Math.random()*pca.length)]);
+            case 'cantada': case 'cantadas': {
+                const pca = [
+                    '😏 Você tem GPS? Porque me perdi nos seus olhos.',
+                    '😏 Você é química? Porque temos uma reação.',
+                    '😏 Posso te seguir? Minha mãe disse pra seguir meus sonhos.',
+                    '😏 Você é anjo? Porque caiu do céu e me derrubou junto.',
+                    '😏 Está cansado(a) de tanto caminhar pela minha cabeça?',
+                    '😏 Você acredita em amor à primeira mensagem?',
+                    '😏 Você é médico(a)? Porque meu coração acelerou quando te vi.',
+                    '😏 É proibido ser tão bonito(a)? Porque você deveria estar preso(a).',
+                    '😏 Você é WiFi? Porque eu sinto uma conexão entre nós.',
+                    '😏 Seu nome deve ser Google, porque tem tudo que eu estava procurando.',
+                    '😏 Você é um dicionário? Porque deu significado à minha vida.',
+                    '😏 Se beleza doesse, você estaria em UTI.',
+                    '😏 Você é real ou estou com febre? Porque parece demais pra ser verdade.',
+                    '😏 Seu sorriso deveria ser ilegal — é altamente perigoso.',
+                    '😏 Você tem seguro? Porque quando te vi, meu coração bateu na parede.',
+                ];
+                await ctx.reply(pca[Math.floor(Math.random() * pca.length)]);
                 break;
+            }
+
+            case 'gerarlink': case 'link': case 'upload': {
+                const msg = ctx.message;
+                const media =
+                    msg.photo ? msg.photo[msg.photo.length - 1] :
+                    msg.video ? msg.video :
+                    msg.audio ? msg.audio :
+                    msg.voice ? msg.voice :
+                    msg.document ? msg.document :
+                    msg.sticker ? msg.sticker :
+                    msg.reply_to_message?.photo ? msg.reply_to_message.photo[msg.reply_to_message.photo.length - 1] :
+                    msg.reply_to_message?.video ? msg.reply_to_message.video :
+                    msg.reply_to_message?.audio ? msg.reply_to_message.audio :
+                    msg.reply_to_message?.document ? msg.reply_to_message.document :
+                    null;
+
+                if (!media) {
+                    return ctx.reply(
+                        '📎 *Gerar Link*\n\nMande um arquivo junto com o comando, ou responda a uma mensagem com mídia.\n\nFormatos aceitos: imagem, vídeo, áudio, documento, figurinha.',
+                        { parse_mode: 'Markdown' }
+                    );
+                }
+
+                try {
+                    await ctx.reply('⏳ Gerando link...');
+                    const fileId = media.file_id;
+                    const fileLink = await ctx.telegram.getFileLink(fileId);
+                    const url = typeof fileLink === 'string' ? fileLink : (fileLink.href || String(fileLink));
+
+                    const nome = media.file_name || media.file_unique_id || 'arquivo';
+                    const tamanho = media.file_size ? `${(media.file_size / 1024).toFixed(1)} KB` : 'N/A';
+
+                    await ctx.reply(
+                        `✅ *Link gerado!*\n\n📄 Arquivo: \`${nome}\`\n📦 Tamanho: ${tamanho}\n\n🔗 ${url}\n\n⚠️ _Este link expira em 1 hora (limitação do Telegram)._`,
+                        { parse_mode: 'Markdown' }
+                    );
+                } catch (e) {
+                    console.error('[ERRO gerarlink]:', e?.message || e);
+                    ctx.reply('❌ Erro ao gerar o link.');
+                }
+                break;
+            }
 
             case 'petadotar': case 'pet': case 'petalimentar':
             case 'petbrincar': case 'pettreinar': case 'petabandonar':
