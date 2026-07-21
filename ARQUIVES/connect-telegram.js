@@ -718,6 +718,272 @@ ${PREFIX}info`, { parse_mode: 'Markdown' });
                 await ctx.reply(ms.text, { parse_mode: 'Markdown', ...Markup.inlineKeyboard(ms.reply_markup.inline_keyboard) });
                 break;
 
+
+            // ── CALCULADORA ─────────────────────────────
+            case 'calc': case 'calcular': {
+                if (!q) return ctx.reply(`Use: ${PREFIX}calc 10 * 5 + 2`);
+                try {
+                    const expr = q.replace(/x/gi,'*').replace(/÷/g,'/').replace(/[^0-9+\-*/.() ]/g,'');
+                    const res = Function('"use strict"; return (' + expr + ')')();
+                    await ctx.reply('🧮 `' + q + '` = *' + res + '*', { parse_mode: 'Markdown' });
+                } catch { ctx.reply('❌ Expressão inválida. Ex: `©calc 10 * 5 + 2`', { parse_mode: 'Markdown' }); }
+                break;
+            }
+
+            // ── QR CODE ─────────────────────────────────
+            case 'qrcode': case 'qr': case 'gerarqr': {
+                if (!q) return ctx.reply(`Use: ${PREFIX}qrcode <texto ou link>`);
+                try {
+                    await ctx.replyWithPhoto({ url: `https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(q)}` }, { caption: `📱 QR Code: ${q}` });
+                } catch { ctx.reply('❌ Erro ao gerar QR Code.'); }
+                break;
+            }
+
+            // ── WIKIPEDIA ───────────────────────────────
+            case 'wiki': case 'wikipedia': {
+                if (!q) return ctx.reply(`Use: ${PREFIX}wiki <pesquisa>`);
+                try {
+                    const resp = await axios.get(`https://pt.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(q)}`, { timeout: 10000 });
+                    const d = resp.data;
+                    if (!d.extract) return ctx.reply('❌ Nenhum resultado encontrado.');
+                    const txt = d.extract.length > 800 ? d.extract.slice(0, 800) + '...' : d.extract;
+                    const link = d.content_urls?.mobile?.page || '';
+                    const cap = `📖 *${d.title}*\n\n${txt}\n\n🔗 ${link}`;
+                    if (d.originalimage?.source) {
+                        await ctx.replyWithPhoto({ url: d.originalimage.source }, { caption: cap, parse_mode: 'Markdown' });
+                    } else {
+                        await ctx.reply(cap, { parse_mode: 'Markdown' });
+                    }
+                } catch { ctx.reply('❌ Nenhum resultado encontrado.'); }
+                break;
+            }
+
+            // ── CEP ─────────────────────────────────────
+            case 'cep': {
+                if (!q) return ctx.reply(`Use: ${PREFIX}cep 01001000`);
+                try {
+                    const resp = await axios.get(`https://viacep.com.br/ws/${q.replace(/\D/g,'')}/json/`, { timeout: 10000 });
+                    const d = resp.data;
+                    if (d.erro) return ctx.reply('❌ CEP não encontrado.');
+                    await ctx.reply(`📮 *CEP ${d.cep}*\n\n🏠 ${d.logradouro||'N/A'}\n🏘️ Bairro: ${d.bairro||'N/A'}\n🏙️ ${d.localidade} - ${d.uf}`, { parse_mode: 'Markdown' });
+                } catch { ctx.reply('❌ Erro ao buscar CEP.'); }
+                break;
+            }
+
+            // ── ENCODE / DECODE ──────────────────────────
+            case 'encode': {
+                if (!q) return ctx.reply(`Use: ${PREFIX}encode <texto>`);
+                await ctx.reply('🔐 `' + Buffer.from(q).toString('base64') + '`', { parse_mode: 'Markdown' });
+                break;
+            }
+            case 'decode': {
+                if (!q) return ctx.reply(`Use: ${PREFIX}decode <base64>`);
+                try { await ctx.reply('🔓 ' + Buffer.from(q, 'base64').toString('utf8')); }
+                catch { ctx.reply('❌ Base64 inválido.'); }
+                break;
+            }
+
+            // ── IDADE ────────────────────────────────────
+            case 'idade': {
+                if (!q) return ctx.reply(`Use: ${PREFIX}idade dd/mm/aaaa`);
+                try {
+                    const [d2,m2,y2] = q.split('/').map(Number);
+                    const nasc = new Date(y2,m2-1,d2);
+                    const hoje = new Date();
+                    let anos = hoje.getFullYear()-nasc.getFullYear();
+                    if (hoje.getMonth()<nasc.getMonth()||(hoje.getMonth()===nasc.getMonth()&&hoje.getDate()<nasc.getDate())) anos--;
+                    const prox = new Date(hoje.getFullYear(),nasc.getMonth(),nasc.getDate());
+                    if (prox<hoje) prox.setFullYear(prox.getFullYear()+1);
+                    const dias = Math.ceil((prox-hoje)/86400000);
+                    await ctx.reply(`🎂 *${anos} anos*\n\n📅 Nascido: ${q}\n🎉 Próximo aniversário em *${dias} dias*`, { parse_mode: 'Markdown' });
+                } catch { ctx.reply('❌ Data inválida. Use: dd/mm/aaaa'); }
+                break;
+            }
+
+            // ── STICKER ──────────────────────────────────
+            case 'sticker': case 'fig': case 'figurinha': {
+                const rep = ctx.message.reply_to_message;
+                if (!rep?.photo && !rep?.document) return ctx.reply('📸 Responda a uma *imagem* com este comando.', { parse_mode: 'Markdown' });
+                try {
+                    await ctx.reply('⏳ Convertendo...');
+                    const fid = rep.photo ? rep.photo[rep.photo.length-1].file_id : rep.document.file_id;
+                    const fl = await ctx.telegram.getFileLink(fid);
+                    const url2 = typeof fl==='string'?fl:(fl.href||String(fl));
+                    const r2 = await axios.get(url2,{responseType:'arraybuffer'});
+                    const sh = require('sharp');
+                    const wb = await sh(Buffer.from(r2.data)).resize(512,512,{fit:'contain',background:{r:0,g:0,b:0,alpha:0}}).webp({quality:90}).toBuffer();
+                    await ctx.replyWithSticker({source:wb});
+                } catch(e){console.error('[sticker]',e?.message);ctx.reply('❌ Erro ao converter.');}
+                break;
+            }
+
+            // ── TOIMG ────────────────────────────────────
+            case 'toimg': {
+                const rep2 = ctx.message.reply_to_message;
+                if (!rep2?.sticker) return ctx.reply('🎭 Responda a uma *figurinha* com este comando.', { parse_mode: 'Markdown' });
+                try {
+                    await ctx.reply('⏳ Convertendo...');
+                    const fl2 = await ctx.telegram.getFileLink(rep2.sticker.file_id);
+                    const url3 = typeof fl2==='string'?fl2:(fl2.href||String(fl2));
+                    const r3 = await axios.get(url3,{responseType:'arraybuffer'});
+                    const sh2 = require('sharp');
+                    const pb = await sh2(Buffer.from(r3.data)).png().toBuffer();
+                    await ctx.replyWithPhoto({source:pb},{caption:'🖼️ Figurinha convertida!'});
+                } catch(e){console.error('[toimg]',e?.message);ctx.reply('❌ Erro ao converter.');}
+                break;
+            }
+
+            // ── BRAT ─────────────────────────────────────
+            case 'brat': {
+                if (!q) return ctx.reply(`Use: ${PREFIX}brat <texto>`);
+                try {
+                    const { Jimp: J, loadFont: lf, measureTextHeight: mth, HorizontalAlign: HA, VerticalAlign: VA } = require('jimp');
+                    const { SANS_64_BLACK } = require('jimp/fonts');
+                    const img = new J({width:512,height:512,color:0x8ace00ff});
+                    const font = await lf(SANS_64_BLACK);
+                    const txt = q.toLowerCase();
+                    const h = mth(font,txt,452);
+                    img.print({font,x:30,y:Math.max(30,(512-h)/2),text:{text:txt,alignmentX:HA.LEFT,alignmentY:VA.TOP},maxWidth:452,maxHeight:452});
+                    const sh3 = require('sharp');
+                    const wb2 = await sh3(await img.getBuffer('image/png')).resize(512,512).webp({quality:90}).toBuffer();
+                    await ctx.replyWithSticker({source:wb2});
+                } catch(e){console.error('[brat]',e?.message);ctx.reply('❌ Erro ao gerar.');}
+                break;
+            }
+
+            // ── SORTEAR / MOEDA / PIADA / CURIOSIDADE ────
+            case 'sortear': case 'dado': case 'rolar': {
+                const max = parseInt(q)||6;
+                await ctx.reply(`🎲 Sorteio (1 a ${max}): *${Math.floor(Math.random()*max)+1}*`, { parse_mode: 'Markdown' });
+                break;
+            }
+            case 'caraoucoroa': case 'moeda': {
+                await ctx.reply(`🪙 ${Math.random()<0.5?'*Cara!*':'*Coroa!*'}`, { parse_mode: 'Markdown' });
+                break;
+            }
+            case 'piada': {
+                const piadas = ['😂 Por que o livro de matemática foi ao psicólogo? Tinha muitos problemas.','😂 O que o zero disse pro oito? Belo cinto!','😂 Por que o programador usa óculos? Não consegue C#.','😂 O que é um elefante na neve? Um freezer.','😂 O que a impressora disse pra folha? Pode deixar que eu te cubro.','😂 Por que o espantalho ganhou um prêmio? Era ótimo no seu campo.'];
+                await ctx.reply(piadas[Math.floor(Math.random()*piadas.length)]);
+                break;
+            }
+            case 'curiosidade': case 'sabia': {
+                const curi = ['🧠 A abelha bate as asas 200 vezes por segundo.','🧠 Os polvos têm 3 corações e sangue azul.','🧠 A Lua se afasta 3,8cm da Terra por ano.','🧠 As formigas nunca dormem.','🧠 O mel nunca estraga — encontraram mel de 3000 anos no Egito.','🧠 Os tubarões são mais velhos que as árvores.','🧠 Uma nuvem pesa em média 500 toneladas.','🧠 Água quente congela mais rápido que fria (Efeito Mpemba).','🧠 Existem mais estrelas no universo do que grãos de areia na Terra.','🧠 O cérebro usa 20% da energia do corpo.'];
+                await ctx.reply(curi[Math.floor(Math.random()*curi.length)]);
+                break;
+            }
+            case 'personalidade': case 'perfil2': {
+                const tipos = {Gênero:['Gay 🏳️‍🌈','Masculino 💪','Feminino 🦋','Trans 🏳️‍⚧️'],Hobbie:['Cozinhar 🍜','Ler 📚','Esportes ⛹️','Música 🎧','Jogos 🎮'],Profissão:['Médico(a)','Engenheiro(a)','Professor(a)','Programador(a)'],Período:['Manhã 🌤','Tarde 🌅','Noite 🌌','Madrugada 🌃'],Musical:['Rock','Pop','Funk','Sertanejo','Eletrônica']};
+                const rnd = a=>a[Math.floor(Math.random()*a.length)];
+                await ctx.reply('🎭 *Personalidade!*\n\n'+Object.entries(tipos).map(([k,v])=>`🔹 *${k}:* ${rnd(v)}`).join('\n'),{parse_mode:'Markdown'});
+                break;
+            }
+
+            // ── SPOTIFY ──────────────────────────────────
+            case 'spotifys': case 'spbusca': {
+                if (!q) return ctx.reply(`Use: ${PREFIX}spotifys <música>`);
+                try {
+                    await ctx.reply('🔍 Buscando...');
+                    const yt = require('yt-search');
+                    const res = await yt(q+' spotify');
+                    const v = res?.videos?.[0];
+                    if (!v) return ctx.reply('❌ Nenhum resultado.');
+                    const cap = `🎵 *${v.title}*\n\n👤 ${v.author?.name||'N/A'}\n⏱️ ${v.timestamp||'N/A'}\n🔗 ${v.url}`;
+                    if (v.thumbnail){await ctx.replyWithPhoto({url:v.thumbnail},{caption:cap,parse_mode:'Markdown'});}
+                    else{await ctx.reply(cap,{parse_mode:'Markdown'});}
+                } catch{ctx.reply('❌ Erro na busca.');}
+                break;
+            }
+            case 'spotifys2': case 'spdown': {
+                if (!q) return ctx.reply(`Use: ${PREFIX}spotifys2 <música>`);
+                try {
+                    await ctx.reply('🔍 Buscando...');
+                    const yt2 = require('yt-search');
+                    const res2 = await yt2(q+' spotify');
+                    const v2 = res2?.videos?.[0];
+                    if (!v2) return ctx.reply('❌ Nenhum resultado.');
+                    if (v2.thumbnail) await ctx.replyWithPhoto({url:v2.thumbnail},{caption:`🎵 *${v2.title}*\n👤 ${v2.author?.name||'N/A'} · ⏱️ ${v2.timestamp||'N/A'}`,parse_mode:'Markdown'});
+                    const urlPlay = process.env.URL_API_PLAY;
+                    if (urlPlay){
+                        const rp = await axios.post(urlPlay,{chatId:String(ctx.from.id),busca:q},{timeout:30000});
+                        if (rp.data?.linkAudio){await ctx.replyWithAudio({url:rp.data.linkAudio});}
+                        else{ctx.reply('⚠️ Download indisponível.');}
+                    }else{ctx.reply('ℹ️ URL_API_PLAY não configurada.');}
+                } catch{ctx.reply('❌ Erro ao processar.');}
+                break;
+            }
+
+            // ── ANIME (Sushi Animes) ──────────────────────
+            case 'anime': case 'buscaranime': {
+                if (!q) return ctx.reply(`Use: ${PREFIX}anime <nome do anime>\nEx: ${PREFIX}anime Naruto`);
+                try {
+                    await ctx.reply('🍙 Buscando no Sushi Animes...');
+                    const cheerio = require('cheerio');
+                    const resp = await axios.get(`https://sushianimes.com.br/?s=${encodeURIComponent(q)}`,{
+                        headers:{'User-Agent':'Mozilla/5.0'},timeout:15000
+                    });
+                    const $ = cheerio.load(resp.data);
+                    const resultados = [];
+                    $('.TPostMv, .post, article').slice(0,5).each((i,el)=>{
+                        const titulo = $(el).find('h2,h3,.Title,.entry-title').first().text().trim();
+                        const link = $(el).find('a').first().attr('href');
+                        const thumb = $(el).find('img').first().attr('src')||$(el).find('img').first().attr('data-src');
+                        if (titulo && link) resultados.push({titulo,link,thumb});
+                    });
+                    if (!resultados.length) return ctx.reply('❌ Nenhum anime encontrado. Tente outro nome.');
+                    const txt = `🍙 *Resultados para "${q}":*\n\n` + resultados.map((r,i)=>`*${i+1}.* [${r.titulo}](${r.link})`).join('\n');
+                    if (resultados[0]?.thumb) {
+                        await ctx.replyWithPhoto({url:resultados[0].thumb},{caption:txt,parse_mode:'Markdown'});
+                    } else {
+                        await ctx.reply(txt,{parse_mode:'Markdown'});
+                    }
+                } catch(e){console.error('[anime]',e?.message);ctx.reply('❌ Erro ao buscar. Tente novamente.');}
+                break;
+            }
+
+            case 'anirecente': case 'animesrecentes': {
+                try {
+                    await ctx.reply('🍙 Buscando últimos episódios...');
+                    const cheerio2 = require('cheerio');
+                    const resp2 = await axios.get('https://sushianimes.com.br/',{
+                        headers:{'User-Agent':'Mozilla/5.0'},timeout:15000
+                    });
+                    const $2 = cheerio2.load(resp2.data);
+                    const recentes = [];
+                    $('.TPostMv, .post, article, .episodio, .item').slice(0,8).each((i,el)=>{
+                        const titulo = $2(el).find('h2,h3,.Title,.entry-title').first().text().trim();
+                        const link = $2(el).find('a').first().attr('href');
+                        if (titulo && link) recentes.push({titulo,link});
+                    });
+                    if (!recentes.length) return ctx.reply('❌ Não foi possível carregar os recentes. Acesse: https://sushianimes.com.br');
+                    const txt2 = `🍙 *Últimos animes/episódios:*\n\n` + recentes.map((r,i)=>`*${i+1}.* [${r.titulo}](${r.link})`).join('\n') + '\n\n🔗 [Ver mais](https://sushianimes.com.br)';
+                    await ctx.reply(txt2,{parse_mode:'Markdown'});
+                } catch(e){console.error('[anirecente]',e?.message);ctx.reply(`❌ Erro ao carregar. Acesse diretamente: https://sushianimes.com.br`);}
+                break;
+            }
+
+            case 'aniinfo': {
+                if (!q) return ctx.reply(`Use: ${PREFIX}aniinfo <url do anime>\nEx: ${PREFIX}aniinfo https://sushianimes.com.br/anime/naruto`);
+                try {
+                    await ctx.reply('🍙 Carregando informações...');
+                    const cheerio3 = require('cheerio');
+                    const resp3 = await axios.get(q,{headers:{'User-Agent':'Mozilla/5.0'},timeout:15000});
+                    const $3 = cheerio3.load(resp3.data);
+                    const titulo3 = $3('h1,.Title').first().text().trim();
+                    const thumb3 = $3('.TPostBg img, .Image img').first().attr('src');
+                    const sinopse = $3('.Description p, .sinopse, .entry-content p').first().text().trim().slice(0,500);
+                    const generos = $3('.genres a, .Tags a, .sgeneros a').map((i,el)=>$3(el).text().trim()).get().join(', ');
+                    const nota = $3('.rating, .score, .imdb').first().text().trim();
+                    const cap3 = `🍙 *${titulo3||'Anime'}*\n\n${sinopse?`📝 ${sinopse}...\n\n`:''}${generos?`🏷️ *Gêneros:* ${generos}\n`:''}${nota?`⭐ *Nota:* ${nota}\n`:''}\n🔗 ${q}`;
+                    if (thumb3) {
+                        await ctx.replyWithPhoto({url:thumb3},{caption:cap3,parse_mode:'Markdown'});
+                    } else {
+                        await ctx.reply(cap3,{parse_mode:'Markdown'});
+                    }
+                } catch(e){console.error('[aniinfo]',e?.message);ctx.reply('❌ Erro ao carregar informações do anime.');}
+                break;
+            }
+
+
             default:
                 await ctx.reply(`❓ Comando desconhecido: \`${PREFIX}${command}\`\nVeja ${PREFIX}menu`, { parse_mode: 'Markdown' });
         }
