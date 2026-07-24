@@ -139,6 +139,18 @@ async function criarWastickers(pacoteInfo) {
 }
 
 // ====== MENU PRINCIPAL (inline keyboard) ======
+
+function menuAnime() {
+    return {
+        text: '🍙 *ANIME — Sushi Animes*',
+        ...Markup.inlineKeyboard([
+            [Markup.button.callback('🔍 Buscar anime', 'cmd_anime_buscar')],
+            [Markup.button.callback('🆕 Recentes', 'cmd_anime_recentes')],
+            [Markup.button.callback('◀️ Voltar', 'menu_principal')]
+        ])
+    };
+}
+
 function menuPrincipal() {
     return {
         text: '🪷 *WHITE LOTUS — MENU PRINCIPAL*\n\nEscolha uma categoria:',
@@ -189,10 +201,13 @@ function menuMusica() {
 
 function menuZoeira() {
     return {
-        text: '😄 *ZOEIRA*',
+        text: '😄 *ZOEIRA & DIVERSÃO*',
         ...Markup.inlineKeyboard([
             [Markup.button.callback('🔮 Vidente', 'cmd_vidente'), Markup.button.callback('💡 Conselho', 'cmd_conselho')],
-            [Markup.button.callback('📖 Conselho Bíblico', 'cmd_conselhobiblico'), Markup.button.callback('😏 Cantada', 'cmd_cantada')],
+            [Markup.button.callback('📖 Bíblico', 'cmd_conselhobiblico'), Markup.button.callback('😏 Cantada', 'cmd_cantada')],
+            [Markup.button.callback('🧠 Curiosidade', 'cmd_curiosidade'), Markup.button.callback('😂 Piada', 'cmd_piada')],
+            [Markup.button.callback('🎲 Sortear', 'cmd_sortear'), Markup.button.callback('🪙 Moeda', 'cmd_moeda')],
+            [Markup.button.callback('🎭 Personalidade', 'cmd_personalidade')],
             [Markup.button.callback('◀️ Voltar', 'menu_principal')]
         ])
     };
@@ -215,7 +230,10 @@ function menuUtil() {
         text: '⚙️ *UTILIDADES*',
         ...Markup.inlineKeyboard([
             [Markup.button.callback('🏓 Ping', 'cmd_ping'), Markup.button.callback('ℹ️ Info', 'cmd_info')],
-            [Markup.button.callback('🔗 Gerar Link', 'cmd_gerarlink')],
+            [Markup.button.callback('🔗 Gerar Link', 'cmd_gerarlink'), Markup.button.callback('📱 QR Code', 'cmd_qrcode')],
+            [Markup.button.callback('📖 Wikipedia', 'cmd_wiki'), Markup.button.callback('🧮 Calculadora', 'cmd_calc')],
+            [Markup.button.callback('📮 CEP', 'cmd_cep'), Markup.button.callback('🎂 Idade', 'cmd_idade')],
+            [Markup.button.callback('🔐 Encode', 'cmd_encode'), Markup.button.callback('🔓 Decode', 'cmd_decode')],
             [Markup.button.callback('◀️ Voltar', 'menu_principal')]
         ])
     };
@@ -405,6 +423,90 @@ async function executarPet(ctx, command, q) {
         return reply(`💔 Você deixou *${nome}* ir.`);
     }
 }
+
+
+bot.action('menu_anime', async (ctx) => {
+    await ctx.answerCbQuery();
+    const m = menuAnime();
+    await ctx.editMessageText(m.text, { parse_mode: 'Markdown', ...Markup.inlineKeyboard(m.reply_markup.inline_keyboard) });
+});
+bot.action('cmd_anime_buscar', async (ctx) => {
+    await ctx.answerCbQuery();
+    await ctx.reply('🔍 Use: `©anime <nome>`\nEx: `©anime Naruto`', { parse_mode: 'Markdown' });
+});
+bot.action('cmd_anime_recentes', async (ctx) => {
+    await ctx.answerCbQuery();
+    try {
+        const cheerio = require('cheerio');
+        const resp = await axios.get('https://sushianimes.com.br/', { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 15000 });
+        const $ = cheerio.load(resp.data);
+        const recentes = [];
+        $('.TPostMv, .post, article').slice(0, 8).each((i, el) => {
+            const titulo = $(el).find('h2,h3,.Title,.entry-title').first().text().trim();
+            const link = $(el).find('a').first().attr('href');
+            if (titulo && link) recentes.push({ titulo, link });
+        });
+        if (!recentes.length) return ctx.reply('❌ Não foi possível carregar. Acesse: https://sushianimes.com.br');
+        const txt = '🍙 *Recentes:*\n\n' + recentes.map((r,i)=>`*${i+1}.* [${r.titulo}](${r.link})`).join('\n');
+        await ctx.reply(txt, { parse_mode: 'Markdown' });
+    } catch(e) { ctx.reply('❌ Erro. Acesse: https://sushianimes.com.br'); }
+});
+bot.action('cmd_qrcode', async (ctx) => {
+    await ctx.answerCbQuery();
+    await ctx.reply('📱 Use: `©qrcode <texto ou link>`', { parse_mode: 'Markdown' });
+});
+bot.action('cmd_wiki', async (ctx) => {
+    await ctx.answerCbQuery();
+    await ctx.reply('📖 Use: `©wiki <pesquisa>`', { parse_mode: 'Markdown' });
+});
+bot.action('cmd_calc', async (ctx) => {
+    await ctx.answerCbQuery();
+    await ctx.reply('🧮 Use: `©calc 10 * 5 + 2`', { parse_mode: 'Markdown' });
+});
+bot.action('cmd_cep', async (ctx) => {
+    await ctx.answerCbQuery();
+    await ctx.reply('📮 Use: `©cep 01001000`', { parse_mode: 'Markdown' });
+});
+bot.action('cmd_idade', async (ctx) => {
+    await ctx.answerCbQuery();
+    await ctx.reply('🎂 Use: `©idade 15/05/2000`', { parse_mode: 'Markdown' });
+});
+bot.action('cmd_encode', async (ctx) => {
+    await ctx.answerCbQuery();
+    await ctx.reply('🔐 Use: `©encode <texto>`', { parse_mode: 'Markdown' });
+});
+bot.action('cmd_decode', async (ctx) => {
+    await ctx.answerCbQuery();
+    await ctx.reply('🔓 Use: `©decode <base64>`', { parse_mode: 'Markdown' });
+});
+bot.action('cmd_curiosidade', async (ctx) => {
+    await ctx.answerCbQuery();
+    const c=['🧠 A abelha bate as asas 200 vezes por segundo.','🧠 Os polvos têm 3 corações e sangue azul.','🧠 As formigas nunca dormem.','🧠 O mel nunca estraga — mel de 3000 anos foi encontrado no Egito.','🧠 Os tubarões são mais velhos que as árvores.','🧠 Uma nuvem pesa 500 toneladas.','🧠 Existem mais estrelas no universo do que grãos de areia na Terra.'];
+    await ctx.reply(c[Math.floor(Math.random()*c.length)]);
+});
+bot.action('cmd_piada', async (ctx) => {
+    await ctx.answerCbQuery();
+    const p=['😂 Por que o livro de matemática foi ao psicólogo? Tinha muitos problemas.','😂 O que o zero disse pro oito? Belo cinto!','😂 Por que o programador usa óculos? Não consegue C#.','😂 O que é um elefante na neve? Um freezer.'];
+    await ctx.reply(p[Math.floor(Math.random()*p.length)]);
+});
+bot.action('cmd_sortear', async (ctx) => {
+    await ctx.answerCbQuery();
+    await ctx.reply(`🎲 Dado: *${Math.floor(Math.random()*6)+1}*\n\nPara outro número: \`©sortear <máximo>\``, { parse_mode: 'Markdown' });
+});
+bot.action('cmd_moeda', async (ctx) => {
+    await ctx.answerCbQuery();
+    await ctx.reply(`🪙 ${Math.random()<0.5?'*Cara!*':'*Coroa!*'}`, { parse_mode: 'Markdown' });
+});
+bot.action('cmd_personalidade', async (ctx) => {
+    await ctx.answerCbQuery();
+    const tipos={Gênero:['Gay 🏳️‍🌈','Masculino 💪','Feminino 🦋','Trans 🏳️‍⚧️'],Hobbie:['Cozinhar 🍜','Ler 📚','Esportes ⛹️','Música 🎧','Jogos 🎮'],Profissão:['Médico(a)','Engenheiro(a)','Professor(a)','Programador(a)'],Período:['Manhã 🌤','Tarde 🌅','Noite 🌌','Madrugada 🌃'],Musical:['Rock','Pop','Funk','Sertanejo','Eletrônica']};
+    const rnd=a=>a[Math.floor(Math.random()*a.length)];
+    await ctx.reply('🎭 *Personalidade!*\n\n'+Object.entries(tipos).map(([k,v])=>`🔹 *${k}:* ${rnd(v)}`).join('\n'),{parse_mode:'Markdown'});
+});
+bot.action('cmd_gerarlink', async (ctx) => {
+    await ctx.answerCbQuery();
+    await ctx.reply('🔗 *Gerar Link*\n\nResponda qualquer mídia com `©gerarlink` ou mande a mídia com `©gerarlink` na legenda.', { parse_mode: 'Markdown' });
+});
 
 // ====== HANDLER DE IMAGENS (sticker pack) ======
 const mediaGroupVisto = new Set();
