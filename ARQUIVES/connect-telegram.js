@@ -769,43 +769,28 @@ ${PREFIX}info`, { parse_mode: 'Markdown' });
             }
 
             case 'gerarlink': case 'link': case 'upload': {
-                const msg = ctx.message;
-                const media =
-                    msg.photo ? msg.photo[msg.photo.length - 1] :
-                    msg.video ? msg.video :
-                    msg.audio ? msg.audio :
-                    msg.voice ? msg.voice :
-                    msg.document ? msg.document :
-                    msg.sticker ? msg.sticker :
-                    msg.reply_to_message?.photo ? msg.reply_to_message.photo[msg.reply_to_message.photo.length - 1] :
-                    msg.reply_to_message?.video ? msg.reply_to_message.video :
-                    msg.reply_to_message?.audio ? msg.reply_to_message.audio :
-                    msg.reply_to_message?.document ? msg.reply_to_message.document :
-                    null;
-
-                if (!media) {
-                    return ctx.reply(
-                        '📎 *Gerar Link*\n\nMande um arquivo junto com o comando, ou responda a uma mensagem com mídia.\n\nFormatos aceitos: imagem, vídeo, áudio, documento, figurinha.',
-                        { parse_mode: 'Markdown' }
-                    );
+                const replied = ctx.message.reply_to_message;
+                let mediaObj = null, mediaType = '';
+                if (replied) {
+                    if (replied.photo)     { mediaObj = replied.photo[replied.photo.length-1]; mediaType = 'foto'; }
+                    else if (replied.video)     { mediaObj = replied.video;    mediaType = 'video'; }
+                    else if (replied.audio)     { mediaObj = replied.audio;    mediaType = 'audio'; }
+                    else if (replied.voice)     { mediaObj = replied.voice;    mediaType = 'audio'; }
+                    else if (replied.document)  { mediaObj = replied.document; mediaType = replied.document.file_name || 'documento'; }
+                    else if (replied.sticker)   { mediaObj = replied.sticker;  mediaType = 'figurinha'; }
+                    else if (replied.animation) { mediaObj = replied.animation; mediaType = 'gif'; }
                 }
-
+                if (!mediaObj) return ctx.reply('📎 *Como usar:*\n\nResponda qualquer mídia com `©gerarlink`\n\n_Limite: 20MB por bots do Telegram._', { parse_mode: 'Markdown' });
                 try {
                     await ctx.reply('⏳ Gerando link...');
-                    const fileId = media.file_id;
-                    const fileLink = await ctx.telegram.getFileLink(fileId);
-                    const url = typeof fileLink === 'string' ? fileLink : (fileLink.href || String(fileLink));
-
-                    const nome = media.file_name || media.file_unique_id || 'arquivo';
-                    const tamanho = media.file_size ? `${(media.file_size / 1024).toFixed(1)} KB` : 'N/A';
-
-                    await ctx.reply(
-                        `✅ *Link gerado!*\n\n📄 Arquivo: \`${nome}\`\n📦 Tamanho: ${tamanho}\n\n🔗 ${url}\n\n⚠️ _Este link expira em 1 hora (limitação do Telegram)._`,
-                        { parse_mode: 'Markdown' }
-                    );
-                } catch (e) {
-                    console.error('[ERRO gerarlink]:', e?.message || e);
-                    ctx.reply('❌ Erro ao gerar o link.');
+                    const r = await axios.get(`https://api.telegram.org/bot${TOKEN_TG}/getFile?file_id=${mediaObj.file_id}`, { timeout: 10000 });
+                    if (!r.data.ok) throw new Error(r.data.description || 'Erro');
+                    const url = `https://api.telegram.org/file/bot${TOKEN_TG}/${r.data.result.file_path}`;
+                    const kb = mediaObj.file_size ? `${(mediaObj.file_size/1024).toFixed(1)} KB` : 'N/A';
+                    await ctx.reply(`✅ *Link gerado!*\n\n📄 \`${mediaType}\`\n📦 ${kb}\n\n🔗 ${url}\n\n⚠️ _Expira em ~1 hora._`, { parse_mode: 'Markdown' });
+                } catch(e) {
+                    const msg = e?.message?.includes('big') ? '❌ Arquivo muito grande (limite 20MB).' : '❌ Erro ao gerar link.';
+                    ctx.reply(msg);
                 }
                 break;
             }
@@ -1016,50 +1001,36 @@ ${PREFIX}info`, { parse_mode: 'Markdown' });
 
             // ── ANIME (Sushi Animes) ──────────────────────
             case 'anime': case 'buscaranime': {
-                if (!q) return ctx.reply(`Use: ${PREFIX}anime <nome do anime>\nEx: ${PREFIX}anime Naruto`);
+                if (!q) return ctx.reply(`Use: ${PREFIX}anime <nome>\nEx: ${PREFIX}anime Naruto`);
                 try {
-                    await ctx.reply('🍙 Buscando no Sushi Animes...');
-                    const cheerio = require('cheerio');
-                    const resp = await axios.get(`https://sushianimes.com.br/?s=${encodeURIComponent(q)}`,{
-                        headers:{'User-Agent':'Mozilla/5.0'},timeout:15000
-                    });
-                    const $ = cheerio.load(resp.data);
-                    const resultados = [];
-                    $('.TPostMv, .post, article').slice(0,5).each((i,el)=>{
-                        const titulo = $(el).find('h2,h3,.Title,.entry-title').first().text().trim();
-                        const link = $(el).find('a').first().attr('href');
-                        const thumb = $(el).find('img').first().attr('src')||$(el).find('img').first().attr('data-src');
-                        if (titulo && link) resultados.push({titulo,link,thumb});
-                    });
-                    if (!resultados.length) return ctx.reply('❌ Nenhum anime encontrado. Tente outro nome.');
-                    const txt = `🍙 *Resultados para "${q}":*\n\n` + resultados.map((r,i)=>`*${i+1}.* [${r.titulo}](${r.link})`).join('\n');
-                    if (resultados[0]?.thumb) {
-                        await ctx.replyWithPhoto({url:resultados[0].thumb},{caption:txt,parse_mode:'Markdown'});
+                    await ctx.reply('🔍 Buscando...');
+                    const res = await axios.get(`https://api.jikan.moe/v4/anime?q=${encodeURIComponent(q)}&limit=5`, { timeout: 15000 });
+                    const animes = res.data?.data;
+                    if (!animes?.length) return ctx.reply('❌ Nenhum anime encontrado.');
+                    const a = animes[0];
+                    const cap = `🍙 *${a.title}*${a.title_english && a.title_english !== a.title ? ` (${a.title_english})` : ''}\n\n📝 ${(a.synopsis||'Sem sinopse').slice(0,400)}...\n\n⭐ Nota: ${a.score||'N/A'} | 📺 ${a.episodes||'?'} eps | 📅 ${a.year||'?'}\n🏷️ ${a.genres?.map(g=>g.name).join(', ')||'N/A'}\n\n🔗 ${a.url}`;
+                    if (a.images?.jpg?.large_image_url) {
+                        await ctx.replyWithPhoto({ url: a.images.jpg.large_image_url }, { caption: cap, parse_mode: 'Markdown' });
                     } else {
-                        await ctx.reply(txt,{parse_mode:'Markdown'});
+                        await ctx.reply(cap, { parse_mode: 'Markdown' });
                     }
-                } catch(e){console.error('[anime]',e?.message);ctx.reply('❌ Erro ao buscar. Tente novamente.');}
+                    if (animes.length > 1) {
+                        const outros = animes.slice(1).map((a2,i)=>`*${i+2}.* [${a2.title}](${a2.url})`).join('\n');
+                        await ctx.reply(`📋 *Outros resultados:*\n\n${outros}`, { parse_mode: 'Markdown' });
+                    }
+                } catch(e) { console.error('[anime]',e?.message); ctx.reply('❌ Erro ao buscar. Tente novamente.'); }
                 break;
             }
 
             case 'anirecente': case 'animesrecentes': {
                 try {
-                    await ctx.reply('🍙 Buscando últimos episódios...');
-                    const cheerio2 = require('cheerio');
-                    const resp2 = await axios.get('https://sushianimes.com.br/',{
-                        headers:{'User-Agent':'Mozilla/5.0'},timeout:15000
-                    });
-                    const $2 = cheerio2.load(resp2.data);
-                    const recentes = [];
-                    $('.TPostMv, .post, article, .episodio, .item').slice(0,8).each((i,el)=>{
-                        const titulo = $2(el).find('h2,h3,.Title,.entry-title').first().text().trim();
-                        const link = $2(el).find('a').first().attr('href');
-                        if (titulo && link) recentes.push({titulo,link});
-                    });
-                    if (!recentes.length) return ctx.reply('❌ Não foi possível carregar os recentes. Acesse: https://sushianimes.com.br');
-                    const txt2 = `🍙 *Últimos animes/episódios:*\n\n` + recentes.map((r,i)=>`*${i+1}.* [${r.titulo}](${r.link})`).join('\n') + '\n\n🔗 [Ver mais](https://sushianimes.com.br)';
-                    await ctx.reply(txt2,{parse_mode:'Markdown'});
-                } catch(e){console.error('[anirecente]',e?.message);ctx.reply(`❌ Erro ao carregar. Acesse diretamente: https://sushianimes.com.br`);}
+                    await ctx.reply('🔍 Buscando animes em destaque...');
+                    const res2 = await axios.get('https://api.jikan.moe/v4/top/anime?limit=8', { timeout: 15000 });
+                    const top = res2.data?.data;
+                    if (!top?.length) return ctx.reply('❌ Não foi possível carregar.');
+                    const txt = '🏆 *Top Animes (MyAnimeList):*\n\n' + top.map((a,i)=>`*${i+1}.* [${a.title}](${a.url}) — ⭐${a.score||'?'}`).join('\n');
+                    await ctx.reply(txt, { parse_mode: 'Markdown' });
+                } catch(e) { ctx.reply('❌ Erro ao carregar.'); }
                 break;
             }
 
