@@ -206,7 +206,7 @@ reject(err)
 })
 })
 
-exports.createExif = (pack, auth) =>{
+const createExif = (pack, auth) =>{
 const code = [0x00,0x00,0x16,0x00,0x00,0x00]
 const exif = {"sticker-pack-id": "com.client.tech", "sticker-pack-name": pack, "sticker-pack-publisher": auth, "android-app-store-link": "https://play.google.com/store/apps/details?id=com.termux", "ios-app-store-link": "https://apps.apple.com/br/app/telegram/id686449807"}
 let len = JSON.stringify(exif).length
