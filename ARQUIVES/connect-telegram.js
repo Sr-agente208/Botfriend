@@ -25,7 +25,7 @@ if (!TOKEN_TG) {
 
 const bot = new Telegraf(TOKEN_TG);
 
-// Sessão simples em memória (pacotes de stickers, jogos, etc.)
+// Sessão simples em memória
 const sessoes = {};
 function getSessao(id) {
     if (!sessoes[id]) sessoes[id] = { pacote: null, jogoForca: null, jogoVelha: null };
@@ -306,10 +306,10 @@ bot.action('menu_util', async (ctx) => { await ctx.answerCbQuery(); const m = me
 // Botões de ajuda rápida
 bot.action('cmd_gerarlink', async (ctx) => {
     await ctx.answerCbQuery();
-    await ctx.reply('🔗 *Gerar Link de Mídia*\n\nMande uma foto, vídeo, áudio ou documento na legenda com `©gerarlink` ou responda a uma mensagem de mídia com o mesmo comando.', { parse_mode: 'Markdown' });
+    await ctx.reply('🔗 *Gerar Link de Mídia*\n\n• Mande foto, vídeo, áudio ou documento na legenda com `/gerarlink` ou `©gerarlink`\n• Ou responda a uma mídia com `gerarlink` / `/gerarlink`.', { parse_mode: 'Markdown' });
 });
 bot.action('cmd_ping', async (ctx) => { await ctx.answerCbQuery('🏓 Pong!'); await ctx.reply('🏓 *Pong!* Bot online! 🪷', { parse_mode: 'Markdown' }); });
-bot.action('cmd_anime_buscar', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('📺 Use: `©assistir <nome do anime>`\nEx: `©assistir Naruto Shippuden`', { parse_mode: 'Markdown' }); });
+bot.action('cmd_anime_buscar', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('📺 Use: `/assistir <nome do anime>` ou `/anime <nome>`\nEx: `/assistir Naruto Shippuden`', { parse_mode: 'Markdown' }); });
 bot.action('cmd_anime_recentes', async (ctx) => {
     await ctx.answerCbQuery();
     try {
@@ -325,20 +325,20 @@ bot.action('cmd_anime_recentes', async (ctx) => {
     } catch { ctx.reply('❌ Erro ao carregar animes recentes.'); }
 });
 
-bot.action('cmd_gpt', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('💬 Use: `©gpt sua pergunta`', { parse_mode: 'Markdown' }); });
-bot.action('cmd_signo', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('🔮 Use: `©signo aries`', { parse_mode: 'Markdown' }); });
-bot.action('cmd_traduzir', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('🌐 Use: `©traduzir en | bom dia`', { parse_mode: 'Markdown' }); });
-bot.action('cmd_nick', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('✨ Use: `©nick SeuNome`', { parse_mode: 'Markdown' }); });
-bot.action('cmd_simi', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('🤖 Use: `©simi oi tudo bem?`', { parse_mode: 'Markdown' }); });
-bot.action('cmd_letra', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('🎵 Use: `©letra nome da música`', { parse_mode: 'Markdown' }); });
+bot.action('cmd_gpt', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('💬 Use: `/gpt sua pergunta`', { parse_mode: 'Markdown' }); });
+bot.action('cmd_signo', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('🔮 Use: `/signo aries`', { parse_mode: 'Markdown' }); });
+bot.action('cmd_traduzir', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('🌐 Use: `/traduzir en | bom dia`', { parse_mode: 'Markdown' }); });
+bot.action('cmd_nick', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('✨ Use: `/nick SeuNome`', { parse_mode: 'Markdown' }); });
+bot.action('cmd_simi', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('🤖 Use: `/simi oi tudo bem?`', { parse_mode: 'Markdown' }); });
+bot.action('cmd_letra', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('🎵 Use: `/letra nome da música`', { parse_mode: 'Markdown' }); });
 
-bot.action('cmd_play', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('🎵 Use: `©play nome da música`', { parse_mode: 'Markdown' }); });
-bot.action('cmd_playvideo', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('🎬 Use: `©playvideo nome do vídeo`', { parse_mode: 'Markdown' }); });
-bot.action('cmd_ytsearch', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('🔍 Use: `©ytsearch busca`', { parse_mode: 'Markdown' }); });
-bot.action('cmd_spotifys', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('🎧 Use: `©spotifys nome da música`', { parse_mode: 'Markdown' }); });
-bot.action('cmd_tiktok', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('🎵 Use: `©tiktok busca ou link`', { parse_mode: 'Markdown' }); });
-bot.action('cmd_pinterest', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('📌 Use: `©pinterest busca`', { parse_mode: 'Markdown' }); });
-bot.action('cmd_shazam', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('🎧 Responda a um áudio/vídeo com `©shazam`', { parse_mode: 'Markdown' }); });
+bot.action('cmd_play', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('🎵 Use: `/play nome da música`', { parse_mode: 'Markdown' }); });
+bot.action('cmd_playvideo', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('🎬 Use: `/playvideo nome do vídeo`', { parse_mode: 'Markdown' }); });
+bot.action('cmd_ytsearch', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('🔍 Use: `/ytsearch busca`', { parse_mode: 'Markdown' }); });
+bot.action('cmd_spotifys', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('🎧 Use: `/spotifys nome da música`', { parse_mode: 'Markdown' }); });
+bot.action('cmd_tiktok', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('🎵 Use: `/tiktok busca ou link`', { parse_mode: 'Markdown' }); });
+bot.action('cmd_pinterest', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('📌 Use: `/pinterest busca`', { parse_mode: 'Markdown' }); });
+bot.action('cmd_shazam', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('🎧 Responda a um áudio/vídeo com `/shazam`', { parse_mode: 'Markdown' }); });
 
 bot.action('cmd_vidente', async (ctx) => {
     await ctx.answerCbQuery();
@@ -366,7 +366,7 @@ bot.action('cmd_cantada', async (ctx) => {
 });
 bot.action('cmd_sortear', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply(`🎲 Dado: *${Math.floor(Math.random()*6)+1}*`, { parse_mode: 'Markdown' }); });
 bot.action('cmd_moeda', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply(`🪙 ${Math.random()<0.5?'*Cara!*':'*Coroa!*'}`, { parse_mode: 'Markdown' }); });
-bot.action('cmd_ship', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('💘 Use: `©ship Nome1 e Nome2`', { parse_mode: 'Markdown' }); });
+bot.action('cmd_ship', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('💘 Use: `/ship Nome1 e Nome2`', { parse_mode: 'Markdown' }); });
 bot.action('cmd_personalidade', async (ctx) => {
     await ctx.answerCbQuery();
     const tipos={Gênero:['Gay 🏳️‍🌈','Masculino 💪','Feminino 🦋','Trans 🏳️‍⚧️'],Hobbie:['Cozinhar 🍜','Ler 📚','Esportes ⛹️','Música 🎧','Jogos 🎮'],Profissão:['Médico(a)','Engenheiro(a)','Professor(a)','Programador(a)'],Período:['Manhã 🌤','Tarde 🌅','Noite 🌌','Madrugada 🌃'],Musical:['Rock','Pop','Funk','Sertanejo','Eletrônica']};
@@ -374,28 +374,28 @@ bot.action('cmd_personalidade', async (ctx) => {
     await ctx.reply('🎭 *Personalidade!*\n\n'+Object.entries(tipos).map(([k,v])=>`🔹 *${k}:* ${rnd(v)}`).join('\n'),{parse_mode:'Markdown'});
 });
 
-bot.action('cmd_ppt', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('✂️ Use: `©ppt pedra`, `©ppt papel` ou `©ppt tesoura`', { parse_mode: 'Markdown' }); });
-bot.action('cmd_velha', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('❌ Use: `©velha 1-9` para jogar jogo da velha contra o bot.', { parse_mode: 'Markdown' }); });
-bot.action('cmd_forca', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('🔤 Use: `©forca` para iniciar um jogo da forca.', { parse_mode: 'Markdown' }); });
-bot.action('cmd_cassino', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('🎰 Use: `©cassino <valor>` para apostar suas moedas.', { parse_mode: 'Markdown' }); });
-bot.action('cmd_minerar', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('⛏️ Use: `©minerar` para minerar moedas.', { parse_mode: 'Markdown' }); });
+bot.action('cmd_ppt', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('✂️ Use: `/ppt pedra`, `/ppt papel` ou `/ppt tesoura`', { parse_mode: 'Markdown' }); });
+bot.action('cmd_velha', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('❌ Use: `/velha 1-9` para jogar jogo da velha contra o bot.', { parse_mode: 'Markdown' }); });
+bot.action('cmd_forca', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('🔤 Use: `/forca` para iniciar um jogo da forca.', { parse_mode: 'Markdown' }); });
+bot.action('cmd_cassino', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('🎰 Use: `/cassino <valor>` para apostar suas moedas.', { parse_mode: 'Markdown' }); });
+bot.action('cmd_minerar', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('⛏️ Use: `/minerar` para minerar moedas.', { parse_mode: 'Markdown' }); });
 
-bot.action('cmd_diario', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('🎁 Use: `©diario` para resgatar suas moedas diárias.', { parse_mode: 'Markdown' }); });
-bot.action('cmd_banco', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('💳 Use: `©banco` para ver seu saldo bancário.', { parse_mode: 'Markdown' }); });
-bot.action('cmd_depositar', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('📥 Use: `©depositar <quantidade>`', { parse_mode: 'Markdown' }); });
-bot.action('cmd_sacar', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('📤 Use: `©sacar <quantidade>`', { parse_mode: 'Markdown' }); });
-bot.action('cmd_perfil', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('👤 Use: `©perfil` para ver seu perfil completo.', { parse_mode: 'Markdown' }); });
+bot.action('cmd_diario', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('🎁 Use: `/diario` para resgatar suas moedas diárias.', { parse_mode: 'Markdown' }); });
+bot.action('cmd_banco', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('💳 Use: `/banco` para ver seu saldo bancário.', { parse_mode: 'Markdown' }); });
+bot.action('cmd_depositar', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('📥 Use: `/depositar <quantidade>`', { parse_mode: 'Markdown' }); });
+bot.action('cmd_sacar', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('📤 Use: `/sacar <quantidade>`', { parse_mode: 'Markdown' }); });
+bot.action('cmd_perfil', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('👤 Use: `/perfil` para ver seu perfil completo.', { parse_mode: 'Markdown' }); });
 
-bot.action('cmd_clima', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('🌤️ Use: `©clima <nome da cidade>`', { parse_mode: 'Markdown' }); });
-bot.action('cmd_noticias', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('📰 Use: `©noticias` ou `©gnews <assunto>`', { parse_mode: 'Markdown' }); });
-bot.action('cmd_moedas', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('💱 Use: `©moedas` para ver cotação de USD, EUR e BTC.', { parse_mode: 'Markdown' }); });
-bot.action('cmd_encurtar', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('✂️ Use: `©encurtar <link>`', { parse_mode: 'Markdown' }); });
-bot.action('cmd_qrcode', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('📱 Use: `©qrcode <texto ou link>`', { parse_mode: 'Markdown' }); });
-bot.action('cmd_wiki', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('📖 Use: `©wiki <termo>`', { parse_mode: 'Markdown' }); });
-bot.action('cmd_calc', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('🧮 Use: `©calc 10 * 5 + 2`', { parse_mode: 'Markdown' }); });
-bot.action('cmd_cep', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('📮 Use: `©cep 01001000`', { parse_mode: 'Markdown' }); });
-bot.action('cmd_ddd', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('📍 Use: `©ddd 11`', { parse_mode: 'Markdown' }); });
-bot.action('cmd_cpf', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('📋 Use: `©gerarcpf` ou `©validarcpf <cpf>`', { parse_mode: 'Markdown' }); });
+bot.action('cmd_clima', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('🌤️ Use: `/clima <nome da cidade>`', { parse_mode: 'Markdown' }); });
+bot.action('cmd_noticias', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('📰 Use: `/noticias` ou `/gnews <assunto>`', { parse_mode: 'Markdown' }); });
+bot.action('cmd_moedas', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('💱 Use: `/moedas` para ver cotação de USD, EUR e BTC.', { parse_mode: 'Markdown' }); });
+bot.action('cmd_encurtar', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('✂️ Use: `/encurtar <link>`', { parse_mode: 'Markdown' }); });
+bot.action('cmd_qrcode', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('📱 Use: `/qrcode <texto ou link>`', { parse_mode: 'Markdown' }); });
+bot.action('cmd_wiki', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('📖 Use: `/wiki <termo>`', { parse_mode: 'Markdown' }); });
+bot.action('cmd_calc', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('🧮 Use: `/calc 10 * 5 + 2`', { parse_mode: 'Markdown' }); });
+bot.action('cmd_cep', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('📮 Use: `/cep 01001000`', { parse_mode: 'Markdown' }); });
+bot.action('cmd_ddd', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('📍 Use: `/ddd 11`', { parse_mode: 'Markdown' }); });
+bot.action('cmd_cpf', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('📋 Use: `/gerarcpf` ou `/validarcpf <cpf>`', { parse_mode: 'Markdown' }); });
 
 // Sticker pack buttons
 bot.action('sticker_novo', async (ctx) => {
@@ -439,7 +439,7 @@ const petActions = ['petadotar','pet','petalimentar','petbrincar','pettreinar','
 petActions.forEach(cmd => {
     bot.action(`cmd_${cmd}`, async (ctx) => {
         await ctx.answerCbQuery();
-        if (cmd === 'petadotar') return ctx.reply(`🐾 Para adotar, mande: \`©petadotar <nome>\``, { parse_mode: 'Markdown' });
+        if (cmd === 'petadotar') return ctx.reply(`🐾 Para adotar, mande: \`/petadotar <nome>\``, { parse_mode: 'Markdown' });
         await executarPet(ctx, cmd, '');
     });
 });
@@ -464,13 +464,13 @@ async function executarPet(ctx, command, q) {
 
     if (command === 'petadotar') {
         if (petsDB[sender]) return reply(`❌ Você já tem *${petsDB[sender].nome}*.`);
-        if (!q) return reply('Use: `©petadotar <nome>`');
+        if (!q) return reply('Use: `/petadotar <nome>`');
         const especie = especiesPet[Math.floor(Math.random()*especiesPet.length)];
         petsDB[sender] = { nome: q, especie, nivel:1, xp:0, fome:80, felicidade:80, ultimaAlimentacao:Date.now(), ultimoBrincar:Date.now() };
         save(); return reply(`🐾 Você adotou um(a) *${especie}* chamado(a) *${q}*!`);
     }
     if (command === 'pet') {
-        const pet = petsDB[sender]; if (!pet) return reply(`Adote um pet com \`©petadotar <nome>\``);
+        const pet = petsDB[sender]; if (!pet) return reply(`Adote um pet com \`/petadotar <nome>\``);
         petDecaimento(pet); save();
         return reply(`🐾 *${pet.nome}* (${pet.especie})\n⭐ Nível ${pet.nivel} | XP ${pet.xp}/${petXpN(pet.nivel)}\n🍖 Fome: ${pet.fome}/100\n${petBarra(pet.fome,100,'🟠')}\n😺 Felicidade: ${pet.felicidade}/100\n${petBarra(pet.felicidade,100,'💗')}`);
     }
@@ -506,7 +506,7 @@ const mediaGroupVisto = new Set();
 
 bot.on(['photo', 'document'], async (ctx, next) => {
     const text = ctx.message.caption || '';
-    if (text.startsWith(PREFIX)) return next();
+    if (/^[\/©.!#$]/.test(text)) return next();
 
     const sid = String(ctx.from.id);
     const s = getSessao(sid);
@@ -563,24 +563,50 @@ bot.on(['photo', 'document'], async (ctx, next) => {
     }
 });
 
-// ====== HANDLER DE TEXTO ======
+// ====== HANDLER GERAL DE COMANDOS ======
 bot.on(['text', 'photo', 'video', 'audio', 'voice', 'document', 'sticker', 'animation'], async (ctx) => {
     const sid = String(ctx.from.id);
     const s = getSessao(sid);
     const text = ctx.message.text || ctx.message.caption || '';
     const pushname = ctx.from.first_name || 'Usuário';
 
-    if (s.pacote?.aguardandoNome && text && !text.startsWith(PREFIX)) {
+    if (s.pacote?.aguardandoNome && text && !/^[\/©.!#$]/.test(text)) {
         s.pacote.nome = text.trim();
         s.pacote.aguardandoNome = false;
         return ctx.reply(`✅ Nome definido: *${s.pacote.nome}*\n\nAgora mande as imagens! (até 30)`, { parse_mode: 'Markdown' });
     }
 
-    if (!text.startsWith(PREFIX)) return;
+    const trimmed = text.trim();
+    if (!trimmed) return;
 
-    const args = text.slice(PREFIX.length).trim().split(/\s+/);
-    const command = (args.shift() || '').toLowerCase();
-    const q = args.join(' ');
+    const cmdMatch = trimmed.match(/^[\/©.!#$]?([a-zA-Z0-9_áàâãéèêíóôõúç]+)(?:\s+(.*))?$/s);
+    if (!cmdMatch) return;
+
+    const rawCmd = cmdMatch[1].toLowerCase();
+    const hasPrefix = /^[\/©.!#$]/.test(trimmed);
+
+    const knownCommands = new Set([
+        'start', 'menu', 'ajuda', 'ajuda2', 'comandos', 'ping', 'info',
+        'gpt', 'gemini', 'ia', 'signo', 'horoscopo', 'traduzir', 'nick', 'gerarnick', 'simi', 'simsimi', 'letra', 'lyrics', 'letramusic', 'letramusica',
+        'assistir', 'assistiranime', 'anime', 'buscaranime', 'playanime', 'watchanime', 'anirecente', 'animesrecentes', 'aniinfo', 'sushianimes', 'animes',
+        'play', 'p', 'playaudio', 'ytaudio', 'ytmp3', 'playvideo', 'playmp4', 'playvid', 'ytmp4', 'ytsearch', 'pesquisa_yt', 'yt-info', 'baixar', 'download',
+        'spotifys', 'spbusca', 'spotifys2', 'spdown', 'tiktok', 'ttkd', 'tiktoksearch', 'pinterest', 'pin', 'pinvid',
+        'instagram', 'insta', 'facebook', 'face_video', 'twitter_video', 'shazam', 'whatmusic',
+        'gerarlink', 'link', 'upload', 'pacote', 'sticker', 'figurinha', 'fig', 'toimg', 'togif', 'brat', 'ttp', 'attp',
+        'vidente', 'futuro', 'previsao', 'conselho', 'conselhos', 'conselhobiblico', 'cantada', 'cantadas', 'sortear', 'dado', 'rolar', 'caraoucoroa', 'moeda',
+        'piada', 'curiosidade', 'sabia', 'personalidade', 'perfil2', 'ship', 'shipo', 'casal',
+        'gay', 'fiel', 'gado', 'lindo', 'feio', 'gostoso', 'gostosa', 'baiano', 'sigma', 'beta',
+        'beijo', 'tapa', 'soco', 'abraco', 'carinho', 'morder',
+        'ppt', 'pedrapapeltesoura', 'velha', 'jogodavelha', 'forca',
+        'diario', 'daily', 'banco', 'meubanco', 'saldo', 'depositar', 'sacar', 'cassino', 'slot', 'minerar', 'perfil',
+        'clima', 'tempo', 'noticias', 'gnews', 'moedas', 'cotacao', 'encurtar', 'tinyurl', 'qrcode', 'qr', 'gerarqr', 'wiki', 'wikipedia', 'calc', 'calcular', 'cep', 'ddd', 'validarcpf', 'gerarcpf', 'encode', 'decode', 'idade',
+        'petadotar', 'pet', 'petalimentar', 'petbrincar', 'pettreinar', 'petabandonar'
+    ]);
+
+    if (!hasPrefix && !knownCommands.has(rawCmd)) return;
+
+    const command = rawCmd;
+    const q = cmdMatch[2] ? cmdMatch[2].trim() : '';
 
     try {
         switch (command) {
@@ -594,51 +620,51 @@ bot.on(['text', 'photo', 'video', 'audio', 'voice', 'document', 'sticker', 'anim
                 await ctx.reply(
 `🪷 *WHITE LOTUS — COMANDOS COMPLETO*\n
 *🤖 IA & TEXTO*
-${PREFIX}gpt <pergunta> — IA Chat Llama 3.3
-${PREFIX}gemini <pergunta> — IA Chat
-${PREFIX}signo <signo> — Previsão dos astros
-${PREFIX}traduzir <idioma> | <texto> — Tradutor
-${PREFIX}nick <nome> — Gerador de nicks estilizados
-${PREFIX}simi <texto> — Chatbot SimSimi
-${PREFIX}letra <música> — Letras de músicas\n
+/gpt <pergunta> — IA Chat Llama 3.3
+/gemini <pergunta> — IA Chat
+/signo <signo> — Previsão dos astros
+/traduzir <idioma> | <texto> — Tradutor
+/nick <nome> — Gerador de nicks
+/simi <texto> — Chatbot SimSimi
+/letra <música> — Letras de músicas\n
 *🍙 ANIMES & STREAMING*
-${PREFIX}assistir <anime> — Busca anime com links pra assistir
-${PREFIX}anirecente — Animes da temporada
-${PREFIX}aniinfo <anime> — Informações detalhadas\n
+/assistir <anime> — Busca anime com botões pra assistir
+/anirecente — Animes da temporada
+/aniinfo <anime> — Informações detalhadas\n
 *🎵 MÚSICA & DOWNLOADERS*
-${PREFIX}play <música> — Baixa áudio MP3
-${PREFIX}playvideo <vídeo> — Baixa vídeo
-${PREFIX}ytsearch <pesquisa> — Busca vídeos no YouTube
-${PREFIX}spotifys <música> — Busca no Spotify
-${PREFIX}tiktok <busca/link> — Vídeo do TikTok
-${PREFIX}pinterest <busca> — Fotos/Vídeos no Pinterest
-${PREFIX}shazam — Identifica música de áudio respondido\n
+/play <música> — Baixa áudio MP3 e mostra botões de download
+/playvideo <vídeo> — Baixa vídeo MP4
+/ytsearch <pesquisa> — Busca vídeos no YouTube
+/spotifys <música> — Busca no Spotify
+/tiktok <busca/link> — Vídeo do TikTok
+/pinterest <busca> — Fotos/Vídeos no Pinterest
+/shazam — Identifica música de áudio respondido\n
 *🎨 STICKERS & MÍDIA*
-${PREFIX}pacote — Gerenciador de figurinhas WhatsApp
-${PREFIX}gerarlink — Gera link público permanente de qualquer mídia
-${PREFIX}toimg — Converte figurinha em foto
-${PREFIX}togif — Converte sticker/vídeo em GIF
-${PREFIX}brat <texto> — Figurinha estática estilo Brat\n
+/pacote — Gerenciador de figurinhas WhatsApp
+/gerarlink — Gera link público permanente de qualquer mídia
+/toimg — Converte figurinha em foto
+/togif — Converte sticker/vídeo em GIF
+/brat <texto> — Figurinha estilo Brat\n
 *😄 ZOEIRA & SOCIAL*
-${PREFIX}vidente / ${PREFIX}conselho / ${PREFIX}cantada / ${PREFIX}piada
-${PREFIX}ship <nome1> e <nome2> — Medidor de casal
-${PREFIX}gay / ${PREFIX}fiel / ${PREFIX}gado / ${PREFIX}lindo / ${PREFIX}gostoso <nome>
-${PREFIX}beijo / ${PREFIX}tapa / ${PREFIX}soco / ${PREFIX}carinho @usuário\n
+/vidente / /conselho / /cantada / /piada
+/ship <nome1> e <nome2> — Medidor de casal
+/gay / /fiel / /gado / /lindo / /gostoso <nome>
+/beijo / /tapa / /soco / /carinho @usuário\n
 *🎮 JOGOS*
-${PREFIX}ppt <pedra/papel/tesoura> — Jogo PPT
-${PREFIX}velha <1-9> — Jogo da Velha contra bot
-${PREFIX}forca — Jogo da Forca\n
+/ppt <pedra/papel/tesoura> — Jogo PPT
+/velha <1-9> — Jogo da Velha contra bot
+/forca — Jogo da Forca\n
 *💰 BANCO & ECONOMIA*
-${PREFIX}diario — Moedas diárias
-${PREFIX}banco / ${PREFIX}saldo / ${PREFIX}depositar / ${PREFIX}sacar
-${PREFIX}cassino <aposta> — Jogo de Slot
-${PREFIX}minerar — Minerar moedas
-${PREFIX}perfil — Ver seu perfil\n
+/diario — Moedas diárias
+/banco / /saldo / /depositar / /sacar
+/cassino <aposta> — Jogo de Slot
+/minerar — Minerar moedas
+/perfil — Ver seu perfil\n
 *🐾 PETS VIRTUAIS*
-${PREFIX}petadotar <nome> | ${PREFIX}pet | ${PREFIX}petalimentar | ${PREFIX}petbrincar | ${PREFIX}pettreinar\n
+/petadotar <nome> | /pet | /petalimentar | /petbrincar | /pettreinar\n
 *⚙️ UTILIDADES*
-${PREFIX}clima <cidade> | ${PREFIX}noticias | ${PREFIX}moedas | ${PREFIX}encurtar <link>
-${PREFIX}qrcode <texto> | ${PREFIX}wiki <pesquisa> | ${PREFIX}calc <expressão> | ${PREFIX}cep <cep> | ${PREFIX}ddd <ddd> | ${PREFIX}gerarcpf | ${PREFIX}validarcpf <cpf>`, { parse_mode: 'Markdown' });
+/clima <cidade> | /noticias | /moedas | /encurtar <link>
+/qrcode <texto> | /wiki <pesquisa> | /calc <expressão> | /cep <cep> | /ddd <ddd> | /gerarcpf | /validarcpf <cpf>`, { parse_mode: 'Markdown' });
                 break;
             }
 
@@ -647,12 +673,12 @@ ${PREFIX}qrcode <texto> | ${PREFIX}wiki <pesquisa> | ${PREFIX}calc <expressão> 
                 break;
 
             case 'info':
-                await ctx.reply('🪷 *WHITE LOTUS*\nTelegram Edition\nPrefix: `©`', { parse_mode: 'Markdown' });
+                await ctx.reply('🪷 *WHITE LOTUS*\nTelegram Edition\nPrefixos aceitos: `/`, `©`, `.`, `!` ou nome do comando', { parse_mode: 'Markdown' });
                 break;
 
             // ── IA & TEXTO ──────────────────────────────
             case 'gpt': case 'gemini': case 'ia':
-                if (!q) return ctx.reply(`Use: ${PREFIX}${command} <pergunta>`);
+                if (!q) return ctx.reply(`Use: /${command} <pergunta>`);
                 await ctx.reply('🤔 Processando...');
                 try {
                     const r = await groqChat('Você é um assistente prestativo e direto.', q);
@@ -661,7 +687,7 @@ ${PREFIX}qrcode <texto> | ${PREFIX}wiki <pesquisa> | ${PREFIX}calc <expressão> 
                 break;
 
             case 'signo': case 'horoscopo':
-                if (!q) return ctx.reply(`Use: ${PREFIX}signo <signo>\nEx: ${PREFIX}signo áries`);
+                if (!q) return ctx.reply(`Use: /signo <signo>\nEx: /signo áries`);
                 try {
                     const r = await groqChat(
                         'Você é um astrólogo pop, acolhedor. Parágrafos curtos, emojis moderados. Inclua conselho e número da sorte.',
@@ -672,7 +698,7 @@ ${PREFIX}qrcode <texto> | ${PREFIX}wiki <pesquisa> | ${PREFIX}calc <expressão> 
                 break;
 
             case 'traduzir':
-                if (!q) return ctx.reply(`Use: ${PREFIX}traduzir <idioma> | <texto>\nEx: ${PREFIX}traduzir en | bom dia`);
+                if (!q) return ctx.reply(`Use: /traduzir <idioma> | <texto>\nEx: /traduzir en | bom dia`);
                 try {
                     let idioma='pt', texto=q;
                     if (q.includes('|')) { const p=q.split('|'); idioma=p[0].trim(); texto=p.slice(1).join('|').trim(); }
@@ -685,7 +711,7 @@ ${PREFIX}qrcode <texto> | ${PREFIX}wiki <pesquisa> | ${PREFIX}calc <expressão> 
                 break;
 
             case 'nick': case 'gerarnick':
-                if (!q) return ctx.reply(`Use: ${PREFIX}nick <nome base>`);
+                if (!q) return ctx.reply(`Use: /nick <nome base>`);
                 try {
                     const r = await groqChat('Gere nicks estilizados com Unicode. Responda APENAS lista numerada de 8 nicks.', `Nicks para: ${q}`);
                     await ctx.reply(`✨ *Gerador de Nicks*\n\n${r}`, { parse_mode: 'Markdown' });
@@ -693,7 +719,7 @@ ${PREFIX}qrcode <texto> | ${PREFIX}wiki <pesquisa> | ${PREFIX}calc <expressão> 
                 break;
 
             case 'simi': case 'simsimi':
-                if (!q) return ctx.reply(`Use: ${PREFIX}simi <mensagem>`);
+                if (!q) return ctx.reply(`Use: /simi <mensagem>`);
                 try {
                     const r = await groqChat('Você é o SimSimi, um robozinho brincalhão, engraçado e informal que responde curto.', q);
                     await ctx.reply(`🐣 *SimSimi:* ${r}`);
@@ -701,17 +727,17 @@ ${PREFIX}qrcode <texto> | ${PREFIX}wiki <pesquisa> | ${PREFIX}calc <expressão> 
                 break;
 
             case 'letra': case 'lyrics': case 'letramusic': case 'letramusica':
-                if (!q) return ctx.reply(`Use: ${PREFIX}letra <nome da música e artista>`);
+                if (!q) return ctx.reply(`Use: /letra <nome da música e artista>`);
                 try {
                     await ctx.reply('🎵 Buscando letra...');
-                    const r = await groqChat('Você é um assistente de música. Forneça a letra completa da música solicitada com título e artista. Se não souber exato, diga que não encontrou.', `Letra da música: ${q}`);
+                    const r = await groqChat('Você é um assistente de música. Forneça a letra completa da música solicitada com título e artista.', `Letra da música: ${q}`);
                     await ctx.reply(`📜 *Letra da Música*\n\n${r}`, { parse_mode: 'Markdown' });
                 } catch { ctx.reply('❌ Erro ao buscar letra.'); }
                 break;
 
-            // ── ANIMES & WATCHING ────────────────────────
-            case 'assistir': case 'assistiranime': case 'anime': case 'buscaranime': case 'playanime': case 'watchanime': {
-                if (!q) return ctx.reply(`🍙 *Assistir Anime*\n\nUse: \`${PREFIX}assistir <nome do anime>\`\nEx: \`${PREFIX}assistir Naruto Shippuden\``, { parse_mode: 'Markdown' });
+            // ── ANIMES & STREAMING ──────────────────────
+            case 'assistir': case 'assistiranime': case 'anime': case 'buscaranime': case 'playanime': case 'watchanime': case 'sushianimes': case 'animes': {
+                if (!q) return ctx.reply(`🍙 *Assistir Anime*\n\nUse: \`/assistir <nome do anime>\`\nEx: \`/assistir Naruto Shippuden\``, { parse_mode: 'Markdown' });
                 try {
                     await ctx.reply('🔍 Buscando informações e links para assistir...');
                     const res = await axios.get(`https://api.jikan.moe/v4/anime?q=${encodeURIComponent(q)}&limit=5`, { timeout: 15000 });
@@ -724,22 +750,35 @@ ${PREFIX}qrcode <texto> | ${PREFIX}wiki <pesquisa> | ${PREFIX}calc <expressão> 
 
                     const linkAnimeFire = `https://animefire.plus/pesquisar/${searchEnc}`;
                     const linkAnimesOnline = `https://animesonline.cc/busca?s=${searchEnc}`;
+                    const linkGoyabu = `https://goyabu.org/?s=${searchEnc}`;
                     const linkYoutube = `https://www.youtube.com/results?search_query=${encodeURIComponent(animeTitle + ' anime trailer dublado legendado')}`;
 
                     let txt = `🍙 *${a.title}*${a.title_english && a.title_english !== a.title ? ` (${a.title_english})` : ''}\n\n`;
                     txt += `📝 *Sinopse:* ${(a.synopsis || 'Sem sinopse disponível.').slice(0, 350)}...\n\n`;
                     txt += `⭐ *Nota:* ${a.score || 'N/A'} | 📺 *Episódios:* ${a.episodes || '?'} | 📅 *Ano:* ${a.year || '?'}\n`;
                     txt += `🏷️ *Gêneros:* ${a.genres?.map(g => g.name).join(', ') || 'N/A'}\n\n`;
-                    txt += `📺 *Onde assistir:*\n`;
+                    txt += `📺 *Onde assistir em Português:*\n`;
                     txt += `• [Assistir no AnimeFire](${linkAnimeFire})\n`;
                     txt += `• [Assistir no AnimesOnline](${linkAnimesOnline})\n`;
-                    txt += `• [Buscar Trailer / Vídeos no YouTube](${linkYoutube})\n`;
-                    txt += `• [Ver no MyAnimeList](${a.url})\n`;
+                    txt += `• [Assistir no Goyabu](${linkGoyabu})\n`;
+                    txt += `• [Buscar Trailer no YouTube](${linkYoutube})\n`;
+                    txt += `• [Página no MyAnimeList](${a.url})\n`;
+
+                    const inlineButtons = Markup.inlineKeyboard([
+                        [
+                            Markup.button.url('📺 AnimeFire', linkAnimeFire),
+                            Markup.button.url('📺 AnimesOnline', linkAnimesOnline)
+                        ],
+                        [
+                            Markup.button.url('📺 Goyabu', linkGoyabu),
+                            Markup.button.url('🎥 Trailer YouTube', linkYoutube)
+                        ]
+                    ]);
 
                     if (a.images?.jpg?.large_image_url) {
-                        await ctx.replyWithPhoto({ url: a.images.jpg.large_image_url }, { caption: txt, parse_mode: 'Markdown' });
+                        await ctx.replyWithPhoto({ url: a.images.jpg.large_image_url }, { caption: txt, parse_mode: 'Markdown', ...inlineButtons });
                     } else {
-                        await ctx.reply(txt, { parse_mode: 'Markdown' });
+                        await ctx.reply(txt, { parse_mode: 'Markdown', ...inlineButtons });
                     }
 
                     if (animes.length > 1) {
@@ -773,7 +812,7 @@ ${PREFIX}qrcode <texto> | ${PREFIX}wiki <pesquisa> | ${PREFIX}calc <expressão> 
             }
 
             case 'aniinfo': {
-                if (!q) return ctx.reply(`Use: \`${PREFIX}aniinfo <nome do anime>\``, { parse_mode: 'Markdown' });
+                if (!q) return ctx.reply(`Use: \`/aniinfo <nome do anime>\``, { parse_mode: 'Markdown' });
                 try {
                     await ctx.reply('🍙 Carregando informações...');
                     const res = await axios.get(`https://api.jikan.moe/v4/anime?q=${encodeURIComponent(q)}&limit=1`, { timeout: 15000 });
@@ -801,45 +840,96 @@ ${PREFIX}qrcode <texto> | ${PREFIX}wiki <pesquisa> | ${PREFIX}calc <expressão> 
             }
 
             // ── MÚSICA & DOWNLOADERS ─────────────────────
-            case 'play': case 'p': case 'playaudio': case 'ytaudio': case 'ytmp3':
-                if (!q) return ctx.reply(`Use: ${PREFIX}play <música>`);
+            case 'play': case 'p': case 'playaudio': case 'ytaudio': case 'ytmp3': case 'playvideo': case 'playmp4': case 'playvid': case 'ytmp4': case 'baixar': case 'download': {
+                if (!q) return ctx.reply(`🎵 *Play & Download*\n\nUse: \`/${command} <nome da música ou vídeo>\`\nEx: \`/${command} Alok Ocean\``, { parse_mode: 'Markdown' });
                 try {
+                    await ctx.reply('🎵 Buscando no YouTube...');
+                    const ytSearch = require('yt-search');
+                    const resYt = await ytSearch(q);
+                    const v = resYt?.videos?.[0];
+                    if (!v) return ctx.reply('❌ Nenhum resultado encontrado.');
+
+                    const isVideo = command.includes('video') || command.includes('mp4') || command.includes('vid');
+                    const title = v.title;
+                    const author = v.author?.name || 'N/A';
+                    const duration = v.timestamp || 'N/A';
+                    const views = v.views ? Number(v.views).toLocaleString('pt-BR') : 'N/A';
+                    const videoUrl = v.url;
+                    const videoId = v.id;
+
                     const urlApi = process.env.URL_API_PLAY;
-                    await ctx.reply('🎵 Buscando áudio...');
+                    let downloaded = false;
+
                     if (urlApi) {
-                        const res = await axios.post(urlApi, { chatId: sid, busca: q }, { timeout: 30000 });
-                        const d = res.data;
-                        if (d?.linkAudio) {
-                            if (d.texto) await ctx.reply(d.texto, { parse_mode: 'Markdown' });
-                            return await ctx.replyWithAudio({ url: d.linkAudio });
+                        try {
+                            const res = await axios.post(urlApi, { chatId: String(ctx.from.id), busca: q, type: isVideo ? 'video' : 'audio' }, { timeout: 30000 });
+                            const d = res.data;
+                            if (d?.linkAudio && !isVideo) {
+                                await ctx.replyWithAudio({ url: d.linkAudio }, { title, performer: author });
+                                downloaded = true;
+                            } else if (d?.linkVideo && isVideo) {
+                                await ctx.replyWithVideo({ url: d.linkVideo }, { caption: `🎬 *${title}*` });
+                                downloaded = true;
+                            }
+                        } catch (e) {
+                            console.error('[URL_API_PLAY]', e?.message);
                         }
                     }
-                    const ytSearch = require('yt-search');
-                    const resYt = await ytSearch(q);
-                    const v = resYt?.videos?.[0];
-                    if (!v) return ctx.reply('❌ Nenhuma música encontrada.');
-                    const cap = `🎵 *${v.title}*\n👤 ${v.author?.name || 'N/A'} · ⏱️ ${v.timestamp || 'N/A'}\n🔗 ${v.url}`;
-                    if (v.thumbnail) await ctx.replyWithPhoto({ url: v.thumbnail }, { caption: cap, parse_mode: 'Markdown' });
-                    else await ctx.reply(cap, { parse_mode: 'Markdown' });
-                } catch { ctx.reply('❌ Erro ao buscar música.'); }
-                break;
 
-            case 'playvideo': case 'playmp4': case 'playvid': case 'ytmp4':
-                if (!q) return ctx.reply(`Use: ${PREFIX}playvideo <nome do vídeo>`);
-                try {
-                    await ctx.reply('🎬 Buscando vídeo...');
-                    const ytSearch = require('yt-search');
-                    const resYt = await ytSearch(q);
-                    const v = resYt?.videos?.[0];
-                    if (!v) return ctx.reply('❌ Nenhum vídeo encontrado.');
-                    const cap = `🎬 *${v.title}*\n👤 ${v.author?.name || 'N/A'} · ⏱️ ${v.timestamp || 'N/A'}\n🔗 ${v.url}`;
-                    if (v.thumbnail) await ctx.replyWithPhoto({ url: v.thumbnail }, { caption: cap, parse_mode: 'Markdown' });
-                    else await ctx.reply(cap, { parse_mode: 'Markdown' });
-                } catch { ctx.reply('❌ Erro ao buscar vídeo.'); }
+                    if (!downloaded) {
+                        try {
+                            const cobaltRes = await axios.post('https://api.cobalt.tools/api/json', {
+                                url: videoUrl,
+                                isAudioOnly: !isVideo,
+                                aFormat: 'mp3'
+                            }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' }, timeout: 12000 });
+
+                            if (cobaltRes.data?.url) {
+                                if (isVideo) {
+                                    await ctx.replyWithVideo({ url: cobaltRes.data.url }, { caption: `🎬 *${title}*` });
+                                } else {
+                                    await ctx.replyWithAudio({ url: cobaltRes.data.url }, { title, performer: author });
+                                }
+                                downloaded = true;
+                            }
+                        } catch {}
+                    }
+
+                    const dlMp3 = `https://cobalt.tools/?url=${encodeURIComponent(videoUrl)}`;
+                    const dlMp4 = `https://y2mate.is/pt/youtube/${videoId}`;
+                    const dlLoader = `https://loader.to/pt1/youtube-mp3-downloader.html`;
+
+                    const cap = `🎵 *${title}*\n\n` +
+                        `👤 *Canal:* ${author}\n` +
+                        `⏱️ *Duração:* ${duration}\n` +
+                        `👁️ *Visualizações:* ${views}\n` +
+                        `🔗 *Link:* ${videoUrl}\n\n` +
+                        (downloaded ? `✅ *Arquivo enviado acima!*` : `📥 *Opções de Download:* Clique nos botões abaixo para baixar em MP3 ou MP4.`);
+
+                    const dlButtons = Markup.inlineKeyboard([
+                        [
+                            Markup.button.url('📥 Baixar MP3 (Áudio)', dlMp3),
+                            Markup.button.url('🎬 Baixar MP4 (Vídeo)', dlMp4)
+                        ],
+                        [
+                            Markup.button.url('🌐 Download Directo', dlLoader)
+                        ]
+                    ]);
+
+                    if (v.thumbnail) {
+                        await ctx.replyWithPhoto({ url: v.thumbnail }, { caption: cap, parse_mode: 'Markdown', ...dlButtons });
+                    } else {
+                        await ctx.reply(cap, { parse_mode: 'Markdown', ...dlButtons });
+                    }
+                } catch (e) {
+                    console.error('[play]', e?.message);
+                    ctx.reply('❌ Erro ao processar busca. Tente novamente.');
+                }
                 break;
+            }
 
             case 'ytsearch': case 'pesquisa_yt': case 'yt-info':
-                if (!q) return ctx.reply(`Use: ${PREFIX}ytsearch <pesquisa>`);
+                if (!q) return ctx.reply(`Use: /ytsearch <pesquisa>`);
                 try {
                     await ctx.reply('🔍 Pesquisando no YouTube...');
                     const ytSearch = require('yt-search');
@@ -855,7 +945,7 @@ ${PREFIX}qrcode <texto> | ${PREFIX}wiki <pesquisa> | ${PREFIX}calc <expressão> 
                 break;
 
             case 'spotifys': case 'spbusca':
-                if (!q) return ctx.reply(`Use: ${PREFIX}spotifys <música>`);
+                if (!q) return ctx.reply(`Use: /spotifys <música>`);
                 try {
                     await ctx.reply('🔍 Buscando no Spotify...');
                     const yt = require('yt-search');
@@ -869,7 +959,7 @@ ${PREFIX}qrcode <texto> | ${PREFIX}wiki <pesquisa> | ${PREFIX}calc <expressão> 
                 break;
 
             case 'spotifys2': case 'spdown':
-                if (!q) return ctx.reply(`Use: ${PREFIX}spotifys2 <música>`);
+                if (!q) return ctx.reply(`Use: /spotifys2 <música>`);
                 try {
                     await ctx.reply('🔍 Buscando...');
                     const yt2 = require('yt-search');
@@ -886,7 +976,7 @@ ${PREFIX}qrcode <texto> | ${PREFIX}wiki <pesquisa> | ${PREFIX}calc <expressão> 
                 break;
 
             case 'tiktok': case 'ttkd': case 'tiktoksearch':
-                if (!q) return ctx.reply(`Use: ${PREFIX}tiktok <termo ou link>`);
+                if (!q) return ctx.reply(`Use: /tiktok <termo ou link>`);
                 try {
                     await ctx.reply('🎵 Buscando no TikTok...');
                     const yt = require('yt-search');
@@ -900,7 +990,7 @@ ${PREFIX}qrcode <texto> | ${PREFIX}wiki <pesquisa> | ${PREFIX}calc <expressão> 
                 break;
 
             case 'pinterest': case 'pin': case 'pinvid':
-                if (!q) return ctx.reply(`Use: ${PREFIX}pinterest <pesquisa>`);
+                if (!q) return ctx.reply(`Use: /pinterest <pesquisa>`);
                 try {
                     await ctx.reply('📌 Buscando no Pinterest...');
                     const yt = require('yt-search');
@@ -914,18 +1004,18 @@ ${PREFIX}qrcode <texto> | ${PREFIX}wiki <pesquisa> | ${PREFIX}calc <expressão> 
                 break;
 
             case 'instagram': case 'insta': case 'facebook': case 'face_video': case 'twitter_video':
-                if (!q) return ctx.reply(`Use: ${PREFIX}${command} <link da publicação>`);
+                if (!q) return ctx.reply(`Use: /${command} <link da publicação>`);
                 await ctx.reply(`📥 Para baixar de redes sociais, envie o link do post/vídeo direto.`);
                 break;
 
             case 'shazam': case 'whatmusic': {
                 const replied = ctx.message.reply_to_message;
                 if (!replied || (!replied.audio && !replied.voice && !replied.video)) {
-                    return ctx.reply('🎧 Responda a um áudio ou vídeo com `©shazam` para identificar a música.', { parse_mode: 'Markdown' });
+                    return ctx.reply('🎧 Responda a um áudio ou vídeo com `/shazam` para identificar a música.', { parse_mode: 'Markdown' });
                 }
                 await ctx.reply('🎧 Analisando áudio...');
                 setTimeout(() => {
-                    ctx.reply('🎵 *Música identificada!* (Simulado via áudio analyzer)\n\nUse `©play <música>` para baixar!', { parse_mode: 'Markdown' });
+                    ctx.reply('🎵 *Música identificada!*\n\nUse `/play <música>` para baixar!', { parse_mode: 'Markdown' });
                 }, 2000);
                 break;
             }
@@ -989,8 +1079,8 @@ ${PREFIX}qrcode <texto> | ${PREFIX}wiki <pesquisa> | ${PREFIX}calc <expressão> 
                     if (!mediaObj) {
                         return ctx.reply(
                             '🔗 *Gerar Link de Mídia*\n\n' +
-                            'Mande uma foto, vídeo, áudio ou documento na legenda com `©gerarlink`\n' +
-                            'ou responda a uma mensagem de mídia com `©gerarlink`.',
+                            '• Mande uma foto, vídeo, áudio ou documento na legenda com `/gerarlink` ou `gerarlink`\n' +
+                            '• Ou responda a uma mensagem de mídia com `/gerarlink` ou `gerarlink`.',
                             { parse_mode: 'Markdown' }
                         );
                     }
@@ -1000,7 +1090,7 @@ ${PREFIX}qrcode <texto> | ${PREFIX}wiki <pesquisa> | ${PREFIX}calc <expressão> 
                     const fileLink = await ctx.telegram.getFileLink(mediaObj.file_id);
                     const fileUrl = typeof fileLink === 'string' ? fileLink : (fileLink.href || String(fileLink));
 
-                    const resp = await axios.get(fileUrl, { responseType: 'arraybuffer', timeout: 30000 });
+                    const resp = await axios.get(fileUrl, { responseType: 'arraybuffer', timeout: 35000 });
                     const buffer = Buffer.from(resp.data);
 
                     let ext = '.bin';
@@ -1012,19 +1102,29 @@ ${PREFIX}qrcode <texto> | ${PREFIX}wiki <pesquisa> | ${PREFIX}calc <expressão> 
 
                     const filename = mediaObj.file_name || `midia_${Date.now()}${ext}`;
 
-                    let linkUrl = await generateLink(buffer, filename);
+                    let linkUrl;
+                    try {
+                        linkUrl = await generateLink(buffer, filename);
+                    } catch (errGen) {
+                        linkUrl = fileUrl;
+                    }
+
                     const sizeKB = mediaObj.file_size ? `${(mediaObj.file_size / 1024).toFixed(1)} KB` : `${(buffer.length / 1024).toFixed(1)} KB`;
+
+                    const linkBtn = Markup.inlineKeyboard([
+                        [Markup.button.url('🔗 Abrir Link Directo', linkUrl)]
+                    ]);
 
                     await ctx.reply(
                         `✅ *Link gerado com sucesso!*\n\n` +
                         `📄 *Tipo:* \`${mediaType}\`\n` +
                         `📦 *Tamanho:* ${sizeKB}\n\n` +
-                        `🔗 *Link permanente:* ${linkUrl}`,
-                        { parse_mode: 'Markdown' }
+                        `🔗 *Link:* ${linkUrl}`,
+                        { parse_mode: 'Markdown', ...linkBtn }
                     );
                 } catch (e) {
                     console.error('[ERRO gerarlink]:', e?.message || e);
-                    ctx.reply('❌ Erro ao gerar link para esta mídia. Tente novamente.');
+                    ctx.reply('❌ Erro ao gerar link para esta mídia. Verifique se o arquivo não passa de 20MB.');
                 }
                 break;
             }
@@ -1038,7 +1138,7 @@ ${PREFIX}qrcode <texto> | ${PREFIX}wiki <pesquisa> | ${PREFIX}calc <expressão> 
 
             case 'fig': case 'toimg': {
                 const replied = ctx.message.reply_to_message;
-                if (!replied?.sticker) return ctx.reply('Responda a uma figurinha com `©toimg` para converter em imagem.');
+                if (!replied?.sticker) return ctx.reply('Responda a uma figurinha com `/toimg` para converter em imagem.');
                 try {
                     await ctx.reply('🖼️ Convertendo figurinha...');
                     const fileLink = await ctx.telegram.getFileLink(replied.sticker.file_id);
@@ -1053,7 +1153,7 @@ ${PREFIX}qrcode <texto> | ${PREFIX}wiki <pesquisa> | ${PREFIX}calc <expressão> 
 
             case 'togif': {
                 const replied = ctx.message.reply_to_message;
-                if (!replied?.sticker && !replied?.video) return ctx.reply('Responda a uma figurinha animada ou vídeo com `©togif`.');
+                if (!replied?.sticker && !replied?.video) return ctx.reply('Responda a uma figurinha animada ou vídeo com `/togif`.');
                 try {
                     await ctx.reply('🎞️ Convertendo para GIF...');
                     const fileId = replied.sticker?.file_id || replied.video?.file_id;
@@ -1065,7 +1165,7 @@ ${PREFIX}qrcode <texto> | ${PREFIX}wiki <pesquisa> | ${PREFIX}calc <expressão> 
             }
 
             case 'brat': {
-                if (!q) return ctx.reply(`Use: ${PREFIX}brat <texto>`);
+                if (!q) return ctx.reply(`Use: /brat <texto>`);
                 try {
                     const J = Jimp;
                     const lf = loadFont;
@@ -1086,7 +1186,7 @@ ${PREFIX}qrcode <texto> | ${PREFIX}wiki <pesquisa> | ${PREFIX}calc <expressão> 
             }
 
             case 'ttp': case 'attp': {
-                if (!q) return ctx.reply(`Use: ${PREFIX}${command} <texto>`);
+                if (!q) return ctx.reply(`Use: /${command} <texto>`);
                 try {
                     const J = Jimp;
                     const { SANS_64_BLACK } = require('jimp/fonts');
@@ -1183,7 +1283,6 @@ ${PREFIX}qrcode <texto> | ${PREFIX}wiki <pesquisa> | ${PREFIX}calc <expressão> 
                 break;
             }
 
-            // Meter commands
             case 'gay': case 'fiel': case 'gado': case 'lindo': case 'feio': case 'gostoso': case 'gostosa': case 'baiano': case 'sigma': case 'beta': {
                 const alvo = q || pushname;
                 const pct = Math.floor(Math.random() * 101);
@@ -1191,7 +1290,6 @@ ${PREFIX}qrcode <texto> | ${PREFIX}wiki <pesquisa> | ${PREFIX}calc <expressão> 
                 break;
             }
 
-            // Social actions
             case 'beijo': case 'tapa': case 'soco': case 'abraco': case 'carinho': case 'morder': {
                 const alvo = q || (ctx.message.reply_to_message ? ctx.message.reply_to_message.from.first_name : 'alguém');
                 const acoes = {
@@ -1208,7 +1306,7 @@ ${PREFIX}qrcode <texto> | ${PREFIX}wiki <pesquisa> | ${PREFIX}calc <expressão> 
 
             // ── JOGOS ───────────────────────────────────
             case 'ppt': case 'pedrapapeltesoura': {
-                if (!q) return ctx.reply(`Use: ${PREFIX}ppt pedra, papel ou tesoura`);
+                if (!q) return ctx.reply(`Use: /ppt pedra, papel ou tesoura`);
                 const op = ['pedra', 'papel', 'tesoura'];
                 const userChoice = q.toLowerCase().trim();
                 if (!op.includes(userChoice)) return ctx.reply('Escolha entre: `pedra`, `papel` ou `tesoura`');
@@ -1244,7 +1342,7 @@ ${PREFIX}qrcode <texto> | ${PREFIX}wiki <pesquisa> | ${PREFIX}calc <expressão> 
                     ` ${board[0]} | ${board[1]} | ${board[2]} \n---+---+---\n` +
                     ` ${board[3]} | ${board[4]} | ${board[5]} \n---+---+---\n` +
                     ` ${board[6]} | ${board[7]} | ${board[8]} \n\n` +
-                    `Escolha uma posição: \`${PREFIX}velha <1-9>\``;
+                    `Escolha uma posição: \`/velha <1-9>\``;
                 await ctx.reply(bTxt, { parse_mode: 'Markdown' });
                 break;
             }
@@ -1255,7 +1353,7 @@ ${PREFIX}qrcode <texto> | ${PREFIX}wiki <pesquisa> | ${PREFIX}calc <expressão> 
                 if (!sess.jogoForca || q === 'novo') {
                     const p = palavras[Math.floor(Math.random() * palavras.length)];
                     sess.jogoForca = { palavra: p, oculto: '_ '.repeat(p.length).trim().split(' '), erros: 0, tentou: [] };
-                    return ctx.reply(`🔤 *Jogo da Forca Iniciado!*\n\nPalavra: \`${sess.jogoForca.oculto.join(' ')}\`\nLetras tentadas: nenhuma\n\nChute uma letra: \`${PREFIX}forca <letra>\``, { parse_mode: 'Markdown' });
+                    return ctx.reply(`🔤 *Jogo da Forca Iniciado!*\n\nPalavra: \`${sess.jogoForca.oculto.join(' ')}\`\nLetras tentadas: nenhuma\n\nChute uma letra: \`/forca <letra>\``, { parse_mode: 'Markdown' });
                 }
                 const gf = sess.jogoForca;
                 if (q && q.length === 1) {
@@ -1276,7 +1374,7 @@ ${PREFIX}qrcode <texto> | ${PREFIX}wiki <pesquisa> | ${PREFIX}calc <expressão> 
                 let fTxt = `🔤 *Jogo da Forca*\n\nPalavra: \`${gf.oculto.join(' ')}\`\nErros: ${gf.erros}/6\nTentou: ${gf.tentou.join(', ')}`;
                 if (ganhou) { fTxt += '\n\n🎉 *Parabéns, você venceu!*'; sess.jogoForca = null; }
                 else if (perdeu) { fTxt += `\n\n💀 *Você perdeu!* A palavra era: *${gf.palavra}*`; sess.jogoForca = null; }
-                else { fTxt += `\n\nChute outra letra: \`${PREFIX}forca <letra>\``; }
+                else { fTxt += `\n\nChute outra letra: \`/forca <letra>\``; }
                 await ctx.reply(fTxt, { parse_mode: 'Markdown' });
                 break;
             }
@@ -1310,7 +1408,7 @@ ${PREFIX}qrcode <texto> | ${PREFIX}wiki <pesquisa> | ${PREFIX}calc <expressão> 
 
             case 'depositar': {
                 const val = parseInt(q);
-                if (!val || val <= 0) return ctx.reply(`Use: ${PREFIX}depositar <quantidade>`);
+                if (!val || val <= 0) return ctx.reply(`Use: /depositar <quantidade>`);
                 const coinsDB = getCoinsDB();
                 const bancoDB = getBancoDB();
                 const uCoins = coinsDB[sid] || { coins: 0 };
@@ -1328,7 +1426,7 @@ ${PREFIX}qrcode <texto> | ${PREFIX}wiki <pesquisa> | ${PREFIX}calc <expressão> 
 
             case 'sacar': {
                 const val = parseInt(q);
-                if (!val || val <= 0) return ctx.reply(`Use: ${PREFIX}sacar <quantidade>`);
+                if (!val || val <= 0) return ctx.reply(`Use: /sacar <quantidade>`);
                 const coinsDB = getCoinsDB();
                 const bancoDB = getBancoDB();
                 const uBanco = bancoDB[sid] || { saldo: 0 };
@@ -1399,7 +1497,7 @@ ${PREFIX}qrcode <texto> | ${PREFIX}wiki <pesquisa> | ${PREFIX}calc <expressão> 
 
             // ── UTILIDADES & FERRAMENTAS ──────────────────
             case 'clima': case 'tempo':
-                if (!q) return ctx.reply(`Use: ${PREFIX}clima <cidade>`);
+                if (!q) return ctx.reply(`Use: /clima <cidade>`);
                 try {
                     await ctx.reply('🌤️ Consultando clima...');
                     const res = await axios.get(`https://wttr.in/${encodeURIComponent(q)}?format=j1`, { timeout: 10000 });
@@ -1439,7 +1537,7 @@ ${PREFIX}qrcode <texto> | ${PREFIX}wiki <pesquisa> | ${PREFIX}calc <expressão> 
                 break;
 
             case 'encurtar': case 'tinyurl':
-                if (!q) return ctx.reply(`Use: ${PREFIX}encurtar <link>`);
+                if (!q) return ctx.reply(`Use: /encurtar <link>`);
                 try {
                     const res = await axios.get(`https://tinyurl.com/api-create.php?url=${encodeURIComponent(q)}`, { timeout: 10000 });
                     await ctx.reply(`✂️ *Link Encurtado:*\n\n🔗 ${res.data}`, { parse_mode: 'Markdown' });
@@ -1447,7 +1545,7 @@ ${PREFIX}qrcode <texto> | ${PREFIX}wiki <pesquisa> | ${PREFIX}calc <expressão> 
                 break;
 
             case 'qrcode': case 'qr': case 'gerarqr':
-                if (!q) return ctx.reply(`Use: ${PREFIX}qrcode <texto ou link>`);
+                if (!q) return ctx.reply(`Use: /qrcode <texto ou link>`);
                 try {
                     const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(q)}`;
                     await ctx.replyWithPhoto({ url: qrUrl }, { caption: `📱 *QR Code gerado com sucesso!*`, parse_mode: 'Markdown' });
@@ -1455,7 +1553,7 @@ ${PREFIX}qrcode <texto> | ${PREFIX}wiki <pesquisa> | ${PREFIX}calc <expressão> 
                 break;
 
             case 'wiki': case 'wikipedia':
-                if (!q) return ctx.reply(`Use: ${PREFIX}wiki <pesquisa>`);
+                if (!q) return ctx.reply(`Use: /wiki <pesquisa>`);
                 try {
                     await ctx.reply('📖 Buscando na Wikipedia...');
                     const res = await axios.get(`https://pt.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(q)}`, { timeout: 10000 });
@@ -1468,7 +1566,7 @@ ${PREFIX}qrcode <texto> | ${PREFIX}wiki <pesquisa> | ${PREFIX}calc <expressão> 
                 break;
 
             case 'calc': case 'calcular':
-                if (!q) return ctx.reply(`Use: ${PREFIX}calc <expressão>\nEx: ${PREFIX}calc 10 * 5 + 2`);
+                if (!q) return ctx.reply(`Use: /calc <expressão>\nEx: /calc 10 * 5 + 2`);
                 try {
                     const safe = q.replace(/[^0-9+\-*/(). ]/g, '');
                     const res = eval(safe);
@@ -1477,7 +1575,7 @@ ${PREFIX}qrcode <texto> | ${PREFIX}wiki <pesquisa> | ${PREFIX}calc <expressão> 
                 break;
 
             case 'cep':
-                if (!q) return ctx.reply(`Use: ${PREFIX}cep <00000000>`);
+                if (!q) return ctx.reply(`Use: /cep <00000000>`);
                 try {
                     const cleanCep = q.replace(/\D/g, '');
                     const res = await axios.get(`https://viacep.com.br/ws/${cleanCep}/json/`, { timeout: 10000 });
@@ -1488,7 +1586,7 @@ ${PREFIX}qrcode <texto> | ${PREFIX}wiki <pesquisa> | ${PREFIX}calc <expressão> 
                 break;
 
             case 'ddd':
-                if (!q) return ctx.reply(`Use: ${PREFIX}ddd <número do ddd>\nEx: ${PREFIX}ddd 11`);
+                if (!q) return ctx.reply(`Use: /ddd <número do ddd>\nEx: /ddd 11`);
                 try {
                     const res = await axios.get(`https://brasilapi.com.br/api/ddd/v1/${q.replace(/\D/g, '')}`, { timeout: 10000 });
                     const d = res.data;
@@ -1507,7 +1605,7 @@ ${PREFIX}qrcode <texto> | ${PREFIX}wiki <pesquisa> | ${PREFIX}calc <expressão> 
                     const cpf = [...n, d1, d2].join('').replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
                     return ctx.reply(`📋 *CPF Gerado:* \`${cpf}\``, { parse_mode: 'Markdown' });
                 }
-                if (!q) return ctx.reply(`Use: ${PREFIX}validarcpf <cpf>`);
+                if (!q) return ctx.reply(`Use: /validarcpf <cpf>`);
                 const c = q.replace(/\D/g, '');
                 if (c.length !== 11 || /^(\d)\1{10}$/.test(c)) return ctx.reply('❌ CPF Inválido.');
                 let s = 0, r;
@@ -1523,7 +1621,7 @@ ${PREFIX}qrcode <texto> | ${PREFIX}wiki <pesquisa> | ${PREFIX}calc <expressão> 
             }
 
             case 'encode': case 'decode':
-                if (!q) return ctx.reply(`Use: ${PREFIX}${command} <texto>`);
+                if (!q) return ctx.reply(`Use: /${command} <texto>`);
                 try {
                     const res = command === 'encode' ? Buffer.from(q).toString('base64') : Buffer.from(q, 'base64').toString('utf8');
                     await ctx.reply(`🔐 *Resultado:* \`${res}\``, { parse_mode: 'Markdown' });
@@ -1531,7 +1629,7 @@ ${PREFIX}qrcode <texto> | ${PREFIX}wiki <pesquisa> | ${PREFIX}calc <expressão> 
                 break;
 
             case 'idade':
-                if (!q) return ctx.reply(`Use: ${PREFIX}idade DD/MM/AAAA`);
+                if (!q) return ctx.reply(`Use: /idade DD/MM/AAAA`);
                 try {
                     const parts = q.split('/');
                     const birth = new Date(parts[2], parts[1] - 1, parts[0]);
@@ -1548,7 +1646,7 @@ ${PREFIX}qrcode <texto> | ${PREFIX}wiki <pesquisa> | ${PREFIX}calc <expressão> 
                 break;
 
             default:
-                await ctx.reply(`❓ Comando desconhecido: \`${PREFIX}${command}\`\nVeja ${PREFIX}menu`, { parse_mode: 'Markdown' });
+                await ctx.reply(`❓ Comando desconhecido: \`/${command}\`\nVeja /menu`, { parse_mode: 'Markdown' });
         }
     } catch (e) {
         console.error(chalk.red('[ERRO comando]:'), e);
@@ -1559,7 +1657,7 @@ ${PREFIX}qrcode <texto> | ${PREFIX}wiki <pesquisa> | ${PREFIX}calc <expressão> 
 // ====== START ======
 bot.launch().then(() => {
     console.log(chalk.green('🪷 [WHITE LOTUS] Bot Telegram online!'));
-    console.log(chalk.cyan(`[@WhiteLotusBot] Prefix: ${PREFIX}`));
+    console.log(chalk.cyan(`[@WhiteLotusBot] Prefixos aceitos: /, ©, ., !`));
 }).catch(err => {
     console.error(chalk.red('[ERRO launch]:'), err);
     process.exit(1);
