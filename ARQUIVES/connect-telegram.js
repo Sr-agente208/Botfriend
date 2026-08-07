@@ -160,6 +160,28 @@ async function criarWastickers(pacoteInfo) {
     });
 }
 
+async function tryFetchAudioDownloadUrl(videoUrl, videoId) {
+    const cobaltInstances = [
+        'https://co.wuk.sh/api/json',
+        'https://cobalt-api.koyeb.app/api/json',
+        'https://cobalt.api.scld.me/api/json'
+    ];
+    for (const inst of cobaltInstances) {
+        try {
+            const res = await axios.post(inst, {
+                url: videoUrl,
+                isAudioOnly: true,
+                aFormat: 'mp3'
+            }, {
+                headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+                timeout: 8000
+            });
+            if (res.data?.url) return res.data.url;
+        } catch {}
+    }
+    return null;
+}
+
 // ====== MENUS PRINCIPAIS ======
 
 function menuPrincipal() {
@@ -876,35 +898,28 @@ bot.on(['text', 'photo', 'video', 'audio', 'voice', 'document', 'sticker', 'anim
                         }
                     }
 
-                    if (!downloaded) {
-                        try {
-                            const cobaltRes = await axios.post('https://api.cobalt.tools/api/json', {
-                                url: videoUrl,
-                                isAudioOnly: !isVideo,
-                                aFormat: 'mp3'
-                            }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' }, timeout: 12000 });
-
-                            if (cobaltRes.data?.url) {
-                                if (isVideo) {
-                                    await ctx.replyWithVideo({ url: cobaltRes.data.url }, { caption: `🎬 *${title}*` });
-                                } else {
-                                    await ctx.replyWithAudio({ url: cobaltRes.data.url }, { title, performer: author });
-                                }
+                    if (!downloaded && !isVideo) {
+                        const directAudioUrl = await tryFetchAudioDownloadUrl(videoUrl, videoId);
+                        if (directAudioUrl) {
+                            try {
+                                await ctx.replyWithAudio({ url: directAudioUrl }, { title, performer: author });
                                 downloaded = true;
+                            } catch (eErr) {
+                                console.error('[directAudioUrl]', eErr?.message);
                             }
-                        } catch {}
+                        }
                     }
 
-                    const dlMp3 = `https://cobalt.tools/?url=${encodeURIComponent(videoUrl)}`;
-                    const dlMp4 = `https://y2mate.is/pt/youtube/${videoId}`;
-                    const dlLoader = `https://loader.to/pt1/youtube-mp3-downloader.html`;
+                    const dlMp3 = `https://y2mate.is/pt/youtube/${videoId}`;
+                    const dlMp4 = `https://ssyoutube.com/watch?v=${videoId}`;
+                    const dlY2mate = `https://www.y2mate.com/youtube/${videoId}`;
 
                     const cap = `🎵 *${title}*\n\n` +
                         `👤 *Canal:* ${author}\n` +
                         `⏱️ *Duração:* ${duration}\n` +
                         `👁️ *Visualizações:* ${views}\n` +
                         `🔗 *Link:* ${videoUrl}\n\n` +
-                        (downloaded ? `✅ *Arquivo enviado acima!*` : `📥 *Opções de Download:* Clique nos botões abaixo para baixar em MP3 ou MP4.`);
+                        (downloaded ? `✅ *Arquivo de áudio enviado acima!*` : `📥 *Opções de Download Directo:* Clique nos botões abaixo para baixar em MP3 ou MP4.`);
 
                     const dlButtons = Markup.inlineKeyboard([
                         [
@@ -912,7 +927,7 @@ bot.on(['text', 'photo', 'video', 'audio', 'voice', 'document', 'sticker', 'anim
                             Markup.button.url('🎬 Baixar MP4 (Vídeo)', dlMp4)
                         ],
                         [
-                            Markup.button.url('🌐 Download Directo', dlLoader)
+                            Markup.button.url('🌐 Y2Mate Downloader', dlY2mate)
                         ]
                     ]);
 
