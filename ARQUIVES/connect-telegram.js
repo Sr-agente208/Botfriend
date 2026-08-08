@@ -28,7 +28,17 @@ const bot = new Telegraf(TOKEN_TG);
 // Sessão simples em memória
 const sessoes = {};
 function getSessao(id) {
-    if (!sessoes[id]) sessoes[id] = { pacote: null, jogoForca: null, jogoVelha: null };
+    if (!sessoes[id]) {
+        sessoes[id] = {
+            pacote: null,
+            jogoForca: null,
+            jogoVelha: null,
+            soloActive: false,
+            soloHistory: [],
+            soloAgente: null,
+            mesa: { ativa: false, mestre: null, iniciativa: [], monstros: [] }
+        };
+    }
     return sessoes[id];
 }
 
@@ -69,7 +79,7 @@ app.use('/pacotes', express.static(path.join(__dirname, '../temp/pacotes')));
 app.get('/', (_, res) => res.send('🪷 WHITE LOTUS TG — Online'));
 app.listen(PORT, '0.0.0.0', () => console.log(chalk.magenta(`[WEB] Porta ${PORT}`)));
 
-// ====== HELPERS ======
+// ====== HELPERS AI ======
 const groqChat = async (system, user) => {
     const key = process.env.GROQ_API_KEY;
     if (!key) throw new Error('GROQ_API_KEY não configurada');
@@ -80,6 +90,32 @@ const groqChat = async (system, user) => {
     }, { headers: { Authorization: `Bearer ${key}` }, timeout: 25000 });
     return r.data.choices[0].message.content;
 };
+
+const groqMestreSolo = async (system, historyMessages) => {
+    const key = process.env.GROQ_API_KEY;
+    if (!key) throw new Error('GROQ_API_KEY não configurada');
+    const messages = [{ role: 'system', content: system }, ...historyMessages];
+    const r = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
+        model: 'llama-3.3-70b-versatile',
+        messages: messages,
+        temperature: 0.85,
+        max_tokens: 1000
+    }, { headers: { Authorization: `Bearer ${key}` }, timeout: 30000 });
+    return r.data.choices[0].message.content;
+};
+
+const MESTRE_SYSTEM_PROMPT = `
+Você é o "Mestre White Lotus", o Mestre de RPG (Dungeon Master) oficial de Ordem Paranormal RPG.
+Você está mestrando uma campanha solo e personalizada de horror e investigação paranormal para o jogador no Telegram.
+
+Diretrizes da sua mestragem:
+1. Mantenha o clima de suspense, horror e investigação da Ordo Realitas (Morte ⏳, Sangue 🩸, Conhecimento 👁️, Energia ⚡, Medo 🖤).
+2. Escreva respostas envolventes, mas concisas para chat de mensagens (2 a 4 parágrafos por turno).
+3. Descreva o ambiente, os detalhes perturbadores e as pistas.
+4. Quando o jogador fizer uma ação que exija teste, peça o comando do bot (ex: "Faça um teste de /op 2 5 para Investigação" ou "/sanidade").
+5. Quando houver combate, narre a ameaça e peça o ataque ou reação do agente.
+6. Termine sempre dando opções ou perguntando: "O que você faz, Agente?".
+`;
 
 async function imgParaWebp(buffer, texto) {
     const sharp = require('sharp');
@@ -139,7 +175,7 @@ async function criarWastickers(pacoteInfo) {
             ios_app_store_link: '',
             publisher: pacoteInfo.autor || 'White Lotus',
             privacy_policy_website: '',
-            license_agreement_website: '',
+License_agreement_website: '',
             title: pacoteInfo.nome || 'Meu Pacote',
             identifier: pacoteInfo.id,
             sticker_packs: [{
@@ -189,10 +225,36 @@ function menuPrincipal() {
         text: '🪷 *WHITE LOTUS — MENU PRINCIPAL*\n\nEscolha uma categoria abaixo:',
         ...Markup.inlineKeyboard([
             [Markup.button.callback('🤖 Inteligência Artificial', 'menu_ia'), Markup.button.callback('🍙 Animes & Streaming', 'menu_anime')],
+            [Markup.button.callback('👁️ RPG Ordem Paranormal (CRIS)', 'menu_ordem')],
             [Markup.button.callback('🎵 Música & Download', 'menu_musica'), Markup.button.callback('🎨 Figurinhas & Stickers', 'menu_sticker')],
             [Markup.button.callback('😄 Zoeira & Brincadeiras', 'menu_zoeira'), Markup.button.callback('🎮 Jogos & Minigames', 'menu_jogos')],
             [Markup.button.callback('🐾 Pets Virtuais', 'menu_pets'), Markup.button.callback('💰 Banco & Economia', 'menu_economia')],
             [Markup.button.callback('⚙️ Utilidades & Ferramentas', 'menu_util')]
+        ])
+    };
+}
+
+function menuOrdem() {
+    return {
+        text: '👁️ *ORDEM PARANORMAL RPG — C.R.I.S.*\n\n' +
+            'Plataforma oficial e sistema de RPG de Ordem Paranormal direto no Telegram!\n\n' +
+            '🤖 *Modo Mestre Solo (IA):*\n' +
+            'Jogue sozinho onde o *White Lotus* é o Mestre da sua missão de investigação!\n\n' +
+            '👥 *Mesa no Telegram:*\n' +
+            'Jogue em grupo no Telegram com gerenciador de iniciativa, vida e monstros!\n\n' +
+            '🌐 *Acesse o site oficial:* https://cris.site\n\n' +
+            '🎲 *Comandos Rápidos:*\n' +
+            '• `/mestresolo` — Inicia campanha solo com White Lotus como Mestre\n' +
+            '• `/op <atributo> [perícia]` — Rola dados (ex: `/op 3 5`)\n' +
+            '• `/fichacris` — Ficha de Agente da Ordo Realitas\n' +
+            '• `/sanidade` | `/rituais` | `/monstro`',
+        ...Markup.inlineKeyboard([
+            [Markup.button.callback('🤖 Jogar Solo com Mestre White Lotus', 'cmd_mestresolo_start')],
+            [Markup.button.callback('👥 Mesa de RPG no Telegram', 'cmd_mesa_info')],
+            [Markup.button.url('🌐 Abrir Site CRIS (cris.site)', 'https://cris.site')],
+            [Markup.button.callback('🎲 Rolar Dados (3d20)', 'cmd_rolar_op'), Markup.button.callback('📋 Minha Ficha', 'cmd_ficha_op')],
+            [Markup.button.callback('🔮 Rituais & Elementos', 'cmd_rituais_op')],
+            [Markup.button.callback('◀️ Voltar', 'menu_principal')]
         ])
     };
 }
@@ -316,6 +378,7 @@ function menuUtil() {
 // ====== ACTIONS DE MENUS ======
 bot.action('menu_principal', async (ctx) => { await ctx.answerCbQuery(); const m = menuPrincipal(); await ctx.editMessageText(m.text, { parse_mode: 'Markdown', ...Markup.inlineKeyboard(m.reply_markup.inline_keyboard) }); });
 bot.action('menu_ia', async (ctx) => { await ctx.answerCbQuery(); const m = menuIA(); await ctx.editMessageText(m.text, { parse_mode: 'Markdown', ...Markup.inlineKeyboard(m.reply_markup.inline_keyboard) }); });
+bot.action('menu_ordem', async (ctx) => { await ctx.answerCbQuery(); const m = menuOrdem(); await ctx.editMessageText(m.text, { parse_mode: 'Markdown', ...Markup.inlineKeyboard(m.reply_markup.inline_keyboard) }); });
 bot.action('menu_anime', async (ctx) => { await ctx.answerCbQuery(); const m = menuAnime(); await ctx.editMessageText(m.text, { parse_mode: 'Markdown', ...Markup.inlineKeyboard(m.reply_markup.inline_keyboard) }); });
 bot.action('menu_sticker', async (ctx) => { await ctx.answerCbQuery(); const m = menuSticker(); await ctx.editMessageText(m.text, { parse_mode: 'Markdown', ...Markup.inlineKeyboard(m.reply_markup.inline_keyboard) }); });
 bot.action('menu_musica', async (ctx) => { await ctx.answerCbQuery(); const m = menuMusica(); await ctx.editMessageText(m.text, { parse_mode: 'Markdown', ...Markup.inlineKeyboard(m.reply_markup.inline_keyboard) }); });
@@ -324,6 +387,18 @@ bot.action('menu_jogos', async (ctx) => { await ctx.answerCbQuery(); const m = m
 bot.action('menu_pets', async (ctx) => { await ctx.answerCbQuery(); const m = menuPets(); await ctx.editMessageText(m.text, { parse_mode: 'Markdown', ...Markup.inlineKeyboard(m.reply_markup.inline_keyboard) }); });
 bot.action('menu_economia', async (ctx) => { await ctx.answerCbQuery(); const m = menuEconomia(); await ctx.editMessageText(m.text, { parse_mode: 'Markdown', ...Markup.inlineKeyboard(m.reply_markup.inline_keyboard) }); });
 bot.action('menu_util', async (ctx) => { await ctx.answerCbQuery(); const m = menuUtil(); await ctx.editMessageText(m.text, { parse_mode: 'Markdown', ...Markup.inlineKeyboard(m.reply_markup.inline_keyboard) }); });
+
+bot.action('cmd_mestresolo_start', async (ctx) => {
+    await ctx.answerCbQuery();
+    await ctx.reply('🤖 *Iniciando Campanha Solo com Mestre White Lotus...*\n\nUse: `/mestresolo` para começar!', { parse_mode: 'Markdown' });
+});
+bot.action('cmd_mesa_info', async (ctx) => {
+    await ctx.answerCbQuery();
+    await ctx.reply('👥 *Mesa de RPG Ordem Paranormal no Telegram*\n\nPara jogar em grupo no grupo/chat:\n• `/mestre` — Define o Mestre humano do grupo\n• `/iniciativa <agente> <valor>` — Adiciona à ordem de combate\n• `/monstro <nome> <pv>` — Spawna criatura paranormal\n• `/op <atributo> [perícia]` — Rola testes no grupo', { parse_mode: 'Markdown' });
+});
+bot.action('cmd_rolar_op', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('🎲 Use: `/op <atributo> [perícia]`\nEx: `/op 3 5` (3 de Agilidade + 5 de Pontaria)', { parse_mode: 'Markdown' }); });
+bot.action('cmd_ficha_op', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('📋 Use: `/fichacris <Nome> | <Classe> | <NEX>`\nEx: `/fichacris Veríssimo | Ocultista | 45%`', { parse_mode: 'Markdown' }); });
+bot.action('cmd_rituais_op', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('🔮 Use: `/rituais` para ver o guia de Elementos Paranormais (Sangue 🩸, Morte ⏳, Conhecimento 👁️, Energia ⚡, Medo 🖤)', { parse_mode: 'Markdown' }); });
 
 // Botões de ajuda rápida
 bot.action('cmd_gerarlink', async (ctx) => {
@@ -598,6 +673,25 @@ bot.on(['text', 'photo', 'video', 'audio', 'voice', 'document', 'sticker', 'anim
         return ctx.reply(`✅ Nome definido: *${s.pacote.nome}*\n\nAgora mande as imagens! (até 30)`, { parse_mode: 'Markdown' });
     }
 
+    // Se Mestre Solo IA estiver ativo e mensagem for texto sem comando expresso:
+    if (s.soloActive && text && !text.startsWith('/') && !text.startsWith('©') && !text.startsWith('.') && !text.startsWith('!')) {
+        try {
+            await ctx.reply('👁️ *Mestre White Lotus está narrando...*', { parse_mode: 'Markdown' });
+            s.soloHistory.push({ role: 'user', content: text });
+
+            // Mantém histórico razoável
+            if (s.soloHistory.length > 12) s.soloHistory = s.soloHistory.slice(s.soloHistory.length - 12);
+
+            const respostaMestre = await groqMestreSolo(MESTRE_SYSTEM_PROMPT, s.soloHistory);
+            s.soloHistory.push({ role: 'assistant', content: respostaMestre });
+
+            return await ctx.reply(respostaMestre, { parse_mode: 'Markdown' });
+        } catch (eErr) {
+            console.error('[Mestre Solo]', eErr?.message);
+            return ctx.reply('👁️ *Mestre White Lotus:* Algo estranho aconteceu com o Paranormal... Tente novamente ou digite `/mestresolo sair`.', { parse_mode: 'Markdown' });
+        }
+    }
+
     const trimmed = text.trim();
     if (!trimmed) return;
 
@@ -609,6 +703,7 @@ bot.on(['text', 'photo', 'video', 'audio', 'voice', 'document', 'sticker', 'anim
 
     const knownCommands = new Set([
         'start', 'menu', 'ajuda', 'ajuda2', 'comandos', 'ping', 'info',
+        'cris', 'ordem', 'rpg', 'ordemparanormal', 'op', 'rolarop', 'dadoop', 'fichacris', 'fichaop', 'agente', 'sanidade', 'san', 'rituais', 'elementos', 'rolar', 'mestresolo', 'jogarsolo', 'mestre', 'iniciativa', 'monstro', 'pv', 'pe', 'mestra',
         'gpt', 'gemini', 'ia', 'signo', 'horoscopo', 'traduzir', 'nick', 'gerarnick', 'simi', 'simsimi', 'letra', 'lyrics', 'letramusic', 'letramusica',
         'assistir', 'assistiranime', 'anime', 'buscaranime', 'playanime', 'watchanime', 'anirecente', 'animesrecentes', 'aniinfo', 'sushianimes', 'animes',
         'play', 'p', 'playaudio', 'ytaudio', 'ytmp3', 'playvideo', 'playmp4', 'playvid', 'ytmp4', 'ytsearch', 'pesquisa_yt', 'yt-info', 'baixar', 'download',
@@ -641,6 +736,13 @@ bot.on(['text', 'photo', 'video', 'audio', 'voice', 'document', 'sticker', 'anim
             case 'ajuda2': case 'comandos': {
                 await ctx.reply(
 `🪷 *WHITE LOTUS — COMANDOS COMPLETO*\n
+*👁️ RPG ORDEM PARANORMAL (CRIS)*
+/cris — Menu do Ordem Paranormal e link do CRIS
+/mestresolo — Jogar solo com Mestre White Lotus (IA)
+/op <atributo> [perícia] — Rola dados de Ordem Paranormal (3d20)
+/fichacris — Ficha do Agente da Ordo Realitas
+/mestre — Gerenciar mesa e iniciativa no Telegram
+/sanidade | /rituais | /monstro\n
 *🤖 IA & TEXTO*
 /gpt <pergunta> — IA Chat Llama 3.3
 /gemini <pergunta> — IA Chat
@@ -697,6 +799,178 @@ bot.on(['text', 'photo', 'video', 'audio', 'voice', 'document', 'sticker', 'anim
             case 'info':
                 await ctx.reply('🪷 *WHITE LOTUS*\nTelegram Edition\nPrefixos aceitos: `/`, `©`, `.`, `!` ou nome do comando', { parse_mode: 'Markdown' });
                 break;
+
+            // ── RPG ORDEM PARANORMAL (CRIS) ─────────────
+            case 'cris': case 'ordem': case 'rpg': case 'ordemparanormal': {
+                const m = menuOrdem();
+                await ctx.reply(m.text, { parse_mode: 'Markdown', ...Markup.inlineKeyboard(m.reply_markup.inline_keyboard) });
+                break;
+            }
+
+            case 'mestresolo': case 'jogarsolo': {
+                if (q === 'sair' || q === 'parar' || q === 'fechar') {
+                    s.soloActive = false;
+                    s.soloHistory = [];
+                    return ctx.reply('👁️ *Campanha Solo Finalizada.* Você saiu do modo Mestre Solo. Volte quando quiser investigações paranormais!', { parse_mode: 'Markdown' });
+                }
+
+                s.soloActive = true;
+                if (!s.soloHistory || s.soloHistory.length === 0) {
+                    s.soloHistory = [];
+                    await ctx.reply('👁️ *MESTRE WHITE LOTUS — ORDEM PARANORMAL SOLO*\n\n_Iniciando investigação paranormal..._\n\nO ar fica gélido no recinto. Os relógios de ponteiro começam a desacelerar. A Ordo Realitas enviou você para investigar uma anomalia numa casa abandonada no centro da cidade, onde relatos afirmam que vizinhos escutam sussurros em um idioma incompreensível...\n\nVocê segura sua lanterna e seu equipamento. O que você faz, Agente?\n\n_(Para responder, basta digitar sua ação em texto normal! Para sair a qualquer momento, digite `/mestresolo sair`)_', { parse_mode: 'Markdown' });
+                    s.soloHistory.push({
+                        role: 'assistant',
+                        content: 'O ar fica gélido no recinto. A Ordo Realitas enviou você para investigar uma anomalia numa casa abandonada onde vizinhos escutam sussurros em um idioma incompreensível... Você segura sua lanterna e seu equipamento. O que você faz, Agente?'
+                    });
+                } else {
+                    await ctx.reply('👁️ *Modo Mestre Solo Ativo!*\n\nBasta digitar sua ação normalmente no chat para continuar jogando com o Mestre White Lotus!\n\nPara sair: `/mestresolo sair`', { parse_mode: 'Markdown' });
+                }
+                break;
+            }
+
+            case 'mestre': case 'mestra': {
+                const chatMesa = s.mesa;
+                chatMesa.mestre = pushname;
+                chatMesa.ativa = true;
+                await ctx.reply(`👁️ *Mesa de RPG do Telegram*\n\n🎮 *Mestre da Sessão:* ${pushname}\n\nO Mestre pode gerenciar a iniciativa e monstros do combate:\n• \`/iniciativa Agente 25\`\n• \`/monstro Zumbi de Sangue 40\`\n• \`/pv +10\` ou \`/pv -5\``, { parse_mode: 'Markdown' });
+                break;
+            }
+
+            case 'iniciativa': {
+                const mesa = s.mesa;
+                if (q) {
+                    const parts = q.split(/\s+/);
+                    const nome = parts[0];
+                    const val = parseInt(parts[1]) || 10;
+                    mesa.iniciativa.push({ nome, val });
+                    mesa.iniciativa.sort((a, b) => b.val - a.val);
+                    return ctx.reply(`⚔️ *Iniciativa Adicionada:* ${nome} (${val})`, { parse_mode: 'Markdown' });
+                }
+                if (mesa.iniciativa.length === 0) {
+                    return ctx.reply('⚔️ Nenhuma iniciativa registrada. Use: `/iniciativa Agente 22`', { parse_mode: 'Markdown' });
+                }
+                let txtInic = '⚔️ *ORDEM DE INICIATIVA DA MESA:*\n\n';
+                mesa.iniciativa.forEach((item, i) => {
+                    txtInic += `*${i + 1}.* ${item.nome} — Iniciativa: *${item.val}*\n`;
+                });
+                await ctx.reply(txtInic, { parse_mode: 'Markdown' });
+                break;
+            }
+
+            case 'monstro': {
+                const mesa = s.mesa;
+                if (q) {
+                    const parts = q.split(/\s+/);
+                    const nome = parts.slice(0, parts.length - 1).join(' ') || parts[0];
+                    const pv = parseInt(parts[parts.length - 1]) || 30;
+                    mesa.monstros.push({ nome, pv });
+                    return ctx.reply(`👾 *Ameaça Paranormal Manifestada:*\n\n*Nome:* ${nome}\n❤️ *PV:* ${pv}`, { parse_mode: 'Markdown' });
+                }
+                if (mesa.monstros.length === 0) {
+                    return ctx.reply('👾 Nenhum monstro presente na cena. Use: `/monstro Zumbi de Sangue 35`', { parse_mode: 'Markdown' });
+                }
+                let txtMon = '👾 *AMEAÇAS PARANORMAIS NA CENA:*\n\n';
+                mesa.monstros.forEach((m, i) => {
+                    txtMon += `*${i + 1}.* ${m.nome} — ❤️ PV: *${m.pv}*\n`;
+                });
+                await ctx.reply(txtMon, { parse_mode: 'Markdown' });
+                break;
+            }
+
+            case 'pv': case 'pe': {
+                await ctx.reply(`❤️⚡ *Ajuste de PV / PE / SAN*\n\nAnote em sua ficha ou use \`/fichacris\` para atualizar seus pontos de agente!`, { parse_mode: 'Markdown' });
+                break;
+            }
+
+            case 'op': case 'rolarop': case 'dadoop': {
+                if (!q) return ctx.reply('🎲 *Rolar Dados - Ordem Paranormal*\n\nUse: `/op <atributo> [perícia]`\nExemplo 1: `/op 3` (Rola 3d20, pega o maior)\nExemplo 2: `/op 3 5` (Rola 3d20, pega o maior e soma +5)\nExemplo 3: `/op 0 2` (Atributo 0: Rola 2d20, pega o menor + 2)', { parse_mode: 'Markdown' });
+                const parts = q.trim().split(/\s+/);
+                const atr = parseInt(parts[0]) || 0;
+                const pericia = parseInt(parts[1]) || 0;
+
+                let dados = [];
+                let numDados = atr > 0 ? atr : 2;
+                for (let i = 0; i < numDados; i++) {
+                    dados.push(Math.floor(Math.random() * 20) + 1);
+                }
+
+                let resultadoDado = 0;
+                if (atr > 0) {
+                    resultadoDado = Math.max(...dados);
+                } else {
+                    resultadoDado = Math.min(...dados);
+                }
+
+                const total = resultadoDado + pericia;
+                const temVinte = dados.includes(20);
+
+                let msg = `👁️ *Ordem Paranormal — Teste de Atributo*\n\n`;
+                msg += `🎲 *Atributo:* ${atr} | *Perícia:* +${pericia}\n`;
+                msg += `🎲 *Dados Rolados:* [ ${dados.join(', ')} ]\n`;
+                msg += `🎯 *Resultado do Dado:* ${resultadoDado}\n`;
+                if (pericia > 0) msg += `➕ *Bônus Perícia:* +${pericia}\n`;
+                msg += `📊 *TOTAL:* *${total}*\n`;
+                if (temVinte) msg += `🔥 *SUCESSO CRÍTICO!* (Tirou 20 no d20!)\n`;
+                if (resultadoDado === 1) msg += `💀 *DESASTRE!* (Tirou 1 no d20!)\n`;
+
+                await ctx.reply(msg, { parse_mode: 'Markdown' });
+                break;
+            }
+
+            case 'fichacris': case 'fichaop': case 'agente': {
+                const sender = String(ctx.from.id);
+                const fichasPath = './DADOS DO KEISEN/usuarios/fichas_op.json';
+                let dbFichas = {};
+                try { if (fs.existsSync(fichasPath)) dbFichas = fs.readJsonSync(fichasPath); } catch {}
+
+                if (q) {
+                    const parts = q.split('|').map(s => s.trim());
+                    const nome = parts[0] || pushname;
+                    const classe = parts[1] || 'Combatente';
+                    const nex = parts[2] || '5%';
+                    dbFichas[sender] = { nome, classe, nex, agi: 2, for: 2, int: 2, pre: 2, vig: 2, pv: 20, pe: 5, san: 20 };
+                    fs.ensureFileSync(fichasPath);
+                    fs.writeJsonSync(fichasPath, dbFichas, { spaces: 2 });
+                    return ctx.reply(`✅ *Ficha de Agente Criada!*\n\n👤 *Nome:* ${nome}\n🛡️ *Classe:* ${classe}\n☣️ *NEX:* ${nex}\n\n🌐 Crie sua ficha completa no site oficial: https://cris.site`, { parse_mode: 'Markdown' });
+                }
+
+                const f = dbFichas[sender];
+                if (!f) {
+                    return ctx.reply('📋 *Ficha de Agente - Ordem Paranormal*\n\nVocê ainda não tem uma ficha criada.\nCrie com: `/fichacris <Nome> | <Classe> | <NEX>`\nEx: `/fichacris Arthur Cervero | Especialista | 30%`\n\n🌐 Ou acesse o site CRIS: https://cris.site', { parse_mode: 'Markdown' });
+                }
+
+                const txt = `👁️ *FICHA DE AGENTE — ORDO REALITAS*\n\n` +
+                    `👤 *Nome:* ${f.nome}\n` +
+                    `🛡️ *Classe:* ${f.classe}\n` +
+                    `☣️ *NEX:* ${f.nex}\n\n` +
+                    `📊 *ATRIBUTOS:*\n` +
+                    `• 🏃 AGI: ${f.agi} | 🏋️ FOR: ${f.for}\n` +
+                    `• 🧠 INT: ${f.int} | 👁️ PRE: ${f.pre}\n` +
+                    `• 💪 VIG: ${f.vig}\n\n` +
+                    `❤️ *PV:* ${f.pv} | ⚡ *PE:* ${f.pe} | 🧠 *SAN:* ${f.san}\n\n` +
+                    `🌐 *Site CRIS:* https://cris.site`;
+
+                await ctx.reply(txt, { parse_mode: 'Markdown' });
+                break;
+            }
+
+            case 'sanidade': case 'san': {
+                const perdeu = Math.floor(Math.random() * 6) + 1;
+                await ctx.reply(`🧠 *Teste de Sanidade Paranormal*\n\n🎲 Perda de Sanidade: *-${perdeu} SAN*\n\n_Se a Sanidade chegar a 0, o Agente entra em Enlouquecendo!_`, { parse_mode: 'Markdown' });
+                break;
+            }
+
+            case 'rituais': case 'elementos': {
+                const txt = `🔮 *ELEMENTOS PARANORMAIS — ORDEM PARANORMAL*\n\n` +
+                    `🩸 *SANGUE:* Sentimento, paixão, dor, carne e fúria. Transforma o corpo e amplifica a força.\n` +
+                    `⏳ *MORTE:* Tempo, cinzas, entropia e decomposição. Acelera ou desacelera a realidade.\n` +
+                    `👁️ *CONHECIMENTO:* Razão, símbolos, verdades e segredos. Altera percepção e revelação.\n` +
+                    `⚡ *ENERGIA:* Caos, eletricidade, transformação e o imprevisível. Muda a matéria instantaneamente.\n` +
+                    `🖤 *MEDO:* O elemento impossível. Origem de todos os rituais.\n\n` +
+                    `🌐 *Acesse rituais e fichas em:* https://cris.site`;
+                await ctx.reply(txt, { parse_mode: 'Markdown' });
+                break;
+            }
 
             // ── IA & TEXTO ──────────────────────────────
             case 'gpt': case 'gemini': case 'ia':
@@ -760,56 +1034,87 @@ bot.on(['text', 'photo', 'video', 'audio', 'voice', 'document', 'sticker', 'anim
             // ── ANIMES & STREAMING ──────────────────────
             case 'assistir': case 'assistiranime': case 'anime': case 'buscaranime': case 'playanime': case 'watchanime': case 'sushianimes': case 'animes': {
                 if (!q) return ctx.reply(`🍙 *Assistir Anime*\n\nUse: \`/assistir <nome do anime>\`\nEx: \`/assistir Naruto Shippuden\``, { parse_mode: 'Markdown' });
+                
+                await ctx.reply('🔍 Buscando anime e gerando links de streaming...');
+
+                let title = q;
+                let titleEng = '';
+                let synopsis = 'Assista aos episódios completos online em português nos servidores de streaming abaixo.';
+                let score = 'N/A';
+                let episodes = '?';
+                let year = '?';
+                let genres = 'Anime';
+                let posterUrl = null;
+
                 try {
-                    await ctx.reply('🔍 Buscando informações e links para assistir...');
-                    const res = await axios.get(`https://api.jikan.moe/v4/anime?q=${encodeURIComponent(q)}&limit=5`, { timeout: 15000 });
-                    const animes = res.data?.data;
-                    if (!animes?.length) return ctx.reply('❌ Nenhum anime encontrado com esse nome.');
-
-                    const a = animes[0];
-                    const animeTitle = a.title || q;
-                    const searchEnc = encodeURIComponent(animeTitle);
-
-                    const linkAnimeFire = `https://animefire.plus/pesquisar/${searchEnc}`;
-                    const linkAnimesOnline = `https://animesonline.cc/busca?s=${searchEnc}`;
-                    const linkGoyabu = `https://goyabu.org/?s=${searchEnc}`;
-                    const linkYoutube = `https://www.youtube.com/results?search_query=${encodeURIComponent(animeTitle + ' anime trailer dublado legendado')}`;
-
-                    let txt = `🍙 *${a.title}*${a.title_english && a.title_english !== a.title ? ` (${a.title_english})` : ''}\n\n`;
-                    txt += `📝 *Sinopse:* ${(a.synopsis || 'Sem sinopse disponível.').slice(0, 350)}...\n\n`;
-                    txt += `⭐ *Nota:* ${a.score || 'N/A'} | 📺 *Episódios:* ${a.episodes || '?'} | 📅 *Ano:* ${a.year || '?'}\n`;
-                    txt += `🏷️ *Gêneros:* ${a.genres?.map(g => g.name).join(', ') || 'N/A'}\n\n`;
-                    txt += `📺 *Onde assistir em Português:*\n`;
-                    txt += `• [Assistir no AnimeFire](${linkAnimeFire})\n`;
-                    txt += `• [Assistir no AnimesOnline](${linkAnimesOnline})\n`;
-                    txt += `• [Assistir no Goyabu](${linkGoyabu})\n`;
-                    txt += `• [Buscar Trailer no YouTube](${linkYoutube})\n`;
-                    txt += `• [Página no MyAnimeList](${a.url})\n`;
-
-                    const inlineButtons = Markup.inlineKeyboard([
-                        [
-                            Markup.button.url('📺 AnimeFire', linkAnimeFire),
-                            Markup.button.url('📺 AnimesOnline', linkAnimesOnline)
-                        ],
-                        [
-                            Markup.button.url('📺 Goyabu', linkGoyabu),
-                            Markup.button.url('🎥 Trailer YouTube', linkYoutube)
-                        ]
-                    ]);
-
-                    if (a.images?.jpg?.large_image_url) {
-                        await ctx.replyWithPhoto({ url: a.images.jpg.large_image_url }, { caption: txt, parse_mode: 'Markdown', ...inlineButtons });
-                    } else {
-                        await ctx.reply(txt, { parse_mode: 'Markdown', ...inlineButtons });
+                    const res = await axios.get(`https://api.jikan.moe/v4/anime?q=${encodeURIComponent(q)}&limit=1`, { timeout: 8000 });
+                    const a = res.data?.data?.[0];
+                    if (a) {
+                        title = a.title || title;
+                        titleEng = a.title_english || '';
+                        synopsis = a.synopsis ? a.synopsis.slice(0, 350) + '...' : synopsis;
+                        score = a.score || score;
+                        episodes = a.episodes || episodes;
+                        year = a.year || year;
+                        genres = a.genres?.map(g => g.name).join(', ') || genres;
+                        posterUrl = a.images?.jpg?.large_image_url || posterUrl;
                     }
+                } catch {}
 
-                    if (animes.length > 1) {
-                        const outros = animes.slice(1).map((a2, i) => `*${i + 2}.* [${a2.title}](${a2.url})`).join('\n');
-                        await ctx.reply(`📋 *Outros resultados encontrados:*\n\n${outros}`, { parse_mode: 'Markdown' });
-                    }
-                } catch (e) {
-                    console.error('[assistir anime]', e?.message);
-                    ctx.reply('❌ Erro ao buscar anime. Tente novamente em instantes.');
+                if (!posterUrl) {
+                    try {
+                        const resK = await axios.get(`https://kitsu.io/api/edge/anime?filter[text]=${encodeURIComponent(q)}&page[limit]=1`, { timeout: 8000 });
+                        const k = resK.data?.data?.[0]?.attributes;
+                        if (k) {
+                            title = k.canonicalTitle || title;
+                            synopsis = k.synopsis ? k.synopsis.slice(0, 350) + '...' : synopsis;
+                            score = k.averageRating ? (parseFloat(k.averageRating) / 10).toFixed(1) : score;
+                            episodes = k.episodeCount || episodes;
+                            posterUrl = k.posterImage?.medium || k.posterImage?.original || posterUrl;
+                        }
+                    } catch {}
+                }
+
+                const searchEnc = encodeURIComponent(title);
+
+                const linkAnimeFire = `https://animefire.plus/pesquisar/${searchEnc}`;
+                const linkAnimesOnline = `https://animesonline.cc/busca?s=${searchEnc}`;
+                const linkGoyabu = `https://goyabu.org/?s=${searchEnc}`;
+                const linkBetterAnime = `https://betteranime.net/pesquisa?titulo=${searchEnc}`;
+                const linkYoutube = `https://www.youtube.com/results?search_query=${encodeURIComponent(title + ' anime episodios dublado legendado')}`;
+                const linkGoogle = `https://www.google.com/search?q=${encodeURIComponent('assistir ' + title + ' anime online dublado legendado')}`;
+
+                let txt = `🍙 *${title}*${titleEng && titleEng !== title ? ` (${titleEng})` : ''}\n\n`;
+                txt += `📝 *Sinopse:* ${synopsis}\n\n`;
+                txt += `⭐ *Nota:* ${score} | 📺 *Episódios:* ${episodes} | 📅 *Ano:* ${year}\n`;
+                txt += `🏷️ *Gêneros:* ${genres}\n\n`;
+                txt += `📺 *Onde assistir em Português (Links Diretos):*\n`;
+                txt += `• [Assistir no AnimeFire](${linkAnimeFire})\n`;
+                txt += `• [Assistir no AnimesOnline](${linkAnimesOnline})\n`;
+                txt += `• [Assistir no Goyabu](${linkGoyabu})\n`;
+                txt += `• [Assistir no BetterAnime](${linkBetterAnime})\n`;
+                txt += `• [Buscar Episódios / Trailer no YouTube](${linkYoutube})\n`;
+                txt += `• [Buscar no Google Stream](${linkGoogle})\n`;
+
+                const inlineButtons = Markup.inlineKeyboard([
+                    [
+                        Markup.button.url('📺 AnimeFire', linkAnimeFire),
+                        Markup.button.url('📺 AnimesOnline', linkAnimesOnline)
+                    ],
+                    [
+                        Markup.button.url('📺 Goyabu', linkGoyabu),
+                        Markup.button.url('📺 BetterAnime', linkBetterAnime)
+                    ],
+                    [
+                        Markup.button.url('🎥 YouTube Stream', linkYoutube),
+                        Markup.button.url('🔍 Busca Google', linkGoogle)
+                    ]
+                ]);
+
+                if (posterUrl) {
+                    await ctx.replyWithPhoto({ url: posterUrl }, { caption: txt, parse_mode: 'Markdown', ...inlineButtons });
+                } else {
+                    await ctx.reply(txt, { parse_mode: 'Markdown', ...inlineButtons });
                 }
                 break;
             }
