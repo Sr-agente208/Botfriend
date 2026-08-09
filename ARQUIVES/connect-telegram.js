@@ -97,8 +97,6 @@ function getOuCriarFicha(sid, pushname) {
             classe: 'Combatente',
             trilha: 'Aniquilador',
             nex: '15%',
-            patente: 'Recruta',
-            pp: 0,
             agi: 2, for: 2, int: 2, pre: 2, vig: 2,
             pv: 28, pvMax: 28,
             pe: 12, peMax: 12,
@@ -512,12 +510,16 @@ function botoesCondicoesCris() {
 function botoesBestiarioCris() {
     return Markup.inlineKeyboard([
         [
-            Markup.button.callback('🩸 Sangue: Zumbi de Sangue (VD 20)', 'best_zumbi'),
-            Markup.button.callback('⏳ Morte: Existido (VD 10)', 'best_existido')
+            Markup.button.callback('🧟 Zumbi de Sangue (VD 10)', 'best_zumbi_10'),
+            Markup.button.callback('🩸 Aberração de Carne (VD 40)', 'best_aberracao_40')
         ],
         [
-            Markup.button.callback('👁️ Conhecimento: Sombra (VD 20)', 'best_sombra'),
-            Markup.button.callback('⚡ Energia: Anomalia (VD 20)', 'best_anomalia')
+            Markup.button.callback('🧟‍♂️ Zumbi Bestial (VD 80)', 'best_zumbibestial_80'),
+            Markup.button.callback('⛓️ Enpap-X (VD 80)', 'best_enpapx_80')
+        ],
+        [
+            Markup.button.callback('⏳ Existido (VD 10)', 'best_existido'),
+            Markup.button.callback('👁️ Sombra (VD 20)', 'best_sombra')
         ]
     ]);
 }
@@ -584,7 +586,8 @@ function menuOrdem() {
             '🎒 *Gerenciador de Mochila:* Adicione e remova itens com 1 clique!\n' +
             '🤖 *Mestre Solo IA:* Jogue sozinho com botões de ação!\n' +
             '📚 *Wiki Ordem Paranormal:* Consulte origens, trilhas e regras do livro!\n' +
-            '👾 *Bestiário & Catálogo:* Ameaças e armas do Livro de Regras!\n\n' +
+            '👾 *Bestiário:* Zumbi de Sangue (VD10), Aberração de Carne (VD40), Zumbi Bestial (VD80), Enpap-X (VD80) e mais!\n' +
+            '🔫 *Catálogo de Armas:* Katana, Fuzil de Precisão, Escudo, Granadas!\n\n' +
             '📖 *Livro de Regras PDF:* Acesse o livro completo no acervo.\n' +
             '🌐 *Site oficial CRIS:* https://cris.site',
         ...Markup.inlineKeyboard([
@@ -760,7 +763,7 @@ bot.action('wiki_op_classes', async (ctx) => {
 
 bot.action('wiki_op_equipamentos', async (ctx) => {
     await ctx.answerCbQuery();
-    await ctx.reply('🎒 *5. EQUIPAMENTOS E PATENTES*\n\n🏅 *Patentes da Ordem:*\n• Recrita (0 PP)\n• Operador (20 PP)\n• Agente Especial (50 PP)\n• Oficial de Operações (100 PP)\n• Agente de Élite (200 PP)\n\n🎒 *Categorias de Itens:* 0, I, II, III e IV. Controlam o limite de inventário pelo peso e patente do Agente.', { parse_mode: 'Markdown' });
+    await ctx.reply('🎒 *5. EQUIPAMENTOS E PATENTES*\n\n🏅 *Patentes da Ordem:*\n• Recruta (0 PP)\n• Operador (20 PP)\n• Agente Especial (50 PP)\n• Oficial de Operações (100 PP)\n• Agente de Élite (200 PP)\n\n🎒 *Categorias de Itens:* 0, I, II, III e IV. Controlam o limite de inventário pelo peso e patente do Agente.', { parse_mode: 'Markdown' });
 });
 
 // ACTIONS DE RITUAIS SEPARADOS POR CÍRCULO
@@ -899,12 +902,93 @@ bot.action('cond_clear', async (ctx) => {
     await ctx.reply(`✨ *Condições Limpas!* Agente ${f.nome} está *Saudável*.`, { parse_mode: 'Markdown' });
 });
 
+bot.action('best_zumbi_10', async (ctx) => {
+    await ctx.answerCbQuery();
+    await ctx.reply(
+        `🧟 *ZUMBI DE SANGUE (VD 10)*\n\n` +
+        `🩸 *Elemento:* Sangue | *Tamanho:* Médio\n` +
+        `❤️ *PV:* 45 | 🛡️ *Defesa:* 17\n` +
+        `🏃 *Fortitude:* 1d+5 | *Reflexos:* 2d+5 | *Vontade:* 1d+5\n` +
+        `🛡️ *Resistências:* Balístico 5, Corte 5, Impacto 5, Perfuração 5 e Sangue 5\n` +
+        `💀 *Vulnerabilidade:* Morte\n` +
+        `💥 *Ataques:* 2 Garras — 2d+5 (Dano: 2d6+5)\n\n` +
+        `👁️ *Habilidades Paranormais:*\n` +
+        `• *Presença Perturbadora:* 2d6 Mental (DT 12, NEX 10%)\n` +
+        `• *Percepção Sensorial:* Não depende da visão; imune a condições de sentidos.\n` +
+        `🏃 *Deslocamento:* 9m`,
+        { parse_mode: 'Markdown' }
+    );
+});
+
+bot.action('best_aberracao_40', async (ctx) => {
+    await ctx.answerCbQuery();
+    await ctx.reply(
+        `🩸 *ABERRAÇÃO DE CARNE (VD 40)*\n\n` +
+        `🩸 *Elemento:* Sangue | *Tamanho:* Grande\n` +
+        `❤️ *PV:* 70 | 🛡️ *Defesa:* 20\n` +
+        `🏃 *Fortitude:* 3d+10 | *Reflexos:* 2d | *Vontade:* 1d\n` +
+        `🛡️ *Resistências:* Balístico 5, Corte 5, Impacto 5, Perfuração 5 e Sangue 5\n` +
+        `💀 *Vulnerabilidade:* Morte\n` +
+        `💥 *Ataques:* 2 Pancadas — 3d+10 (Dano: 2d8+6)\n\n` +
+        `👁️ *Habilidades Paranormais:*\n` +
+        `• *Presença Perturbadora:* 3d6 Mental (DT 15, NEX 15%)\n` +
+        `• *Agarrão:* Após acertar pancada, pode agarrar criatura Média ou menor.\n` +
+        `• *Abocanhar:* Leva até dois alvos agarrados à boca e causa 3d6 Sangue por turno (Fortitude DT 15 reduz à metade).\n` +
+        `🏃 *Deslocamento:* 9m`,
+        { parse_mode: 'Markdown' }
+    );
+});
+
+bot.action('best_zumbibestial_80', async (ctx) => {
+    await ctx.answerCbQuery();
+    await ctx.reply(
+        `🧟‍♂️ *ZUMBI DE SANGUE BESTIAL (VD 80)*\n\n` +
+        `🩸 *Elemento:* Sangue | *Tamanho:* Grande\n` +
+        `❤️ *PV:* 112 | 🛡️ *Defesa:* 15\n` +
+        `🏃 *Fortitude:* 3d+5 | *Reflexos:* 3d+5 | *Vontade:* 1d+5\n` +
+        `🛡️ *Resistências:* Balístico 5, Corte 5, Impacto 5, Perfuração 5 e Sangue 5\n` +
+        `💀 *Vulnerabilidade:* Morte\n` +
+        `💥 *Ataques:*\n` +
+        `• Mordida de Sangue — 3d+10 (Dano: 2d10+4 Sangue)\n` +
+        `• 2 Garras de Sangue — 3d+10 (Dano: 2d8+2 Sangue)\n\n` +
+        `👁️ *Habilidades Paranormais:*\n` +
+        `• *Presença Perturbadora:* 5d6 Mental (DT 15, NEX 20%)\n` +
+        `• *Furtivo e Letal:* Contra alvo desprevenido recebe +1d nos ataques e +2 dados de dano.\n` +
+        `• *Instinto Predatório:* Não sofre penalidade de Furtividade ao se mover normalmente.\n` +
+        `• *Percepção Sensorial:* Imune a condições de sentidos.\n` +
+        `🏃 *Deslocamento:* 9m`,
+        { parse_mode: 'Markdown' }
+    );
+});
+
+bot.action('best_enpapx_80', async (ctx) => {
+    await ctx.answerCbQuery();
+    await ctx.reply(
+        `⛓️ *ENPAP-X (VD 80)*\n\n` +
+        `🩸🟡 *Elementos:* Sangue + Conhecimento | *Tamanho:* Grande\n` +
+        `❤️ *PV:* 245 | 🛡️ *Defesa:* 22\n` +
+        `🏃 *Fortitude:* 4d+15 | *Reflexos:* 3d+10 | *Vontade:* 2d+10\n` +
+        `🛡️ *Resistências:* Balístico 5, Corte 5, Impacto 5, Perfuração 5 e Sangue 5\n` +
+        `💀 *Vulnerabilidade:* Morte\n` +
+        `💥 *Ataque:* 2 Correntes — 3d+15 (Dano: 3d6 Sangue, alcance curto)\n\n` +
+        `👁️ *Habilidades Paranormais:*\n` +
+        `• *Presença Perturbadora:* 10d6 Mental (DT 20, NEX 45%)\n` +
+        `• *Força Desencadeada:* Em acerto crítico, empurra/derruba o alvo a 3m.\n` +
+        `• *Transformação:* Ao chegar a 0 PV, recupera TODOS os PV e ganha +40 PV temporários!\n` +
+        `• *Acorrentar:* Agarra à distância e causa 2d6 Sangue/turno por estrangulamento.\n` +
+        `• *Crescer:* Cada soco acertado concede +1d6 cumulativo no dano do turno.\n` +
+        `• *Marcas do Terror:* Inimigos adjacentes sofrem 2d6 Mental (Vontade DT 15 reduz à metade).\n` +
+        `🏃 *Deslocamento:* 9m`,
+        { parse_mode: 'Markdown' }
+    );
+});
+
 bot.action(/^best_(.+)$/, async (ctx) => {
     await ctx.answerCbQuery();
     const b = ctx.match[1];
 
     const bests = {
-        zumbi: '👾 *ZUMBI DE SANGUE (VD 20)*\n\n❤️ *PV:* 35 | 🛡️ *Defesa:* 14\n🩸 *Elemento:* Sangue\n💥 *Ataque:* Garra 2d20+5 (Dano 1d8+3)\n👁️ *Habilidade:* Presença Perturbadora (SAN -2)',
+        zumbi: '👾 *ZUMBI DE SANGUE (VD 10)*\n\n❤️ *PV:* 45 | 🛡️ *Defesa:* 17\n🩸 *Elemento:* Sangue\n💥 *Ataque:* Garra 2d20+5 (Dano 2d6+5)\n👁️ *Habilidade:* Presença Perturbadora (SAN -2)',
         existido: '👾 *EXISTIDO (VD 10)*\n\n❤️ *PV:* 20 | 🛡️ *Defesa:* 12\n⏳ *Elemento:* Morte\n💥 *Ataque:* Toque Entrópico 2d20+3 (Dano 1d6+2 Morte)\n⏳ *Habilidade:* Descomposição Lenta',
         sombra: '👾 *SOMBRA (VD 20)*\n\n❤️ *PV:* 30 | 🛡️ *Defesa:* 16\n👁️ *Elemento:* Conhecimento\n💥 *Ataque:* Suspiro Obsessivo 2d20+6 (Dano 1d8 Mental)\n🧠 *Habilidade:* Invisibilidade na Escuridão',
         anomalia: '👾 *ANOMALIA (VD 20)*\n\n❤️ *PV:* 25 | 🛡️ *Defesa:* 15\n⚡ *Elemento:* Energia\n💥 *Ataque:* Arcos Elétricos 2d20+5 (Dano 1d10 Energia)\n⚡ *Habilidade:* Caos Estático'
