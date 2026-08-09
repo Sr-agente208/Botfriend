@@ -18,6 +18,7 @@ const TOKEN_TG = process.env.TELEGRAM_BOT_TOKEN;
 const PORT = process.env.PORT || 3000;
 const PREFIX = '©';
 const LINK_LIVRO_REGRAS = 'https://dl2.bibliotecaelfica.org/dl/eyJwaWQiOjI3OTcxLCJ1aWQiOm51bGwsInBhdGgiOiJcL3ZhclwvYWNlcnZvXC9zdWdlc3RvZXNcLzVkZjEyYzAyLTJiMWQtNGVhMy04MWZkLTk0ZTZjZDZlMGJhZC5wZGYiLCJtb2RlIjoidmlzdWFsaXphciIsInNwZWVkIjo1MTIwMDAsInNpemUiOjQ4MDI1OTc0LCJ0aXRsZSI6Ik91dHJvcyAtIE9yZGVtIFBhcmFub3JtYWwiLCJleHAiOjE3ODYyNzA2MDN9.d54dffd130fe9d90a51f7e76c29358bdce935545e50e0952be26acad7d274657';
+const LINK_BESTIARIO_WIKI = 'https://ordemparanormal.fandom.com/wiki/Besti%C3%A1rio';
 
 if (!TOKEN_TG) {
     console.error(chalk.red('[ERRO] TELEGRAM_BOT_TOKEN não definido!'));
@@ -520,6 +521,9 @@ function botoesBestiarioCris() {
         [
             Markup.button.callback('⏳ Existido (VD 10)', 'best_existido'),
             Markup.button.callback('👁️ Sombra (VD 20)', 'best_sombra')
+        ],
+        [
+            Markup.button.url('🌐 Bestiário Fandom Completo', LINK_BESTIARIO_WIKI)
         ]
     ]);
 }
@@ -556,7 +560,8 @@ function botoesWikiOrdem() {
             Markup.button.callback('🎒 6. Equipamentos & Patentes', 'wiki_op_equipamentos')
         ],
         [
-            Markup.button.url('📖 Livro de Regras PDF Oficial', LINK_LIVRO_REGRAS)
+            Markup.button.url('📖 Livro de Regras PDF Oficial', LINK_LIVRO_REGRAS),
+            Markup.button.url('🌐 Bestiário Fandom', LINK_BESTIARIO_WIKI)
         ]
     ]);
 }
@@ -586,7 +591,7 @@ function menuOrdem() {
             '🎒 *Gerenciador de Mochila:* Adicione e remova itens com 1 clique!\n' +
             '🤖 *Mestre Solo IA:* Jogue sozinho com botões de ação!\n' +
             '📚 *Wiki Ordem Paranormal:* Consulte origens, trilhas e regras do livro!\n' +
-            '👾 *Bestiário:* Zumbi de Sangue (VD10), Aberração de Carne (VD40), Zumbi Bestial (VD80), Enpap-X (VD80) e mais!\n' +
+            '👾 *Bestiário Fandom:* Zumbi de Sangue, Aberração de Carne, Zumbi Bestial, Enpap-X e mais!\n' +
             '🔫 *Catálogo de Armas:* Katana, Fuzil de Precisão, Escudo, Granadas!\n\n' +
             '📖 *Livro de Regras PDF:* Acesse o livro completo no acervo.\n' +
             '🌐 *Site oficial CRIS:* https://cris.site',
@@ -600,6 +605,7 @@ function menuOrdem() {
             [Markup.button.callback('🛡️ Trilhas & Habilidades', 'cris_menu_trilhas'), Markup.button.callback('🎯 Rolar Perícias', 'cris_menu_pericias')],
             [Markup.button.callback('👾 Bestiário Paranormal', 'cris_menu_bestiario'), Markup.button.callback('🔫 Catálogo de Armas', 'cris_menu_catalogo')],
             [Markup.button.url('📖 Livro de Regras Oficial (PDF)', LINK_LIVRO_REGRAS)],
+            [Markup.button.url('🌐 Bestiário Wiki Fandom', LINK_BESTIARIO_WIKI)],
             [Markup.button.url('🌐 Abrir Site CRIS (cris.site)', 'https://cris.site')],
             [Markup.button.callback('📋 Minha Ficha Atual', 'cmd_ficha_op')],
             [Markup.button.callback('◀️ Voltar', 'menu_principal')]
