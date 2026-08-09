@@ -271,7 +271,7 @@ function botoesSoloAcoes() {
         ],
         [
             Markup.button.callback('👥 Falar / Negociar', 'solo_act_falar'),
-            Markup.button.callback('🔮 Conjurar Ritual', 'cris_menu_rituais')
+            Markup.button.callback('🔮 Conjurar Ritual', 'cris_menu_circulos_rit')
         ],
         [
             Markup.button.callback('🎒 Ver Inventario', 'cris_ver_itens'),
@@ -279,6 +279,73 @@ function botoesSoloAcoes() {
         ],
         [
             Markup.button.callback('🛑 Sair da Campanha', 'solo_act_sair')
+        ]
+    ]);
+}
+
+function botoesCirculosRituais() {
+    return Markup.inlineKeyboard([
+        [
+            Markup.button.callback('🔮 1º Círculo (1 PE)', 'rit_circulo_1'),
+            Markup.button.callback('🔮 2º Círculo (3 PE)', 'rit_circulo_2')
+        ],
+        [
+            Markup.button.callback('🔮 3º Círculo (6 PE)', 'rit_circulo_3'),
+            Markup.button.callback('🔮 4º Círculo (10 PE)', 'rit_circulo_4')
+        ],
+        [
+            Markup.button.callback('🩸 Rituais por Elemento', 'cris_menu_elementos')
+        ]
+    ]);
+}
+
+function botoesRituais1Circulo() {
+    return Markup.inlineKeyboard([
+        [
+            Markup.button.callback('🩸 Armadura de Sangue (+5 DEF)', 'cris_rit_armadura'),
+            Markup.button.callback('🩸 Cicatrização (3d8 PV)', 'cris_rit_cicatrizacao')
+        ],
+        [
+            Markup.button.callback('🩸 Descarnar (2d8 Sangue)', 'cris_rit_descarnar'),
+            Markup.button.callback('⏳ Decadência (2d8 Morte)', 'cris_rit_decadencia')
+        ],
+        [
+            Markup.button.callback('👁️ Sussurros Paranormais (+5 Int)', 'cris_rit_sussurros'),
+            Markup.button.callback('⚡ Eletrocussão (2d6 Energia)', 'cris_rit_eletrocussao')
+        ],
+        [
+            Markup.button.callback('⚡ Chama do Caos (1d12 Fogo)', 'cris_rit_chama'),
+            Markup.button.callback('⚡ Coincidência Forçada (+2 Bônus)', 'cris_rit_coincidencia')
+        ]
+    ]);
+}
+
+function botoesRituais2Circulo() {
+    return Markup.inlineKeyboard([
+        [
+            Markup.button.callback('🩸 Sangue Fervente (4d8 Sangue)', 'cris_rit_sanguefervente'),
+            Markup.button.callback('⏳ Velocidade Mortal (+1 Ação)', 'cris_rit_velocidade')
+        ],
+        [
+            Markup.button.callback('⚡ Salto Quântico (Teletransporte)', 'cris_rit_salto'),
+            Markup.button.callback('⚡ Tela de Ruído (+30 PV Temp)', 'cris_rit_tela')
+        ],
+        [
+            Markup.button.callback('🧠 Aprimorar Mente (+1 INT/PRE)', 'cris_rit_aprimorarmente'),
+            Markup.button.callback('👁️ Visão das Sombras (Ver Tudo)', 'cris_rit_visao')
+        ]
+    ]);
+}
+
+function botoesRituais3e4Circulo() {
+    return Markup.inlineKeyboard([
+        [
+            Markup.button.callback('🩸 Forma Monstruosa (3º Círculo, 6 PE)', 'cris_rit_monstruosa'),
+            Markup.button.callback('⏳ Âncora Temporal (3º Círculo, 6 PE)', 'cris_rit_ancora')
+        ],
+        [
+            Markup.button.callback('🖤 Lâmina do Medo (4º Círculo, 10 PE)', 'cris_rit_laminamedo'),
+            Markup.button.callback('⏳ Fim dos Tempos (4º Círculo, 10 PE)', 'cris_rit_fimtempos')
         ]
     ]);
 }
@@ -308,27 +375,6 @@ function botoesPericiasCris() {
         [
             Markup.button.callback('🏃 Atletismo', 'cris_p_atletismo'),
             Markup.button.callback('💻 Tecnologia', 'cris_p_tecnologia')
-        ]
-    ]);
-}
-
-function botoesRituaisCris() {
-    return Markup.inlineKeyboard([
-        [
-            Markup.button.callback('🩸 Cicatrização (3d8 PV)', 'cris_rit_cicatrizacao'),
-            Markup.button.callback('🩸 Armadura de Sangue (+5 DEF)', 'cris_rit_armadura')
-        ],
-        [
-            Markup.button.callback('⚡ Eletrocussão (2d6 Dano)', 'cris_rit_eletrocussao'),
-            Markup.button.callback('⏳ Decadência (2d8 Dano)', 'cris_rit_decadencia')
-        ],
-        [
-            Markup.button.callback('👁️ Sussurros Paranormais (+5 Int)', 'cris_rit_sussurros'),
-            Markup.button.callback('⚡ Coincidência Forçada (+2 Bônus)', 'cris_rit_coincidencia')
-        ],
-        [
-            Markup.button.callback('🩸 Descarnar (2d8 Sangue)', 'cris_rit_descarnar'),
-            Markup.button.callback('⚡ Chuva de Faíscas (4d6)', 'cris_rit_faiscas')
         ]
     ]);
 }
@@ -500,21 +546,20 @@ function menuOrdem() {
         text: '👁️ *ORDEM PARANORMAL RPG — C.R.I.S. COMPLETO*\n\n' +
             'Sistema completo de Ordem Paranormal RPG do Livro de Regras no Telegram!\n\n' +
             '📝 *Criador Guiado:* Crie fichas completas por botões!\n' +
+            '🔮 *Biblioteca de Rituais por Círculo:* 1º, 2º, 3º e 4º Círculo por botões!\n' +
             '🎒 *Gerenciador de Mochila:* Adicione e remova itens com 1 clique!\n' +
             '🤖 *Mestre Solo IA:* Jogue sozinho com botões de ação!\n' +
-            '👾 *Bestiário:* Zumbi de Sangue, Existido, Sombra, Anomalia!\n' +
-            '🔫 *Catálogo de Armas:* Katana, Fuzil de Precisão, Escudo, Granadas!\n' +
-            '🩸 *Rituais & Trilhas:* Todos os Elementos e Habilidades do Livro!\n\n' +
+            '👾 *Bestiário & Catálogo:* Ameaças e armas do Livro de Regras!\n\n' +
             '📖 *Livro de Regras PDF:* Acesse o livro completo no acervo.\n' +
             '🌐 *Site oficial CRIS:* https://cris.site',
         ...Markup.inlineKeyboard([
             [Markup.button.callback('📝 Criar Minha Ficha com Botões', 'wiz_start_ficha')],
+            [Markup.button.callback('🔮 Rituais Separados por Círculo', 'cris_menu_circulos_rit')],
             [Markup.button.callback('🤖 Jogar Solo com Mestre White Lotus', 'cmd_mestresolo_start')],
             [Markup.button.callback('🎒 Inventário & Gerenciar Itens', 'cris_ver_itens')],
-            [Markup.button.callback('➕ Adicionar Novo Item', 'cris_prompt_additem'), Markup.button.callback('🗑️ Remover Item', 'cris_rm_item_menu')],
-            [Markup.button.callback('🔮 Rituais Paranormais', 'cris_menu_rituais'), Markup.button.callback('🛡️ Trilhas & Habilidades', 'cris_menu_trilhas')],
-            [Markup.button.callback('🎯 Rolar Perícias', 'cris_menu_pericias'), Markup.button.callback('👾 Bestiário Paranormal', 'cris_menu_bestiario')],
-            [Markup.button.callback('🔫 Catálogo de Armas', 'cris_menu_catalogo'), Markup.button.callback('🩸 Condições de Saúde', 'cris_menu_condicoes')],
+            [Markup.button.callback('➕ Adicionar Item', 'cris_prompt_additem'), Markup.button.callback('🗑️ Remover Item', 'cris_rm_item_menu')],
+            [Markup.button.callback('🛡️ Trilhas & Habilidades', 'cris_menu_trilhas'), Markup.button.callback('🎯 Rolar Perícias', 'cris_menu_pericias')],
+            [Markup.button.callback('👾 Bestiário Paranormal', 'cris_menu_bestiario'), Markup.button.callback('🔫 Catálogo de Armas', 'cris_menu_catalogo')],
             [Markup.button.url('📖 Livro de Regras Oficial (PDF)', LINK_LIVRO_REGRAS)],
             [Markup.button.url('🌐 Abrir Site CRIS (cris.site)', 'https://cris.site')],
             [Markup.button.callback('📋 Minha Ficha Atual', 'cmd_ficha_op')],
@@ -651,6 +696,44 @@ bot.action('menu_jogos', async (ctx) => { await ctx.answerCbQuery(); const m = m
 bot.action('menu_pets', async (ctx) => { await ctx.answerCbQuery(); const m = menuPets(); await ctx.editMessageText(m.text, { parse_mode: 'Markdown', ...Markup.inlineKeyboard(m.reply_markup.inline_keyboard) }); });
 bot.action('menu_economia', async (ctx) => { await ctx.answerCbQuery(); const m = menuEconomia(); await ctx.editMessageText(m.text, { parse_mode: 'Markdown', ...Markup.inlineKeyboard(m.reply_markup.inline_keyboard) }); });
 bot.action('menu_util', async (ctx) => { await ctx.answerCbQuery(); const m = menuUtil(); await ctx.editMessageText(m.text, { parse_mode: 'Markdown', ...Markup.inlineKeyboard(m.reply_markup.inline_keyboard) }); });
+
+// ACTIONS DE RITUAIS SEPARADOS POR CÍRCULO
+bot.action('cris_menu_circulos_rit', async (ctx) => {
+    await ctx.answerCbQuery();
+    await ctx.reply('🔮 *BIBLIOTECA DE RITUAIS — SEPARADOS POR CÍRCULO*\n\nEscolha o Círculo de Ritual:', { parse_mode: 'Markdown', ...botoesCirculosRituais() });
+});
+
+bot.action('rit_circulo_1', async (ctx) => {
+    await ctx.answerCbQuery();
+    await ctx.reply('🔮 *RITUAIS DE 1º CÍRCULO (Custo: 1 PE)*\n\nEscolha um ritual para conjurar:', { parse_mode: 'Markdown', ...botoesRituais1Circulo() });
+});
+
+bot.action('rit_circulo_2', async (ctx) => {
+    await ctx.answerCbQuery();
+    await ctx.reply('🔮 *RITUAIS DE 2º CÍRCULO (Custo: 3 PE)*\n\nEscolha um ritual para conjurar:', { parse_mode: 'Markdown', ...botoesRituais2Circulo() });
+});
+
+bot.action('rit_circulo_3', async (ctx) => {
+    await ctx.answerCbQuery();
+    await ctx.reply('🔮 *RITUAIS DE 3º E 4º CÍRCULO (Custo: 6 PE / 10 PE)*\n\nEscolha um ritual para conjurar:', { parse_mode: 'Markdown', ...botoesRituais3e4Circulo() });
+});
+
+bot.action('rit_circulo_4', async (ctx) => {
+    await ctx.answerCbQuery();
+    await ctx.reply('🔮 *RITUAIS DE 3º E 4º CÍRCULO (Custo: 6 PE / 10 PE)*\n\nEscolha um ritual para conjurar:', { parse_mode: 'Markdown', ...botoesRituais3e4Circulo() });
+});
+
+bot.action('cris_menu_elementos', async (ctx) => {
+    await ctx.answerCbQuery();
+    const txt = `🔮 *ELEMENTOS PARANORMAIS — ORDEM PARANORMAL*\n\n` +
+        `🩸 *SANGUE:* Sentimento, dor, fúria, transformação física e vitalidade.\n` +
+        `⏳ *MORTE:* Tempo, cinzas, decomposição, controle de sangramento e entropia.\n` +
+        `👁️ *CONHECIMENTO:* Razão, símbolos, percepção ampliada, segredos e intuição.\n` +
+        `⚡ *ENERGIA:* Caos, eletricidade, velocidade, probabilidade e teletransporte.\n` +
+        `🖤 *MEDO:* O elemento impossível. Origem dos rituais lendários.\n\n` +
+        `🌐 *Site CRIS:* https://cris.site`;
+    await ctx.reply(txt, { parse_mode: 'Markdown', ...botoesCirculosRituais() });
+});
 
 // ACTIONS DE BESTIÁRIO, CATÁLOGO E CONDIÇÕES CRIS
 bot.action('cris_menu_bestiario', async (ctx) => {
@@ -942,7 +1025,7 @@ bot.action(/^wiz_nex_(.+)$/, async (ctx) => {
     const btns = Markup.inlineKeyboard([
         [Markup.button.callback('🤖 Jogar Solo com Mestre White Lotus', 'cmd_mestresolo_start')],
         [Markup.button.callback('🎒 Ver Inventário', 'cris_ver_itens'), Markup.button.callback('🗑️ Remover Item', 'cris_rm_item_menu')],
-        [Markup.button.callback('🎯 Rolar Perícia', 'cris_menu_pericias'), Markup.button.callback('🔮 Rituais', 'cris_menu_rituais')],
+        [Markup.button.callback('🎯 Rolar Perícia', 'cris_menu_pericias'), Markup.button.callback('🔮 Rituais Por Círculo', 'cris_menu_circulos_rit')],
         [Markup.button.url('📖 Livro de Regras PDF', LINK_LIVRO_REGRAS)]
     ]);
 
@@ -1072,7 +1155,7 @@ bot.action('cris_menu_pericias', async (ctx) => {
 
 bot.action('cris_menu_rituais', async (ctx) => {
     await ctx.answerCbQuery();
-    await ctx.reply('🔮 *RITUAIS PARANORMAIS — C.R.I.S.*\n\nEscolha um ritual para conjurar:', { parse_mode: 'Markdown', ...botoesRituaisCris() });
+    await ctx.reply('🔮 *RITUAIS PARANORMAIS — C.R.I.S.*\n\nEscolha o Círculo de Ritual:', { parse_mode: 'Markdown', ...botoesCirculosRituais() });
 });
 
 bot.action('cris_menu_trilhas', async (ctx) => {
@@ -1088,25 +1171,40 @@ bot.action(/^cris_rit_(.+)$/, async (ctx) => {
     const db = getFichasDB();
     const f = getOuCriarFicha(sid, pushname);
 
-    if (f.pe < 1) return ctx.reply('❌ PE insuficiente para conjurar rituais.');
+    let peCusto = 1;
+    if (rit === 'sanguefervente' || rit === 'velocidade' || rit === 'salto' || rit === 'tela' || rit === 'aprimorarmente' || rit === 'visao') peCusto = 3;
+    if (rit === 'monstruosa' || rit === 'ancora') peCusto = 6;
+    if (rit === 'laminamedo' || rit === 'fimtempos') peCusto = 10;
 
-    f.pe -= 1;
+    if (f.pe < peCusto) return ctx.reply(`❌ PE insuficiente para conjurar este ritual (Custo: ${peCusto} PE).`);
+
+    f.pe -= peCusto;
     db[sid] = f;
     saveFichasDB(db);
 
     const rituaisInfo = {
-        cicatrização: '🩸 *Cicatrização (Sangue)*\nRecupera +3d8+3 PV do Agente e estanca sangramento!',
-        armadura: '🩸 *Armadura de Sangue*\nSua pele endurece! Defesa aumentada em +5!',
-        eletrocussão: '⚡ *Eletrocussão (Energia)*\nDispara arcos elétricos! Dano: *2d6 Energia* + atordoamento!',
-        decadencia: '⏳ *Decadência (Morte)*\nAcelera o envelhecimento da matéria! Dano: *2d8 Morte*!',
-        sussurros: '👁️ *Sussurros Paranormais (Conhecimento)*\nRevela segredos e concede +5 em testes de Investigação!',
-        coincidencia: '⚡ *Coincidência Forçada (Energia)*\nAltera a probabilidade! Bônus de +2 em todos os testes no próximo turno!',
-        descarnar: '🩸 *Descarnar (Sangue)*\nDesaloca tecidos da vítima causando *2d8 Dano de Sangue*!',
-        faiscas: '⚡ *Chuva de Faíscas (Energia)*\nLança rajada de eletricidade causando *4d6 Dano de Energia*!'
+        cicatrização: '🩸 *Cicatrização (1º Círculo, Sangue)*\nRecupera +3d8+3 PV do Agente e estanca sangramento!',
+        armadura: '🩸 *Armadura de Sangue (1º Círculo, Sangue)*\nSua pele endurece! Defesa aumentada em +5!',
+        eletrocussão: '⚡ *Eletrocussão (1º Círculo, Energia)*\nDispara arcos elétricos! Dano: *2d6 Energia* + atordoamento!',
+        decadencia: '⏳ *Decadência (1º Círculo, Morte)*\nAcelera o envelhecimento da matéria! Dano: *2d8 Morte*!',
+        sussurros: '👁️ *Sussurros Paranormais (1º Círculo, Conhecimento)*\nRevela segredos e concede +5 em testes de Investigação!',
+        coincidencia: '⚡ *Coincidência Forçada (1º Círculo, Energia)*\nAltera a probabilidade! Bônus de +2 em todos os testes no próximo turno!',
+        descarnar: '🩸 *Descarnar (1º Círculo, Sangue)*\nDesaloca tecidos da vítima causando *2d8 Dano de Sangue*!',
+        faiscas: '⚡ *Chuva de Faíscas (2º Círculo, Energia)*\nLança rajada de eletricidade causando *4d6 Dano de Energia*!',
+        sanguefervente: '🩸 *Sangue Fervente (2º Círculo, Sangue)*\nProvoca hemorragia interna! Dano: *4d8 Sangue*!',
+        velocidade: '⏳ *Velocidade Mortal (2º Círculo, Morte)*\nAcelera seu tempo interno! Ganha +1 Ação Padrão Extra no turno!',
+        salto: '⚡ *Salto Quântico (2º Círculo, Energia)*\nDesintegra e surge a até 15m instantaneamente!',
+        tela: '⚡ *Tela de Ruído (2º Círculo, Energia)*\nCria barreira estática concedendo +30 PV temporários!',
+        aprimorarmente: '🧠 *Aprimorar Mente (2º Círculo, Conhecimento)*\nAumenta Intelecto/Presença do Agente em +1!',
+        visao: '👁️ *Visão das Sombras (2º Círculo, Conhecimento)*\nPermite enxergar através de paredes, trevas e ilusões!',
+        monstruosa: '🩸 *Forma Monstruosa (3º Círculo, Sangue)*\nTransforma o agente em uma abominação física devastadora!',
+        ancora: '⏳ *Âncora Temporal (3º Círculo, Morte)*\nCongela o tempo ao redor dos inimigos na área!',
+        laminamedo: '🖤 *Lâmina do Medo (4º Círculo, Medo)*\nForja lâmina irrestrita que ignora imunidades e defesas!',
+        fimtempos: '⏳ *Fim dos Tempos (4º Círculo, Morte)*\nAcelera a entropia de tudo ao redor causando 10d10 Dano de Morte!'
     };
 
     const desc = rituaisInfo[rit] || '🔮 Ritual Paranormal Conjurado com sucesso!';
-    await ctx.reply(`🔮 *RITUAL CONJURADO!* (-1 PE)\n\n${desc}\n⚡ PE Restante: *${f.pe}/${f.peMax} PE*`, { parse_mode: 'Markdown' });
+    await ctx.reply(`🔮 *RITUAL CONJURADO!* (-${peCusto} PE)\n\n${desc}\n⚡ PE Restante: *${f.pe}/${f.peMax} PE*`, { parse_mode: 'Markdown' });
 });
 
 bot.action(/^cris_trilha_(.+)$/, async (ctx) => {
@@ -1500,7 +1598,7 @@ bot.on(['text', 'photo', 'video', 'audio', 'voice', 'document', 'sticker', 'anim
 /fichacris — Ficha e inventário do Agente
 /itens — Ver mochila e armas equipadas
 /additem <Nome> | <Cat> | <Peso> — Adicionar novo item
-/rituais — Conjurar rituais paranormais com botões
+/rituais — Rituais paranormais organizados por 1º, 2º, 3º e 4º Círculo
 /trilhas — Selecionar Trilha e ver Habilidades
 /bestiario — Bestiário Paranormal do Livro
 /catalogo — Loja de Armas e Proteções
@@ -1807,7 +1905,7 @@ bot.on(['text', 'photo', 'video', 'audio', 'voice', 'document', 'sticker', 'anim
                 const btns = Markup.inlineKeyboard([
                     [Markup.button.callback('🎒 Ver Inventário & Itens', 'cris_ver_itens')],
                     [Markup.button.callback('🗑️ Remover Item', 'cris_rm_item_menu'), Markup.button.callback('➕ Add Item', 'cris_prompt_additem')],
-                    [Markup.button.callback('🎯 Rolar Perícia', 'cris_menu_pericias'), Markup.button.callback('🔮 Rituais', 'cris_menu_rituais')],
+                    [Markup.button.callback('🎯 Rolar Perícia', 'cris_menu_pericias'), Markup.button.callback('🔮 Rituais Por Círculo', 'cris_menu_circulos_rit')],
                     [Markup.button.callback('🛡️ Escolher Trilha', 'cris_menu_trilhas'), Markup.button.callback('🩸 Condições', 'cris_menu_condicoes')],
                     [Markup.button.url('📖 Livro de Regras PDF', LINK_LIVRO_REGRAS)]
                 ]);
@@ -1830,7 +1928,7 @@ bot.on(['text', 'photo', 'video', 'audio', 'voice', 'document', 'sticker', 'anim
                     `⚡ *ENERGIA:* Caos, eletricidade, transformação e o imprevisível. Muda a matéria instantaneamente.\n` +
                     `🖤 *MEDO:* O elemento impossível. Origem de todos os rituais.\n\n` +
                     `🌐 *Acesse rituais e fichas em:* https://cris.site`;
-                await ctx.reply(txt, { parse_mode: 'Markdown', ...botoesRituaisCris() });
+                await ctx.reply(txt, { parse_mode: 'Markdown', ...botoesCirculosRituais() });
                 break;
             }
 
