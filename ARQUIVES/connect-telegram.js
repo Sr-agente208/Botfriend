@@ -2248,17 +2248,26 @@ function menuUtil() {
 }
 
 // ====== ACTIONS DE MENUS ======
-bot.action('menu_principal', async (ctx) => { await ctx.answerCbQuery(); const m = menuPrincipal(); await ctx.editMessageText(m.text, { parse_mode: 'Markdown', ...Markup.inlineKeyboard(m.reply_markup.inline_keyboard) }); });
-bot.action('menu_ia', async (ctx) => { await ctx.answerCbQuery(); const m = menuIA(); await ctx.editMessageText(m.text, { parse_mode: 'Markdown', ...Markup.inlineKeyboard(m.reply_markup.inline_keyboard) }); });
-bot.action('menu_ordem', async (ctx) => { await ctx.answerCbQuery(); const m = menuOrdem(); await ctx.editMessageText(m.text, { parse_mode: 'Markdown', ...Markup.inlineKeyboard(m.reply_markup.inline_keyboard) }); });
-bot.action('menu_anime', async (ctx) => { await ctx.answerCbQuery(); const m = menuAnime(); await ctx.editMessageText(m.text, { parse_mode: 'Markdown', ...Markup.inlineKeyboard(m.reply_markup.inline_keyboard) }); });
-bot.action('menu_sticker', async (ctx) => { await ctx.answerCbQuery(); const m = menuSticker(); await ctx.editMessageText(m.text, { parse_mode: 'Markdown', ...Markup.inlineKeyboard(m.reply_markup.inline_keyboard) }); });
-bot.action('menu_musica', async (ctx) => { await ctx.answerCbQuery(); const m = menuMusica(); await ctx.editMessageText(m.text, { parse_mode: 'Markdown', ...Markup.inlineKeyboard(m.reply_markup.inline_keyboard) }); });
-bot.action('menu_zoeira', async (ctx) => { await ctx.answerCbQuery(); const m = menuZoeira(); await ctx.editMessageText(m.text, { parse_mode: 'Markdown', ...Markup.inlineKeyboard(m.reply_markup.inline_keyboard) }); });
-bot.action('menu_jogos', async (ctx) => { await ctx.answerCbQuery(); const m = menuJogos(); await ctx.editMessageText(m.text, { parse_mode: 'Markdown', ...Markup.inlineKeyboard(m.reply_markup.inline_keyboard) }); });
-bot.action('menu_pets', async (ctx) => { await ctx.answerCbQuery(); const m = menuPets(); await ctx.editMessageText(m.text, { parse_mode: 'Markdown', ...Markup.inlineKeyboard(m.reply_markup.inline_keyboard) }); });
-bot.action('menu_economia', async (ctx) => { await ctx.answerCbQuery(); const m = menuEconomia(); await ctx.editMessageText(m.text, { parse_mode: 'Markdown', ...Markup.inlineKeyboard(m.reply_markup.inline_keyboard) }); });
-bot.action('menu_util', async (ctx) => { await ctx.answerCbQuery(); const m = menuUtil(); await ctx.editMessageText(m.text, { parse_mode: 'Markdown', ...Markup.inlineKeyboard(m.reply_markup.inline_keyboard) }); });
+async function safeSendMenu(ctx, m) {
+    await ctx.answerCbQuery();
+    try {
+        await ctx.editMessageText(m.text, { parse_mode: 'Markdown', ...Markup.inlineKeyboard(m.reply_markup.inline_keyboard) });
+    } catch {
+        await ctx.reply(m.text, { parse_mode: 'Markdown', ...Markup.inlineKeyboard(m.reply_markup.inline_keyboard) });
+    }
+}
+
+bot.action('menu_principal', async (ctx) => safeSendMenu(ctx, menuPrincipal()));
+bot.action('menu_ia', async (ctx) => safeSendMenu(ctx, menuIA()));
+bot.action(['cris', 'menu_ordem'], async (ctx) => safeSendMenu(ctx, menuOrdem()));
+bot.action('menu_anime', async (ctx) => safeSendMenu(ctx, menuAnime()));
+bot.action('menu_sticker', async (ctx) => safeSendMenu(ctx, menuSticker()));
+bot.action('menu_musica', async (ctx) => safeSendMenu(ctx, menuMusica()));
+bot.action('menu_zoeira', async (ctx) => safeSendMenu(ctx, menuZoeira()));
+bot.action('menu_jogos', async (ctx) => safeSendMenu(ctx, menuJogos()));
+bot.action('menu_pets', async (ctx) => safeSendMenu(ctx, menuPets()));
+bot.action('menu_economia', async (ctx) => safeSendMenu(ctx, menuEconomia()));
+bot.action('menu_util', async (ctx) => safeSendMenu(ctx, menuUtil()));
 
 bot.action('wiki_op_main', async (ctx) => {
     await ctx.answerCbQuery();
@@ -3106,6 +3115,77 @@ bot.action('cmd_anime_recentes', async (ctx) => {
         await ctx.reply(txt, { parse_mode: 'Markdown' });
     } catch { ctx.reply('❌ Erro ao carregar animes recentes.'); }
 });
+
+function botoesFichaAcoes() {
+    return Markup.inlineKeyboard([
+        [
+            Markup.button.callback('➕ Adicionar Item', 'cris_prompt_additem'),
+            Markup.button.callback('🗑️ Remover Item', 'cris_rm_item_menu')
+        ],
+        [
+            Markup.button.callback('🩸 Gerenciar Condições', 'cris_menu_condicoes'),
+            Markup.button.callback('🔮 Usar Ritual', 'cris_menu_circulos_rit')
+        ],
+        [
+            Markup.button.callback('◀️ Voltar ao Menu CRIS', 'cris')
+        ]
+    ]);
+}
+
+bot.action('cmd_ficha_op', async (ctx) => {
+    await ctx.answerCbQuery();
+    const sid = String(ctx.from.id);
+    const pushname = ctx.from.first_name || 'Agente';
+    const f = getOuCriarFicha(sid, pushname);
+
+    let txt = `📋 *FICHA DE AGENTE C.R.I.S. — ORDEM PARANORMAL*\n\n` +
+        `👤 *Nome:* ${f.nome}\n` +
+        `💼 *Origem:* ${f.origem} | 🛡️ *Classe:* ${f.classe} (${f.trilha || 'Aniquilador'})\n` +
+        `☣️ *NEX:* ${f.nex || '15%'}\n\n` +
+        `🎯 *ATRIBUTOS:*\n` +
+        `🏃 *AGI:* ${f.agi} | 🏋️ *FOR:* ${f.for} | 🧠 *INT:* ${f.int} | 👁️ *PRE:* ${f.pre} | 💪 *VIG:* ${f.vig}\n\n` +
+        `❤️ *PV:* ${f.pv}/${f.pvMax} | ⚡ *PE:* ${f.pe}/${f.peMax} | 🧠 *SAN:* ${f.san}/${f.sanMax}\n` +
+        `🛡️ *Defesa:* ${f.defesa} | ⚖️ *Carga Máxima:* ${f.cargaMax || 9}\n` +
+        `⚠️ *Condições:* ${f.condicoes?.join(', ') || 'Saudável'}\n\n` +
+        `🎒 *INVENTÁRIO (${f.inventario?.length || 0} itens):*\n`;
+
+    if (f.inventario && f.inventario.length > 0) {
+        f.inventario.forEach((it, i) => {
+            txt += `*${i + 1}.* ${it.nome} (Cat. ${it.categoria || 'I'})\n`;
+        });
+    } else {
+        txt += `_Mochila vazia._\n`;
+    }
+
+    await ctx.reply(txt, { parse_mode: 'Markdown', ...botoesFichaAcoes() });
+});
+
+bot.action('cmd_brat', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('✨ Use: `/brat texto` para gerar figurinha estilo Brat.', { parse_mode: 'Markdown' }); });
+bot.action('cmd_curiosidade', async (ctx) => {
+    await ctx.answerCbQuery();
+    const curis = [
+        '💡 Sabia que aranhas não têm músculos nas pernas? Elas usam pressão hidráulica de sangue para se moverem!',
+        '💡 O coração de uma baleia-azul é do tamanho de um carro pequeno!',
+        '💡 No Japão existem mais de 5 milhões de máquinas de vendas automáticas!'
+    ];
+    await ctx.reply(curis[Math.floor(Math.random() * curis.length)], { parse_mode: 'Markdown' });
+});
+bot.action('cmd_piada', async (ctx) => {
+    await ctx.answerCbQuery();
+    const piadas = [
+        '😂 Por que os químicos são ótimos em resolver problemas? Porque eles têm todas as soluções!',
+        '😂 O que o zero disse para o oito? Belo cinto!',
+        '😂 Qual é o fantasma mais engraçado? O Boo-bo da corte!'
+    ];
+    await ctx.reply(piadas[Math.floor(Math.random() * piadas.length)], { parse_mode: 'Markdown' });
+});
+
+bot.action('cmd_petadotar', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('🐾 Use: `/petadotar <nome>` para adotar um pet virtual!', { parse_mode: 'Markdown' }); });
+bot.action('cmd_pet', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('📊 Use: `/pet` para ver o status do seu pet.', { parse_mode: 'Markdown' }); });
+bot.action('cmd_petalimentar', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('🍖 Use: `/petalimentar` para alimentar seu pet.', { parse_mode: 'Markdown' }); });
+bot.action('cmd_petbrincar', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('🎾 Use: `/petbrincar` para brincar com seu pet.', { parse_mode: 'Markdown' }); });
+bot.action('cmd_pettreinar', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('💪 Use: `/pettreinar` para treinar seu pet.', { parse_mode: 'Markdown' }); });
+bot.action('cmd_petabandonar', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('💔 Use: `/petabandonar` para abandonar seu pet.', { parse_mode: 'Markdown' }); });
 
 bot.action('cmd_gpt', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('💬 Use: `/gpt sua pergunta`', { parse_mode: 'Markdown' }); });
 bot.action('cmd_signo', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('🔮 Use: `/signo aries`', { parse_mode: 'Markdown' }); });
