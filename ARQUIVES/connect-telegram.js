@@ -29,6 +29,48 @@ if (!TOKEN_TG) {
 
 const bot = new Telegraf(TOKEN_TG);
 
+// ====== TRATAMENTO GLOBAL DE ERROS E SANITIZAÇÃO MARKDOWN ======
+function sanitizeMd(str) {
+    if (!str) return '';
+    return String(str).replace(/[_*`[\]]/g, ' ');
+}
+
+async function safeReply(ctx, text, extra = {}) {
+    try {
+        return await ctx.reply(text, extra);
+    } catch (err) {
+        if (err.message && (err.message.includes('can\'t parse entities') || err.message.includes('parsing'))) {
+            const cleanExtra = { ...extra };
+            delete cleanExtra.parse_mode;
+            return await ctx.reply(String(text).replace(/[*_`[\]]/g, ''), cleanExtra);
+        }
+        throw err;
+    }
+}
+
+async function safeReplyPhoto(ctx, photo, extra = {}) {
+    try {
+        return await ctx.replyWithPhoto(photo, extra);
+    } catch (err) {
+        if (err.message && (err.message.includes('can\'t parse entities') || err.message.includes('parsing'))) {
+            const cleanExtra = { ...extra };
+            delete cleanExtra.parse_mode;
+            if (cleanExtra.caption) {
+                cleanExtra.caption = String(cleanExtra.caption).replace(/[*_`[\]]/g, '');
+            }
+            return await ctx.replyWithPhoto(photo, cleanExtra);
+        }
+        throw err;
+    }
+}
+
+bot.catch(async (err, ctx) => {
+    console.error(`[TELEGRAF CATCH] updateType: ${ctx.updateType}:`, err?.message || err);
+    if (ctx.callbackQuery) {
+        try { await ctx.answerCbQuery('⚠️ Ocorreu um erro temporário').catch(() => {}); } catch(e) {}
+    }
+});
+
 // Sessão simples em memória
 const sessoes = {};
 function getSessao(id) {
@@ -2361,7 +2403,7 @@ bot.action(/^pkm_fav_(\d+)$/, async (ctx) => {
     await ctx.answerCbQuery();
     const pkmId = parseInt(ctx.match[1]);
     const sid = String(ctx.from.id);
-    const pushname = ctx.from.first_name || 'Treinador';
+    const pushname = sanitizeMd(ctx.from.first_name) || 'Treinador';
     const db = getPokedexDB();
     if (!db[sid]) db[sid] = { treinador: pushname, pokemon: [] };
 
@@ -2417,7 +2459,7 @@ bot.action('pkm_random', async (ctx) => {
 bot.action('pkm_minha_pokedex', async (ctx) => {
     await ctx.answerCbQuery();
     const sid = String(ctx.from.id);
-    const pushname = ctx.from.first_name || 'Treinador';
+    const pushname = sanitizeMd(ctx.from.first_name) || 'Treinador';
     const db = getPokedexDB();
     const userPkm = db[sid]?.pokemon || [];
 
@@ -3430,7 +3472,7 @@ bot.on(['text', 'photo', 'video', 'audio', 'voice', 'document', 'sticker', 'anim
     const sid = String(ctx.from.id);
     const s = getSessao(sid);
     const text = ctx.message.text || ctx.message.caption || '';
-    const pushname = ctx.from.first_name || 'Usuário';
+    const pushname = sanitizeMd(ctx.from.first_name) || 'Usuário';
 
     if (s.pacote?.aguardandoNome && text && !/^[\/©.!#$]/.test(text)) {
         s.pacote.nome = text.trim();
@@ -3987,12 +4029,12 @@ bot.on(['text', 'photo', 'video', 'audio', 'voice', 'document', 'sticker', 'anim
 
             // ── POKÉDEX & POKÉMON (SITE GITHUB) ──────────
             case 'pokemon': case 'pokedex': {
-                const query = q || '25';
+                const query = sanitizeMd(q) || '25';
                 await ctx.reply(`🔎 *Buscando Pokédex para "${query}"...*`, { parse_mode: 'Markdown' });
                 const p = await buscarPokemon(query);
                 if (p) {
                     const txt = formatarPokemonText(p, false);
-                    await ctx.replyWithPhoto(p.spriteNormal, { caption: txt, parse_mode: 'Markdown', ...botoesCardPokemon(p.id, false) });
+                    await safeReplyPhoto(ctx, p.spriteNormal, { caption: txt, parse_mode: 'Markdown', ...botoesCardPokemon(p.id, false) });
                 } else {
                     await ctx.reply('❌ Pokémon não encontrado! Digite o nome ou número de 1 a 1025. Ex: `/pokemon charizard`', { parse_mode: 'Markdown' });
                 }
@@ -4005,14 +4047,14 @@ bot.on(['text', 'photo', 'video', 'audio', 'voice', 'document', 'sticker', 'anim
                 const p = await buscarPokemon(randId);
                 if (p) {
                     const txt = formatarPokemonText(p, false);
-                    await ctx.replyWithPhoto(p.spriteNormal, { caption: txt, parse_mode: 'Markdown', ...botoesCardPokemon(p.id, false) });
+                    await safeReplyPhoto(ctx, p.spriteNormal, { caption: txt, parse_mode: 'Markdown', ...botoesCardPokemon(p.id, false) });
                 }
                 break;
             }
 
             case 'minhapokedex': case 'meuspokemon': {
                 const sid = String(ctx.from.id);
-                const pushname = ctx.from.first_name || 'Treinador';
+                const pushname = sanitizeMd(ctx.from.first_name) || 'Treinador';
                 const db = getPokedexDB();
                 const userPkm = db[sid]?.pokemon || [];
 
@@ -4037,11 +4079,12 @@ bot.on(['text', 'photo', 'video', 'audio', 'voice', 'document', 'sticker', 'anim
             case 'pokerecados': case 'pokesite': {
                 const recados = getRecadosDB();
                 if (q) {
-                    const pushname = ctx.from.first_name || 'Treinador';
-                    recados.unshift({ nome: pushname, mensagem: q, data: new Date().toLocaleDateString('pt-BR') });
+                    const pushname = sanitizeMd(ctx.from.first_name) || 'Treinador';
+                    const msgL = sanitizeMd(q);
+                    recados.unshift({ nome: pushname, mensagem: msgL, data: new Date().toLocaleDateString('pt-BR') });
                     if (recados.length > 20) recados.pop();
                     saveRecadosDB(recados);
-                    await ctx.reply(`📝 *Recado de Treinador Registrado!*\n\n👤 *${pushname}:* "${q}"`, { parse_mode: 'Markdown' });
+                    await ctx.reply(`📝 *Recado de Treinador Registrado!*\n\n👤 *${pushname}:* "${msgL}"`, { parse_mode: 'Markdown' });
                 } else {
                     let txt = `🌐 *SITE POKÉDEX — REPOSITÓRIO GITHUB*\n\n` +
                         `🔗 *Repositório:* ${LINK_POKEMON_REPO}\n\n` +
@@ -4996,8 +5039,14 @@ bot.on(['text', 'photo', 'video', 'audio', 'voice', 'document', 'sticker', 'anim
                 await ctx.reply(`❓ Comando desconhecido: \`/${command}\`\nVeja /menu`, { parse_mode: 'Markdown' });
         }
     } catch (e) {
-        console.error(chalk.red('[ERRO comando]:'), e);
-        ctx.reply('❌ Erro interno.').catch(() => {});
+        console.error(chalk.red('[ERRO comando]:'), e?.message || e);
+        if (e && e.message && (e.message.includes('can\'t parse entities') || e.message.includes('parsing'))) {
+            try {
+                await ctx.reply('⚠️ Ocorreu uma oscilação na formatação do texto. Tente novamente!').catch(() => {});
+            } catch(err2) {}
+        } else {
+            ctx.reply('⚠️ Não foi possível concluir o comando no momento. Tente novamente!').catch(() => {});
+        }
     }
 });
 
