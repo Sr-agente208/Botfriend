@@ -91,6 +91,36 @@ function saveFichasDB(db) {
     } catch (e) { console.error('[saveFichasDB]', e); }
 }
 
+// ====== BANCO DE DADOS POKÉDEX & RECADOS ======
+const pokedexPath = './DADOS DO KEISEN/usuarios/pokedex.json';
+const recadosPath = './DADOS DO KEISEN/usuarios/recados_pkm.json';
+
+function getPokedexDB() {
+    try {
+        if (!fs.existsSync(pokedexPath)) return {};
+        return fs.readJsonSync(pokedexPath);
+    } catch { return {}; }
+}
+function savePokedexDB(db) {
+    try {
+        fs.ensureFileSync(pokedexPath);
+        fs.writeJsonSync(pokedexPath, db, { spaces: 2 });
+    } catch (e) { console.error('[savePokedexDB]', e); }
+}
+
+function getRecadosDB() {
+    try {
+        if (!fs.existsSync(recadosPath)) return [];
+        return fs.readJsonSync(recadosPath);
+    } catch { return []; }
+}
+function saveRecadosDB(arr) {
+    try {
+        fs.ensureFileSync(recadosPath);
+        fs.writeJsonSync(recadosPath, arr, { spaces: 2 });
+    } catch (e) { console.error('[saveRecadosDB]', e); }
+}
+
 function getOuCriarFicha(sid, pushname) {
     const db = getFichasDB();
     if (!db[sid]) {
@@ -490,6 +520,152 @@ function botoesNexWizard() {
         [
             Markup.button.callback('☣️ NEX 30% (Veterano)', 'wiz_nex_30%'),
             Markup.button.callback('☣️ NEX 50% (Elite)', 'wiz_nex_50%')
+        ]
+    ]);
+}
+
+// ====== POKÉDEX & POKÉMON SYSTEM (GITHUB: Sr-agente208/Pokemon_pokedex) ======
+const LINK_POKEMON_REPO = 'https://github.com/Sr-agente208/Pokemon_pokedex';
+
+const POKEMON_TYPES_PT = {
+    normal: '⚪ Normal',
+    fire: '🔥 Fogo',
+    water: '💧 Água',
+    grass: '🌿 Planta',
+    electric: '⚡ Elétrico',
+    ice: '❄️ Gelo',
+    fighting: '🥊 Lutador',
+    poison: '☠️ Veneno',
+    ground: '⏳ Terrestre',
+    flying: '🕊️ Voador',
+    psychic: '🧠 Psíquico',
+    bug: '🐛 Inseto',
+    rock: '🪨 Pedra',
+    ghost: '👻 Fantasma',
+    dragon: '🐉 Dragão',
+    dark: '🖤 Noturno',
+    steel: '⚙️ Aço',
+    fairy: '✨ Fada'
+};
+
+const POKEMON_BUILTIN_DATA = {
+    1: { id: 1, name: 'bulbasaur', nomePt: 'Bulbasaur', types: ['grass', 'poison'], height: 0.7, weight: 6.9, stats: { hp: 45, attack: 49, defense: 49, spAtk: 65, spDef: 65, speed: 45 }, abilities: ['Overgrow', 'Chlorophyll'] },
+    4: { id: 4, name: 'charmander', nomePt: 'Charmander', types: ['fire'], height: 0.6, weight: 8.5, stats: { hp: 39, attack: 52, defense: 43, spAtk: 60, spDef: 50, speed: 65 }, abilities: ['Blaze', 'Solar Power'] },
+    6: { id: 6, name: 'charizard', nomePt: 'Charizard', types: ['fire', 'flying'], height: 1.7, weight: 90.5, stats: { hp: 78, attack: 84, defense: 78, spAtk: 109, spDef: 85, speed: 100 }, abilities: ['Blaze', 'Solar Power'] },
+    7: { id: 7, name: 'squirtle', nomePt: 'Squirtle', types: ['water'], height: 0.5, weight: 9.0, stats: { hp: 44, attack: 48, defense: 65, spAtk: 50, spDef: 64, speed: 43 }, abilities: ['Torrent', 'Rain Dish'] },
+    25: { id: 25, name: 'pikachu', nomePt: 'Pikachu', types: ['electric'], height: 0.4, weight: 6.0, stats: { hp: 35, attack: 55, defense: 40, spAtk: 50, spDef: 50, speed: 90 }, abilities: ['Static', 'Lightning Rod'] },
+    94: { id: 94, name: 'gengar', nomePt: 'Gengar', types: ['ghost', 'poison'], height: 1.5, weight: 40.5, stats: { hp: 60, attack: 65, defense: 60, spAtk: 130, spDef: 75, speed: 110 }, abilities: ['Cursed Body'] },
+    130: { id: 130, name: 'gyarados', nomePt: 'Gyarados', types: ['water', 'flying'], height: 6.5, weight: 235.0, stats: { hp: 95, attack: 125, defense: 79, spAtk: 60, spDef: 100, speed: 81 }, abilities: ['Intimidate', 'Moxie'] },
+    133: { id: 133, name: 'eevee', nomePt: 'Eevee', types: ['normal'], height: 0.3, weight: 6.5, stats: { hp: 55, attack: 55, defense: 50, spAtk: 45, spDef: 65, speed: 55 }, abilities: ['Run Away', 'Adaptability', 'Anticipation'] },
+    143: { id: 143, name: 'snorlax', nomePt: 'Snorlax', types: ['normal'], height: 2.1, weight: 460.0, stats: { hp: 160, attack: 110, defense: 65, spAtk: 65, spDef: 110, speed: 30 }, abilities: ['Immunity', 'Thick Fat', 'Gluttony'] },
+    150: { id: 150, name: 'mewtwo', nomePt: 'Mewtwo', types: ['psychic'], height: 2.0, weight: 122.0, stats: { hp: 106, attack: 110, defense: 90, spAtk: 154, spDef: 90, speed: 130 }, abilities: ['Pressure', 'Unnerve'] },
+    257: { id: 257, name: 'blaziken', nomePt: 'Blaziken', types: ['fire', 'fighting'], height: 1.9, weight: 52.0, stats: { hp: 80, attack: 120, defense: 70, spAtk: 110, spDef: 70, speed: 80 }, abilities: ['Blaze', 'Speed Boost'] },
+    448: { id: 448, name: 'lucario', nomePt: 'Lucario', types: ['fighting', 'steel'], height: 1.2, weight: 54.0, stats: { hp: 70, attack: 110, defense: 70, spAtk: 115, spDef: 70, speed: 90 }, abilities: ['Steadfast', 'Inner Focus', 'Justified'] },
+    658: { id: 658, name: 'greninja', nomePt: 'Greninja', types: ['water', 'dark'], height: 1.5, weight: 40.0, stats: { hp: 72, attack: 95, defense: 67, spAtk: 103, spDef: 71, speed: 122 }, abilities: ['Torrent', 'Protean', 'Battle Bond'] }
+};
+
+async function buscarPokemon(query) {
+    const q = String(query || '25').trim().toLowerCase();
+
+    try {
+        const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${encodeURIComponent(q)}`);
+        if (res.ok) {
+            const data = await res.json();
+            const id = data.id;
+            const name = data.name;
+            const types = data.types.map(t => t.type.name);
+            const height = data.height / 10;
+            const weight = data.weight / 10;
+            const abilities = data.abilities.map(a => a.ability.name);
+
+            const stats = {};
+            data.stats.forEach(s => {
+                if (s.stat.name === 'hp') stats.hp = s.base_stat;
+                if (s.stat.name === 'attack') stats.attack = s.base_stat;
+                if (s.stat.name === 'defense') stats.defense = s.base_stat;
+                if (s.stat.name === 'special-attack') stats.spAtk = s.base_stat;
+                if (s.stat.name === 'special-defense') stats.spDef = s.base_stat;
+                if (s.stat.name === 'speed') stats.speed = s.base_stat;
+            });
+
+            const spriteNormal = data.sprites.other?.['official-artwork']?.front_default || `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`;
+            const spriteShiny = data.sprites.other?.['official-artwork']?.front_shiny || `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/${id}.png`;
+
+            return {
+                id,
+                name,
+                nomePt: name.charAt(0).toUpperCase() + name.slice(1),
+                types,
+                height,
+                weight,
+                abilities,
+                stats,
+                spriteNormal,
+                spriteShiny
+            };
+        }
+    } catch (e) {
+        console.log('[PokéAPI notice]', e.message);
+    }
+
+    for (const p of Object.values(POKEMON_BUILTIN_DATA)) {
+        if (String(p.id) === q || p.name === q || p.nomePt.toLowerCase() === q) {
+            return {
+                ...p,
+                spriteNormal: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${p.id}.png`,
+                spriteShiny: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/${p.id}.png`
+            };
+        }
+    }
+
+    const numId = parseInt(q);
+    if (!isNaN(numId) && numId >= 1 && numId <= 1025) {
+        return {
+            id: numId,
+            name: `pokemon-${numId}`,
+            nomePt: `Pokémon #${numId}`,
+            types: ['normal'],
+            height: 1.0,
+            weight: 10.0,
+            abilities: ['Adaptability'],
+            stats: { hp: 50, attack: 50, defense: 50, spAtk: 50, spDef: 50, speed: 50 },
+            spriteNormal: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${numId}.png`,
+            spriteShiny: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/${numId}.png`
+        };
+    }
+
+    return null;
+}
+
+function formatarPokemonText(p, isShiny = false) {
+    if (!p) return '🔴 Pokémon não encontrado!';
+    const tiposPt = p.types.map(t => POKEMON_TYPES_PT[t.toLowerCase()] || t).join(' / ');
+    return `🔴 *POKÉDEX — FICHA POKÉMON* ${isShiny ? '✨ (SHINY)' : ''}\n\n` +
+        `📌 *Nome:* ${p.nomePt.toUpperCase()} | *#${String(p.id).padStart(3, '0')}*\n` +
+        `⚡ *Tipo:* ${tiposPt}\n` +
+        `📏 *Altura:* ${p.height}m | ⚖️ *Peso:* ${p.weight}kg\n` +
+        `🔮 *Habilidades:* ${p.abilities.map(a => a.charAt(0).toUpperCase() + a.slice(1)).join(', ')}\n\n` +
+        `📊 *ESTATÍSTICAS BASE:*\n` +
+        `❤️ *HP:* ${p.stats.hp || 50}\n` +
+        `⚔️ *Ataque:* ${p.stats.attack || 50}\n` +
+        `🛡️ *Defesa:* ${p.stats.defense || 50}\n` +
+        `🔮 *Sp. Atk:* ${p.stats.spAtk || 50} | 🛡️ *Sp. Def:* ${p.stats.spDef || 50}\n` +
+        `🏃 *Velocidade:* ${p.stats.speed || 50}\n\n` +
+        `🌐 *Pokédex Repository:* ${LINK_POKEMON_REPO}`;
+}
+
+function botoesCardPokemon(pkmId, isShiny = false) {
+    return Markup.inlineKeyboard([
+        [
+            Markup.button.callback('⭐️ Capturar / Favoritar', `pkm_fav_${pkmId}`),
+            Markup.button.callback(isShiny ? '🖼️ Versão Normal' : '✨ Versão Shiny', `pkm_${isShiny ? 'normal' : 'shiny'}_${pkmId}`)
+        ],
+        [
+            Markup.button.callback('🎲 Pokémon Aleatório', 'pkm_random'),
+            Markup.button.callback('🎒 Minha Pokédex', 'pkm_minha_pokedex')
+        ],
+        [
+            Markup.button.url('🌐 Pokédex Web GitHub', LINK_POKEMON_REPO)
         ]
     ]);
 }
@@ -2171,6 +2347,101 @@ bot.action(/^rit_elem_(.+)$/, async (ctx) => {
     await ctx.reply(`🔮 *RITUAIS DE ${e ? e.nome.toUpperCase() : key.toUpperCase()}*\n\nClique no ritual que deseja conjurar:`, { parse_mode: 'Markdown', ...botoesRituaisElemento(key) });
 });
 
+// ACTIONS DE POKÉDEX & POKÉMON
+bot.action(/^pkm_fav_(\d+)$/, async (ctx) => {
+    await ctx.answerCbQuery();
+    const pkmId = parseInt(ctx.match[1]);
+    const sid = String(ctx.from.id);
+    const pushname = ctx.from.first_name || 'Treinador';
+    const db = getPokedexDB();
+    if (!db[sid]) db[sid] = { treinador: pushname, pokemon: [] };
+
+    const p = await buscarPokemon(pkmId);
+    if (p) {
+        const jaTem = db[sid].pokemon.some(it => it.id === p.id);
+        if (!jaTem) {
+            db[sid].pokemon.push({
+                id: p.id,
+                nome: p.nomePt,
+                tipos: p.types,
+                sprite: p.spriteNormal,
+                data: new Date().toLocaleDateString('pt-BR')
+            });
+            savePokedexDB(db);
+            await ctx.reply(`🎉 *POKÉMON CAPTURADO!*\n\n🔴 *${p.nomePt}* (#${p.id}) foi adicionado à Pokédex de ${pushname}!`, { parse_mode: 'Markdown' });
+        } else {
+            await ctx.reply(`⭐️ *${p.nomePt}* já está na sua Pokédex!`, { parse_mode: 'Markdown' });
+        }
+    }
+});
+
+bot.action(/^pkm_shiny_(\d+)$/, async (ctx) => {
+    await ctx.answerCbQuery();
+    const pkmId = parseInt(ctx.match[1]);
+    const p = await buscarPokemon(pkmId);
+    if (p) {
+        const txt = formatarPokemonText(p, true);
+        await ctx.replyWithPhoto(p.spriteShiny, { caption: txt, parse_mode: 'Markdown', ...botoesCardPokemon(pkmId, true) });
+    }
+});
+
+bot.action(/^pkm_normal_(\d+)$/, async (ctx) => {
+    await ctx.answerCbQuery();
+    const pkmId = parseInt(ctx.match[1]);
+    const p = await buscarPokemon(pkmId);
+    if (p) {
+        const txt = formatarPokemonText(p, false);
+        await ctx.replyWithPhoto(p.spriteNormal, { caption: txt, parse_mode: 'Markdown', ...botoesCardPokemon(pkmId, false) });
+    }
+});
+
+bot.action('pkm_random', async (ctx) => {
+    await ctx.answerCbQuery();
+    const randId = Math.floor(Math.random() * 1025) + 1;
+    const p = await buscarPokemon(randId);
+    if (p) {
+        const txt = formatarPokemonText(p, false);
+        await ctx.replyWithPhoto(p.spriteNormal, { caption: txt, parse_mode: 'Markdown', ...botoesCardPokemon(p.id, false) });
+    }
+});
+
+bot.action('pkm_minha_pokedex', async (ctx) => {
+    await ctx.answerCbQuery();
+    const sid = String(ctx.from.id);
+    const pushname = ctx.from.first_name || 'Treinador';
+    const db = getPokedexDB();
+    const userPkm = db[sid]?.pokemon || [];
+
+    if (userPkm.length === 0) {
+        return ctx.reply(`🎒 *POKÉDEX DE ${pushname.toUpperCase()}*\n\nSua Pokédex está vazia! Use \`/pokemon <nome>\` e clique em "⭐️ Capturar" para salvar seus Pokémon favoritos.`, { parse_mode: 'Markdown', ...Markup.inlineKeyboard([[Markup.button.callback('🎲 Sorteiar Pokémon', 'pkm_random')]]) });
+    }
+
+    let txt = `🎒 *POKÉDEX DE ${pushname.toUpperCase()}* (${userPkm.length} Pokémon capturados)\n\n`;
+    userPkm.forEach((it, idx) => {
+        txt += `*${idx + 1}.* #${String(it.id).padStart(3, '0')} ${it.nome}\n`;
+    });
+
+    const delButtons = userPkm.map((it, idx) => [
+        Markup.button.callback(`🗑️ Soltar ${it.nome}`, `pkm_del_idx_${idx}`)
+    ]);
+    delButtons.push([Markup.button.callback('🎲 Capturar Pokémon Aleatório', 'pkm_random')]);
+
+    await ctx.reply(txt, { parse_mode: 'Markdown', ...Markup.inlineKeyboard(delButtons) });
+});
+
+bot.action(/^pkm_del_idx_(\d+)$/, async (ctx) => {
+    await ctx.answerCbQuery();
+    const idx = parseInt(ctx.match[1]);
+    const sid = String(ctx.from.id);
+    const db = getPokedexDB();
+
+    if (db[sid] && db[sid].pokemon && db[sid].pokemon[idx]) {
+        const solto = db[sid].pokemon.splice(idx, 1)[0];
+        savePokedexDB(db);
+        await ctx.reply(`🕊️ *Pokémon Solto:* \`${solto.nome}\` foi libertado de volta à natureza!`, { parse_mode: 'Markdown' });
+    }
+});
+
 // ACTIONS DE BESTIÁRIO, ITENS AMALDIÇOADOS, CATÁLOGO E CONDIÇÕES CRIS
 bot.action('cris_menu_bestiario', async (ctx) => {
     await ctx.answerCbQuery();
@@ -3116,7 +3387,7 @@ bot.on(['text', 'photo', 'video', 'audio', 'voice', 'document', 'sticker', 'anim
 
     const knownCommands = new Set([
         'start', 'menu', 'ajuda', 'ajuda2', 'comandos', 'ping', 'info',
-        'cris', 'ordem', 'rpg', 'ordemparanormal', 'op', 'rolarop', 'dadoop', 'fichacris', 'fichaop', 'agente', 'sanidade', 'san', 'rituais', 'elementos', 'rolar', 'mestresolo', 'jogarsolo', 'mestre', 'iniciativa', 'monstro', 'pv', 'pe', 'mestra', 'itens', 'inventario', 'mochila', 'additem', 'usaritem', 'trilha', 'trilhas', 'habilidades', 'criarficha', 'livro', 'bestiario', 'criaturas', 'catalogo', 'lojadearmas', 'condicoes', 'condicao', 'wikiop', 'wikiordem', 'itensamaldicoados', 'amaldicoados', 'itemamaldicoado',
+        'cris', 'ordem', 'rpg', 'ordemparanormal', 'op', 'rolarop', 'dadoop', 'fichacris', 'fichaop', 'agente', 'sanidade', 'san', 'rituais', 'elementos', 'rolar', 'mestresolo', 'jogarsolo', 'mestre', 'iniciativa', 'monstro', 'pv', 'pe', 'mestra', 'itens', 'inventario', 'mochila', 'additem', 'usaritem', 'trilha', 'trilhas', 'habilidades', 'criarficha', 'livro', 'bestiario', 'criaturas', 'catalogo', 'lojadearmas', 'condicoes', 'condicao', 'wikiop', 'wikiordem', 'itensamaldicoados', 'amaldicoados', 'itemamaldicoado', 'pokemon', 'pokedex', 'pokealeatorio', 'pokemonaleatorio', 'minhapokedex', 'meuspokemon', 'pokerecados', 'pokesite',
         'gpt', 'gemini', 'ia', 'signo', 'horoscopo', 'traduzir', 'nick', 'gerarnick', 'simi', 'simsimi', 'letra', 'lyrics', 'letramusic', 'letramusica',
         'assistir', 'assistiranime', 'anime', 'buscaranime', 'playanime', 'watchanime', 'anirecente', 'animesrecentes', 'aniinfo', 'sushianimes', 'animes',
         'play', 'p', 'playaudio', 'ytaudio', 'ytmp3', 'playvideo', 'playmp4', 'playvid', 'ytmp4', 'ytsearch', 'pesquisa_yt', 'yt-info', 'baixar', 'download',
@@ -3175,6 +3446,11 @@ bot.on(['text', 'photo', 'video', 'audio', 'voice', 'document', 'sticker', 'anim
 /assistir <anime> — Busca anime com botões pra assistir
 /anirecente — Animes da temporada
 /aniinfo <anime> — Informações detalhadas\n
+*🔴 POKÉDEX & POKÉMON*
+/pokemon <nome/id> — Consulta Pokédex com estatísticas e sprite
+/pokealeatorio — Sorteia um Pokémon selvagem
+/minhapokedex — Ver seus Pokémon capturados e salvos
+/pokerecados — Mural de recados do Pokédex Site\n
 *🎵 MÚSICA & DOWNLOADERS*
 /play <música> — Baixa áudio MP3 e mostra botões de download
 /playvideo <vídeo> — Baixa vídeo MP4
@@ -3628,6 +3904,79 @@ bot.on(['text', 'photo', 'video', 'audio', 'voice', 'document', 'sticker', 'anim
                     await ctx.reply(`📜 *Letra da Música*\n\n${r}`, { parse_mode: 'Markdown' });
                 } catch { ctx.reply('❌ Erro ao buscar letra.'); }
                 break;
+
+            // ── POKÉDEX & POKÉMON (SITE GITHUB) ──────────
+            case 'pokemon': case 'pokedex': {
+                const query = q || '25';
+                await ctx.reply(`🔎 *Buscando Pokédex para "${query}"...*`, { parse_mode: 'Markdown' });
+                const p = await buscarPokemon(query);
+                if (p) {
+                    const txt = formatarPokemonText(p, false);
+                    await ctx.replyWithPhoto(p.spriteNormal, { caption: txt, parse_mode: 'Markdown', ...botoesCardPokemon(p.id, false) });
+                } else {
+                    await ctx.reply('❌ Pokémon não encontrado! Digite o nome ou número de 1 a 1025. Ex: `/pokemon charizard`', { parse_mode: 'Markdown' });
+                }
+                break;
+            }
+
+            case 'pokealeatorio': case 'pokemonaleatorio': {
+                const randId = Math.floor(Math.random() * 1025) + 1;
+                await ctx.reply(`🎲 *Sorteando Pokémon Selvagem (#${randId})...*`, { parse_mode: 'Markdown' });
+                const p = await buscarPokemon(randId);
+                if (p) {
+                    const txt = formatarPokemonText(p, false);
+                    await ctx.replyWithPhoto(p.spriteNormal, { caption: txt, parse_mode: 'Markdown', ...botoesCardPokemon(p.id, false) });
+                }
+                break;
+            }
+
+            case 'minhapokedex': case 'meuspokemon': {
+                const sid = String(ctx.from.id);
+                const pushname = ctx.from.first_name || 'Treinador';
+                const db = getPokedexDB();
+                const userPkm = db[sid]?.pokemon || [];
+
+                if (userPkm.length === 0) {
+                    await ctx.reply(`🎒 *POKÉDEX DE ${pushname.toUpperCase()}*\n\nSua Pokédex está vazia! Use \`/pokemon <nome>\` e clique em "⭐️ Capturar" para salvar seus Pokémon favoritos.`, { parse_mode: 'Markdown', ...Markup.inlineKeyboard([[Markup.button.callback('🎲 Sorteiar Pokémon', 'pkm_random')]]) });
+                } else {
+                    let txt = `🎒 *POKÉDEX DE ${pushname.toUpperCase()}* (${userPkm.length} Pokémon capturados)\n\n`;
+                    userPkm.forEach((it, idx) => {
+                        txt += `*${idx + 1}.* #${String(it.id).padStart(3, '0')} ${it.nome}\n`;
+                    });
+
+                    const delButtons = userPkm.map((it, idx) => [
+                        Markup.button.callback(`🗑️ Soltar ${it.nome}`, `pkm_del_idx_${idx}`)
+                    ]);
+                    delButtons.push([Markup.button.callback('🎲 Capturar Pokémon Aleatório', 'pkm_random')]);
+
+                    await ctx.reply(txt, { parse_mode: 'Markdown', ...Markup.inlineKeyboard(delButtons) });
+                }
+                break;
+            }
+
+            case 'pokerecados': case 'pokesite': {
+                const recados = getRecadosDB();
+                if (q) {
+                    const pushname = ctx.from.first_name || 'Treinador';
+                    recados.unshift({ nome: pushname, mensagem: q, data: new Date().toLocaleDateString('pt-BR') });
+                    if (recados.length > 20) recados.pop();
+                    saveRecadosDB(recados);
+                    await ctx.reply(`📝 *Recado de Treinador Registrado!*\n\n👤 *${pushname}:* "${q}"`, { parse_mode: 'Markdown' });
+                } else {
+                    let txt = `🌐 *SITE POKÉDEX — REPOSITÓRIO GITHUB*\n\n` +
+                        `🔗 *Repositório:* ${LINK_POKEMON_REPO}\n\n` +
+                        `📝 *MURAL DE RECADOS DOS TREINADORES:*\n`;
+                    if (recados.length === 0) {
+                        txt += `_Nenhum recado ainda. Deixe o seu usando: \`/pokerecados Seu Recado\`_\n`;
+                    } else {
+                        recados.slice(0, 5).forEach((r, i) => {
+                            txt += `*${i + 1}. ${r.nome}:* "${r.mensagem}" (${r.data})\n`;
+                        });
+                    }
+                    await ctx.reply(txt, { parse_mode: 'Markdown', ...Markup.inlineKeyboard([[Markup.button.url('🌐 Abrir Repositório Pokédex', LINK_POKEMON_REPO)]]) });
+                }
+                break;
+            }
 
             // ── ANIMES & STREAMING ──────────────────────
             case 'assistir': case 'assistiranime': case 'anime': case 'buscaranime': case 'playanime': case 'watchanime': case 'sushianimes': case 'animes': {
