@@ -17,9 +17,10 @@ const { uploadToCatbox, uploadToFileIo, uploadTo0x0 } = require('./funcoes/uploa
 const TOKEN_TG = process.env.TELEGRAM_BOT_TOKEN;
 const PORT = process.env.PORT || 3000;
 const PREFIX = '©';
-const LINK_LIVRO_REGRAS = 'https://dl2.bibliotecaelfica.org/dl/eyJwaWQiOjI3OTcxLCJ1aWQiOm51bGwsInBhdGgiOiJcL3ZhclwvYWNlcnZvXC9zdWdlc3RvZXNcLzVkZjEyYzAyLTJiMWQtNGVhMy04MWZkLTk0ZTZjZDZlMGJhZC5wZGYiLCJtb2RlIjoidmlzdWFsaXphciIsInNwZWVkIjo1MTIwMDAsInNpemUiOjQ4MDI1OTc0LCJ0aXRsZSI6Ik91dHJvcyAtIE9yZGVtIFBhcmFub3JtYWwiLCJleHAiOjE3ODYyNzA2MDN9.d54dffd130fe9d90a51f7e76c29358bdce935545e50e0952be26acad7d274657';
+const LINK_LIVRO_REGRAS = 'https://dl2.bibliotecaelfica.org/dl/eyJwaWQiOjI3OTcxLCJ1aWQiOm51bGwsInBhdGgiOiJcL3ZhclwvYWNlcnZvXC9zdWdlc3RvZXNcLzVkZjEyYzAyLTJiMWQtNGVhMy04MWZkLTk0ZTZjZDZlMGJhZC5wZGYiLCJtb2RlIjoidmlzdWFsaXphciIsInNwZWVkIjo1MTIwMDAsInNpemUiOjQ4MDI1OTc0LCJ0aXRsZSI6Ik91d روب - Ordem Paranormal", "exp":1786270603}.d54dffd130fe9d90a51f7e76c29358bdce935545e50e0952be26acad7d274657';
 const LINK_BESTIARIO_WIKI = 'https://ordemparanormal.fandom.com/wiki/Besti%C3%A1rio';
 const LINK_ELEMENTOS_WIKI = 'https://ordemparanormal.fandom.com/wiki/Elementos_do_Outro_Lado';
+const LINK_ITENS_AMALDICOADOS_WIKI = 'https://ordemparanormal.fandom.com/wiki/Itens_Amaldi%C3%A7oados';
 
 if (!TOKEN_TG) {
     console.error(chalk.red('[ERRO] TELEGRAM_BOT_TOKEN não definido!'));
@@ -577,7 +578,303 @@ const ELEMENTOS_DATA = {
     }
 };
 
-// ====== BANCO DE DADOS DE RITUAIS ======
+// ====== BANCO DE DADOS DE ITENS AMALDIÇOADOS ======
+const ITENS_AMALDICOADOS_DATA = {
+    // SANGUE
+    faca_sanguinaria: {
+        id: "faca_sanguinaria",
+        nome: "Faca Sanguinária 🩸",
+        elemento: "🩸 Sangue",
+        categoria: "II",
+        peso: 1,
+        tipo: "arma",
+        dano: "1d6+2 Perfuração + Sangramento",
+        efeito: "Ao infligir ferimentos que causem sangramento no alvo, o usuário recupera +1d6 PV."
+    },
+    colar_sangue: {
+        id: "colar_sangue",
+        nome: "Colar Banhado em Sangue 🩸",
+        elemento: "🩸 Sangue",
+        categoria: "II",
+        peso: 1,
+        tipo: "acessorio",
+        efeito: "Concede +2 de Bônus em testes de Força e Atletismo, mas aumenta o temperamento agressivo."
+    },
+    machado_lancinante: {
+        id: "machado_lancinante",
+        nome: "Machado Lancinante 🩸",
+        elemento: "🩸 Sangue",
+        categoria: "III",
+        peso: 2,
+        tipo: "arma",
+        dano: "3d12 Corte (Crit x3)",
+        efeito: "Em acertos críticos, vibra com pulsos de sangue causando +2d10 Dano de Sangue extra."
+    },
+    punhos_enraivecidos: {
+        id: "punhos_enraivecidos",
+        nome: "Punhos Enraivecidos 🩸",
+        elemento: "🩸 Sangue",
+        categoria: "II",
+        peso: 1,
+        tipo: "acessorio",
+        efeito: "Concede +2d no teste de ataque para combates desarmados e +1d8 de Dano de Sangue por soco."
+    },
+    elmo_sangrento: {
+        id: "elmo_sangrento",
+        nome: "Elmo Sangrento 🩸",
+        elemento: "🩸 Sangue",
+        categoria: "III",
+        peso: 2,
+        tipo: "protecao",
+        defesaBonus: 5,
+        efeito: "Garante +5 de Defesa e permite enxergar o pulso e fluxo sanguíneo através de paredes."
+    },
+    codice_ira: {
+        id: "codice_ira",
+        nome: "Códice da Ira 🩸",
+        elemento: "🩸 Sangue",
+        categoria: "II",
+        peso: 1,
+        tipo: "item",
+        efeito: "Induz estado de fúria cega no Agente, concedendo RD 5 a danos físicos e imunidade a dor."
+    },
+
+    // MORTE
+    katana_erosiva: {
+        id: "katana_erosiva",
+        nome: "Katana Erosiva ⏳",
+        elemento: "⏳ Morte",
+        categoria: "III",
+        peso: 1,
+        tipo: "arma",
+        dano: "1d10 Corte + 2d8 Morte",
+        efeito: "Deteriora armaduras e proteções do alvo, reduzindo a Defesa do inimigo em -2 a cada acerto."
+    },
+    cristais_morte: {
+        id: "cristais_morte",
+        nome: "Cristais da Morte ⏳",
+        elemento: "⏳ Morte",
+        categoria: "II",
+        peso: 1,
+        tipo: "consumivel",
+        efeito: "Libera fumaça de lodo preto que reduz a velocidade e ações dos alvos ao redor."
+    },
+    pelucia_tempo: {
+        id: "pelucia_tempo",
+        nome: "Pelúcia do Tempo Perdido ⏳",
+        elemento: "⏳ Morte",
+        categoria: "I",
+        peso: 1,
+        tipo: "acessorio",
+        efeito: "Absorve envelhecimento e degradação física do usuário, prevenindo condições de cansaço."
+    },
+    anel_espiral: {
+        id: "anel_espiral",
+        nome: "Anel Espiral ⏳",
+        elemento: "⏳ Morte",
+        categoria: "II",
+        peso: 1,
+        tipo: "acessorio",
+        efeito: "Distorce a linha temporal do usuário, concedendo +2 de Bônus em testes de Esquiva e Reflexos."
+    },
+    lentes_funebres: {
+        id: "lentes_funebres",
+        nome: "Lentes Fúnebres ⏳",
+        elemento: "⏳ Morte",
+        categoria: "II",
+        peso: 1,
+        tipo: "acessorio",
+        efeito: "Permite enxergar espectros de morte e a quantidade exata de PV restante das criaturas."
+    },
+
+    // CONHECIMENTO
+    grimorio_ritualistico: {
+        id: "grimorio_ritualistico",
+        nome: "Grimório Ritualístico 👁️",
+        elemento: "👁️ Conhecimento",
+        categoria: "II",
+        peso: 1,
+        tipo: "item",
+        efeito: "Armazena rituais paranormais e reduz o custo em -1 PE na conjuração de Rituais."
+    },
+    oculos_entendimento: {
+        id: "oculos_entendimento",
+        nome: "Óculos do Entendimento 👁️",
+        elemento: "👁️ Conhecimento",
+        categoria: "I",
+        peso: 1,
+        tipo: "acessorio",
+        efeito: "Traduz instantaneamente qualquer código, símbolo ocultista ou idioma desconhecido."
+    },
+    vidro_marcado: {
+        id: "vidro_marcado",
+        nome: "Vidro Marcado 👁️",
+        elemento: "👁️ Conhecimento",
+        categoria: "II",
+        peso: 1,
+        tipo: "item",
+        efeito: "Revela instantaneamente a Resistência, Vulnerabilidade e Habilidades de qualquer ameaça."
+    },
+    relicario_memorial: {
+        id: "relicario_memorial",
+        nome: "Relicário Memorial 👁️",
+        elemento: "👁️ Conhecimento",
+        categoria: "II",
+        peso: 1,
+        tipo: "acessorio",
+        efeito: "Guarda memórias do usuário, prevenindo perdas de Sanidade decorrentes de traumas."
+    },
+    papel_dissipacao: {
+        id: "papel_dissipacao",
+        nome: "Papel da Dissipação 👁️",
+        elemento: "👁️ Conhecimento",
+        categoria: "I",
+        peso: 1,
+        tipo: "consumivel",
+        efeito: "Queima em chamas douradas cancelando ilusões mentais, paralisias e truques simbólicos."
+    },
+
+    // ENERGIA
+    bracelete_energetico: {
+        id: "bracelete_energetico",
+        nome: "Bracelete Energético ⚡",
+        elemento: "⚡ Energia",
+        categoria: "II",
+        peso: 1,
+        tipo: "acessorio",
+        efeito: "Emite descarga de 2d6 Dano de Energia em alvos adjacentes sempre que o usuário sofre dano."
+    },
+    polaroid_acaso: {
+        id: "polaroid_acaso",
+        nome: "Polaroid do Acaso ⚡",
+        elemento: "⚡ Energia",
+        categoria: "II",
+        peso: 1,
+        tipo: "item",
+        efeito: "Fotografa probabilidades e permite ao Agente rerolar 1 teste falho por cena de combate."
+    },
+    amuleto_eletrico: {
+        id: "amuleto_eletrico",
+        nome: "Amuleto Elétrico ⚡",
+        elemento: "⚡ Energia",
+        categoria: "I",
+        peso: 1,
+        tipo: "acessorio",
+        efeito: "Garante imunidade completa a danos e efeitos de Eletrocussão e Atordoamento."
+    },
+    violao_colerico: {
+        id: "violao_colerico",
+        nome: "Violão Colérico ⚡",
+        elemento: "⚡ Energia",
+        categoria: "III",
+        peso: 2,
+        tipo: "item",
+        efeito: "Ao tocar suas cordas, dispara ondas sônicas de plasma causando 3d8 Dano de Energia na área."
+    },
+    camera_energizante: {
+        id: "camera_energizante",
+        nome: "Câmera Energizante ⚡",
+        elemento: "⚡ Energia",
+        categoria: "II",
+        peso: 1,
+        tipo: "item",
+        efeito: "Emite um flash de luz plasmática que cega e desorienta alvos em cone por 1 rodada."
+    },
+
+    // MEDO & RELÍQUIAS
+    mascara_desespero: {
+        id: "mascara_desespero",
+        nome: "Máscara do Desespero 🖤",
+        elemento: "🖤 Medo / Conhecimento",
+        categoria: "IV",
+        peso: 1,
+        tipo: "reliquia",
+        efeito: "Relíquia da Magistrada. Reescreve conceitos e altera a lógica da realidade no ambiente."
+    },
+    diario_deus: {
+        id: "diario_deus",
+        nome: "Diário de Deus 🖤",
+        elemento: "🖤 Medo",
+        categoria: "IV",
+        peso: 1,
+        tipo: "reliquia",
+        efeito: "Manuscrito ancestral que narra a verdade do Outro Lado e revela segredos das Relíquias."
+    },
+    primeira_adaga: {
+        id: "primeira_adaga",
+        nome: "A Primeira Adaga 🖤",
+        elemento: "🖤 Medo",
+        categoria: "IV",
+        peso: 1,
+        tipo: "reliquia",
+        efeito: "Lâmina primordial capaz de rasgar véus e cortar vínculos com entidades paranormais."
+    }
+};
+
+function formatarItemAmaldicoado(item) {
+    if (!item) return '🔮 Item Amaldiçoado não encontrado.';
+    return `🔮 *${item.nome.toUpperCase()}*\n\n` +
+        `🔮 *Elemento:* ${item.elemento}\n` +
+        `🏷️ *Categoria:* ${item.categoria} | ⚖️ *Peso:* ${item.peso}\n` +
+        `📦 *Tipo:* ${item.tipo.toUpperCase()}\n` +
+        (item.dano ? `💥 *Dano:* ${item.dano}\n` : '') +
+        (item.defesaBonus ? `🛡️ *Bônus Defesa:* +${item.defesaBonus}\n` : '') +
+        `✨ *Efeito Paranormal:* ${item.efeito}`;
+}
+
+function botoesItensAmaldicoadosHub() {
+    return Markup.inlineKeyboard([
+        [
+            Markup.button.callback('🩸 Sangue', 'curse_cat_sangue'),
+            Markup.button.callback('⏳ Morte', 'curse_cat_morte')
+        ],
+        [
+            Markup.button.callback('👁️ Conhecimento', 'curse_cat_conhecimento'),
+            Markup.button.callback('⚡ Energia', 'curse_cat_energia')
+        ],
+        [
+            Markup.button.callback('🖤 Medo & Relíquias', 'curse_cat_medo')
+        ],
+        [
+            Markup.button.callback('🔫 Catálogo Geral de Armas', 'cris_menu_catalogo')
+        ],
+        [
+            Markup.button.url('🌐 Wiki Fandom: Itens Amaldiçoados', LINK_ITENS_AMALDICOADOS_WIKI)
+        ],
+        [
+            Markup.button.callback('◀️ Voltar ao Menu CRIS', 'cris')
+        ]
+    ]);
+}
+
+function botoesCatItensAmaldicoados(elemKey) {
+    const items = Object.entries(ITENS_AMALDICOADOS_DATA).filter(([k, it]) => {
+        if (elemKey === 'sangue') return it.elemento.includes('Sangue');
+        if (elemKey === 'morte') return it.elemento.includes('Morte');
+        if (elemKey === 'conhecimento') return it.elemento.includes('Conhecimento');
+        if (elemKey === 'energia') return it.elemento.includes('Energia');
+        if (elemKey === 'medo') return it.elemento.includes('Medo');
+        return false;
+    });
+
+    const btns = items.map(([k, it]) => [
+        Markup.button.callback(`🔮 ${it.nome} (Cat. ${it.categoria})`, `curse_show_${k}`)
+    ]);
+
+    btns.push([Markup.button.callback('◀️ Voltar aos Itens Amaldiçoados', 'cris_menu_amaldicoados')]);
+    return Markup.inlineKeyboard(btns);
+}
+
+function botoesCardItemAmaldicoado(itemKey) {
+    return Markup.inlineKeyboard([
+        [
+            Markup.button.callback('➕ Adicionar à Minha Mochila', `cat_add_${itemKey}`)
+        ],
+        [
+            Markup.button.callback('◀️ Voltar aos Itens Amaldiçoados', 'cris_menu_amaldicoados')
+        ]
+    ]);
+}
 const RITUAIS_DATA = {
     // SANGUE
     armadura: {
@@ -1648,6 +1945,7 @@ function menuOrdem() {
             [Markup.button.callback('➕ Adicionar Item', 'cris_prompt_additem'), Markup.button.callback('🗑️ Remover Item', 'cris_rm_item_menu')],
             [Markup.button.callback('🛡️ Trilhas & Habilidades', 'cris_menu_trilhas'), Markup.button.callback('🎯 Rolar Perícias', 'cris_menu_pericias')],
             [Markup.button.callback('👾 Bestiário Paranormal', 'cris_menu_bestiario'), Markup.button.callback('🔫 Catálogo de Armas', 'cris_menu_catalogo')],
+            [Markup.button.callback('🔮 Itens Amaldiçoados', 'cris_menu_amaldicoados'), Markup.button.url('🌐 Itens Amaldiçoados Wiki', LINK_ITENS_AMALDICOADOS_WIKI)],
             [Markup.button.url('📖 Livro de Regras Oficial (PDF)', LINK_LIVRO_REGRAS)],
             [Markup.button.url('🌐 Bestiário Wiki Fandom', LINK_BESTIARIO_WIKI)],
             [Markup.button.url('🌐 Abrir Site CRIS (cris.site)', 'https://cris.site')],
@@ -1873,10 +2171,32 @@ bot.action(/^rit_elem_(.+)$/, async (ctx) => {
     await ctx.reply(`🔮 *RITUAIS DE ${e ? e.nome.toUpperCase() : key.toUpperCase()}*\n\nClique no ritual que deseja conjurar:`, { parse_mode: 'Markdown', ...botoesRituaisElemento(key) });
 });
 
-// ACTIONS DE BESTIÁRIO, CATÁLOGO E CONDIÇÕES CRIS
+// ACTIONS DE BESTIÁRIO, ITENS AMALDIÇOADOS, CATÁLOGO E CONDIÇÕES CRIS
 bot.action('cris_menu_bestiario', async (ctx) => {
     await ctx.answerCbQuery();
     await ctx.reply('👾 *BESTIÁRIO PARANORMAL — LIVRO DE REGRAS*\n\nEscolha uma ameaça para consultar a ficha:', { parse_mode: 'Markdown', ...botoesBestiarioCris() });
+});
+
+bot.action('cris_menu_amaldicoados', async (ctx) => {
+    await ctx.answerCbQuery();
+    await ctx.reply('🔮 *ITENS AMALDIÇOADOS — LIVRO DE REGRAS & WIKI*\n\nEscolha o elemento para consultar os itens amaldiçoados:', { parse_mode: 'Markdown', ...botoesItensAmaldicoadosHub() });
+});
+
+bot.action(/^curse_cat_(.+)$/, async (ctx) => {
+    await ctx.answerCbQuery();
+    const key = ctx.match[1];
+    await ctx.reply(`🔮 *ITENS AMALDIÇOADOS DE ${key.toUpperCase()}*\n\nEscolha um item para consultar detalhes ou adicionar à mochila:`, { parse_mode: 'Markdown', ...botoesCatItensAmaldicoados(key) });
+});
+
+bot.action(/^curse_show_(.+)$/, async (ctx) => {
+    await ctx.answerCbQuery();
+    const key = ctx.match[1];
+    const item = ITENS_AMALDICOADOS_DATA[key];
+    if (item) {
+        await ctx.reply(formatarItemAmaldicoado(item), { parse_mode: 'Markdown', ...botoesCardItemAmaldicoado(key) });
+    } else {
+        await ctx.reply('🔮 Item Amaldiçoado não encontrado.', { parse_mode: 'Markdown' });
+    }
 });
 
 bot.action('cris_menu_catalogo', async (ctx) => {
@@ -2084,13 +2404,26 @@ bot.action(/^cat_add_(.+)$/, async (ctx) => {
         medkit: { id: `item_medkit_${Date.now()}`, nome: 'Kit de Medicina (+15 PV)', tipo: 'consumivel', curaPV: 15, categoria: 'I', peso: 1 }
     };
 
-    const newItem = catalogItens[itemKey];
+    let newItem = catalogItens[itemKey];
+    if (!newItem && ITENS_AMALDICOADOS_DATA[itemKey]) {
+        const c = ITENS_AMALDICOADOS_DATA[itemKey];
+        newItem = {
+            id: `item_curse_${itemKey}_${Date.now()}`,
+            nome: c.nome,
+            tipo: c.tipo,
+            dano: c.dano,
+            defesaBonus: c.defesaBonus,
+            categoria: c.categoria,
+            peso: c.peso
+        };
+    }
+
     if (newItem) {
         f.inventario.push(newItem);
         if (newItem.defesaBonus) f.defesa += newItem.defesaBonus;
         db[sid] = f;
         saveFichasDB(db);
-        await ctx.reply(`✅ *Item do Livro de Regras Adicionado:*\n\n📦 *${newItem.nome}* (Cat. ${newItem.categoria} | Peso: ${newItem.peso})`, { parse_mode: 'Markdown' });
+        await ctx.reply(`✅ *Item Adicionado à Mochila CRIS:*\n\n📦 *${newItem.nome}* (Cat. ${newItem.categoria} | Peso: ${newItem.peso})`, { parse_mode: 'Markdown' });
     }
 });
 
@@ -2783,7 +3116,7 @@ bot.on(['text', 'photo', 'video', 'audio', 'voice', 'document', 'sticker', 'anim
 
     const knownCommands = new Set([
         'start', 'menu', 'ajuda', 'ajuda2', 'comandos', 'ping', 'info',
-        'cris', 'ordem', 'rpg', 'ordemparanormal', 'op', 'rolarop', 'dadoop', 'fichacris', 'fichaop', 'agente', 'sanidade', 'san', 'rituais', 'elementos', 'rolar', 'mestresolo', 'jogarsolo', 'mestre', 'iniciativa', 'monstro', 'pv', 'pe', 'mestra', 'itens', 'inventario', 'mochila', 'additem', 'usaritem', 'trilha', 'trilhas', 'habilidades', 'criarficha', 'livro', 'bestiario', 'criaturas', 'catalogo', 'lojadearmas', 'condicoes', 'condicao', 'wikiop', 'wikiordem',
+        'cris', 'ordem', 'rpg', 'ordemparanormal', 'op', 'rolarop', 'dadoop', 'fichacris', 'fichaop', 'agente', 'sanidade', 'san', 'rituais', 'elementos', 'rolar', 'mestresolo', 'jogarsolo', 'mestre', 'iniciativa', 'monstro', 'pv', 'pe', 'mestra', 'itens', 'inventario', 'mochila', 'additem', 'usaritem', 'trilha', 'trilhas', 'habilidades', 'criarficha', 'livro', 'bestiario', 'criaturas', 'catalogo', 'lojadearmas', 'condicoes', 'condicao', 'wikiop', 'wikiordem', 'itensamaldicoados', 'amaldicoados', 'itemamaldicoado',
         'gpt', 'gemini', 'ia', 'signo', 'horoscopo', 'traduzir', 'nick', 'gerarnick', 'simi', 'simsimi', 'letra', 'lyrics', 'letramusic', 'letramusica',
         'assistir', 'assistiranime', 'anime', 'buscaranime', 'playanime', 'watchanime', 'anirecente', 'animesrecentes', 'aniinfo', 'sushianimes', 'animes',
         'play', 'p', 'playaudio', 'ytaudio', 'ytmp3', 'playvideo', 'playmp4', 'playvid', 'ytmp4', 'ytsearch', 'pesquisa_yt', 'yt-info', 'baixar', 'download',
@@ -2931,6 +3264,31 @@ bot.on(['text', 'photo', 'video', 'audio', 'voice', 'document', 'sticker', 'anim
                     }
                 } else {
                     await ctx.reply('👾 *BESTIÁRIO PARANORMAL — LIVRO DE REGRAS*\n\nEscolha um elemento para consultar as criaturas do livro:', { parse_mode: 'Markdown', ...botoesBestiarioCris() });
+                }
+                break;
+            }
+
+            case 'itensamaldicoados': case 'amaldicoados': case 'itemamaldicoado': {
+                if (q) {
+                    const termo = q.toLowerCase();
+                    const matches = Object.values(ITENS_AMALDICOADOS_DATA).filter(it =>
+                        it.nome.toLowerCase().includes(termo) ||
+                        it.elemento.toLowerCase().includes(termo) ||
+                        it.id.toLowerCase().includes(termo)
+                    );
+
+                    if (matches.length === 1) {
+                        const item = matches[0];
+                        await ctx.reply(formatarItemAmaldicoado(item), { parse_mode: 'Markdown', ...botoesCardItemAmaldicoado(item.id) });
+                    } else if (matches.length > 1) {
+                        const btns = matches.map(it => [Markup.button.callback(`🔮 ${it.nome}`, `curse_show_${it.id}`)]);
+                        btns.push([Markup.button.callback('◀️ Voltar aos Itens Amaldiçoados', 'cris_menu_amaldicoados')]);
+                        await ctx.reply(`🔎 *Itens Amaldiçoados encontrados para "${q}":*`, { parse_mode: 'Markdown', ...Markup.inlineKeyboard(btns) });
+                    } else {
+                        await ctx.reply(`❌ Nenhum item amaldiçoado encontrado para "${q}". Escolha um elemento abaixo:`, { parse_mode: 'Markdown', ...botoesItensAmaldicoadosHub() });
+                    }
+                } else {
+                    await ctx.reply('🔮 *ITENS AMALDIÇOADOS — LIVRO DE REGRAS & WIKI*\n\nEscolha um elemento para explorar os itens amaldiçoados:', { parse_mode: 'Markdown', ...botoesItensAmaldicoadosHub() });
                 }
                 break;
             }
