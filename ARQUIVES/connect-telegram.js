@@ -17,6 +17,7 @@ const { uploadToCatbox, uploadToFileIo, uploadTo0x0 } = require('./funcoes/uploa
 const TOKEN_TG = process.env.TELEGRAM_BOT_TOKEN;
 const PORT = process.env.PORT || 3000;
 const PREFIX = '©';
+const LINK_LIVRO_REGRAS = 'https://dl2.bibliotecaelfica.org/dl/eyJwaWQiOjI3OTcxLCJ1aWQiOm51bGwsInBhdGgiOiJcL3ZhclwvYWNlcnZvXC9zdWdlc3RvZXNcLzVkZjEyYzAyLTJiMWQtNGVhMy04MWZkLTk0ZTZjZDZlMGJhZC5wZGYiLCJtb2RlIjoidmlzdWFsaXphciIsInNwZWVkIjo1MTIwMDAsInNpemUiOjQ4MDI1OTc0LCJ0aXRsZSI6Ik91dHJvcyAtIE9yZGVtIFBhcmFub3JtYWwiLCJleHAiOjE3ODYyNzA2MDN9.d54dffd130fe9d90a51f7e76c29358bdce935545e50e0952be26acad7d274657';
 
 if (!TOKEN_TG) {
     console.error(chalk.red('[ERRO] TELEGRAM_BOT_TOKEN não definido!'));
@@ -36,6 +37,7 @@ function getSessao(id) {
             soloActive: false,
             soloHistory: [],
             soloAgente: null,
+            wizardFicha: null,
             mesa: { ativa: false, mestre: null, iniciativa: [], monstros: [] }
         };
     }
@@ -91,15 +93,16 @@ function getOuCriarFicha(sid, pushname) {
     if (!db[sid]) {
         db[sid] = {
             nome: pushname || 'Agente Anônimo',
+            origem: 'Investigador',
             classe: 'Combatente',
             trilha: 'Aniquilador',
             nex: '15%',
             agi: 2, for: 2, int: 2, pre: 2, vig: 2,
-            pv: 25, pvMax: 25,
-            pe: 10, peMax: 10,
+            pv: 28, pvMax: 28,
+            pe: 12, peMax: 12,
             san: 30, sanMax: 30,
             defesa: 14,
-            cargaMax: 10,
+            cargaMax: 9,
             inventario: [
                 { id: 'item_pistola', nome: 'Pistola .40', tipo: 'arma', dano: '1d12', categoria: 'I', peso: 1 },
                 { id: 'item_faca', nome: 'Faca Tática', tipo: 'arma', dano: '1d4', categoria: '0', peso: 1 },
@@ -334,6 +337,89 @@ function botoesTrilhasCris() {
     ]);
 }
 
+function botoesOrigensWizard() {
+    return Markup.inlineKeyboard([
+        [
+            Markup.button.callback('🕵️ Investigador', 'wiz_origem_Investigador'),
+            Markup.button.callback('🩺 Socorrista', 'wiz_origem_Socorrista')
+        ],
+        [
+            Markup.button.callback('👨‍💻 TI / Hacker', 'wiz_origem_TI'),
+            Markup.button.callback('🪖 Atleta', 'wiz_origem_Atleta')
+        ],
+        [
+            Markup.button.callback('🎨 Artista', 'wiz_origem_Artista'),
+            Markup.button.callback('🧑‍💼 Acadêmico', 'wiz_origem_Academico')
+        ],
+        [
+            Markup.button.callback('🔮 Ocultista Clandestino', 'wiz_origem_OcultistaClandestino')
+        ]
+    ]);
+}
+
+function botoesClassesWizard() {
+    return Markup.inlineKeyboard([
+        [
+            Markup.button.callback('🛡️ Combatente (Mais PV)', 'wiz_classe_Combatente'),
+            Markup.button.callback('🔍 Especialista (Mais Perícias)', 'wiz_classe_Especialista')
+        ],
+        [
+            Markup.button.callback('🔮 Ocultista (Mais Rituais & SAN)', 'wiz_classe_Ocultista')
+        ]
+    ]);
+}
+
+function botoesTrilhasWizard(classe) {
+    if (classe === 'Ocultista') {
+        return Markup.inlineKeyboard([
+            [Markup.button.callback('⚔️ Lâmina Paranormal', 'wiz_trilha_LaminaParanormal')],
+            [Markup.button.callback('📖 Graduado', 'wiz_trilha_Graduado')],
+            [Markup.button.callback('🧠 Intuitivo', 'wiz_trilha_Intuitivo')]
+        ]);
+    }
+    if (classe === 'Especialista') {
+        return Markup.inlineKeyboard([
+            [Markup.button.callback('🎯 Atirador de Élite', 'wiz_trilha_AtiradorDeElite')],
+            [Markup.button.callback('🩺 Médico de Campo', 'wiz_trilha_MedicoDeCampo')],
+            [Markup.button.callback('🎒 Técnico', 'wiz_trilha_Tecnico')]
+        ]);
+    }
+    return Markup.inlineKeyboard([
+        [Markup.button.callback('🛡️ Aniquilador', 'wiz_trilha_Aniquilador')],
+        [Markup.button.callback('📣 Comandante de Campo', 'wiz_trilha_ComandanteDeCampo')],
+        [Markup.button.callback('⚡ Operações Especiais', 'wiz_trilha_OperacoesEspeciais')]
+    ]);
+}
+
+function botoesAtributosWizard() {
+    return Markup.inlineKeyboard([
+        [
+            Markup.button.callback('🏃 Agilidade (+1)', 'wiz_atr_agi'),
+            Markup.button.callback('🏋️ Força (+1)', 'wiz_atr_for')
+        ],
+        [
+            Markup.button.callback('🧠 Intelecto (+1)', 'wiz_atr_int'),
+            Markup.button.callback('👁️ Presença (+1)', 'wiz_atr_pre')
+        ],
+        [
+            Markup.button.callback('💪 Vigor (+1)', 'wiz_atr_vig')
+        ]
+    ]);
+}
+
+function botoesNexWizard() {
+    return Markup.inlineKeyboard([
+        [
+            Markup.button.callback('☣️ NEX 5% (Novato)', 'wiz_nex_5%'),
+            Markup.button.callback('☣️ NEX 15% (Experiente)', 'wiz_nex_15%')
+        ],
+        [
+            Markup.button.callback('☣️ NEX 30% (Veterano)', 'wiz_nex_30%'),
+            Markup.button.callback('☣️ NEX 50% (Elite)', 'wiz_nex_50%')
+        ]
+    ]);
+}
+
 // ====== MENUS PRINCIPAIS ======
 
 function menuPrincipal() {
@@ -353,18 +439,19 @@ function menuPrincipal() {
 function menuOrdem() {
     return {
         text: '👁️ *ORDEM PARANORMAL RPG — C.R.I.S.*\n\n' +
-            'Plataforma oficial e sistema completo de Ordem Paranormal RPG no Telegram!\n\n' +
-            '🤖 *Mestre Solo IA:* Jogue com Mestre White Lotus e botões de ação!\n' +
-            '🔮 *Rituais Paranormais:* Sangue, Morte, Conhecimento e Energia!\n' +
-            '🛡️ *Trilhas & Habilidades:* Aniquilador, Lâmina Paranormal, Atirador de Élite, Médico e Técnico!\n' +
-            '🎒 *Inventário & Itens CRIS:* Armas, coletes, cicatrizantes e gerenciamento de carga!\n\n' +
+            'Plataforma oficial e sistema de Ordem Paranormal RPG com botões no Telegram!\n\n' +
+            '📝 *Criador de Ficha Guiado:* Crie sua ficha do zero escolhendo Origem, Classe, Trilha e Atributos usando botões!\n\n' +
+            '🤖 *Mestre Solo IA:* Jogue sozinho com botões de escolhas práticas e Mestre White Lotus narrando!\n\n' +
+            '📖 *Livro de Regras Official PDF:* Baixe e consulte as regras oficiais.\n\n' +
             '🌐 *Site oficial CRIS:* https://cris.site',
         ...Markup.inlineKeyboard([
+            [Markup.button.callback('📝 Criar Minha Ficha com Botões', 'wiz_start_ficha')],
             [Markup.button.callback('🤖 Jogar Solo com Mestre White Lotus', 'cmd_mestresolo_start')],
             [Markup.button.callback('🔮 Rituais Paranormais', 'cris_menu_rituais'), Markup.button.callback('🛡️ Trilhas & Habilidades', 'cris_menu_trilhas')],
             [Markup.button.callback('🎒 Inventário & Itens CRIS', 'cris_ver_itens'), Markup.button.callback('🎯 Rolar Perícias', 'cris_menu_pericias')],
+            [Markup.button.url('📖 Livro de Regras Oficial (PDF)', LINK_LIVRO_REGRAS)],
             [Markup.button.url('🌐 Abrir Site CRIS (cris.site)', 'https://cris.site')],
-            [Markup.button.callback('📋 Minha Ficha Agente', 'cmd_ficha_op')],
+            [Markup.button.callback('📋 Minha Ficha Atual', 'cmd_ficha_op')],
             [Markup.button.callback('◀️ Voltar', 'menu_principal')]
         ])
     };
@@ -498,6 +585,163 @@ bot.action('menu_jogos', async (ctx) => { await ctx.answerCbQuery(); const m = m
 bot.action('menu_pets', async (ctx) => { await ctx.answerCbQuery(); const m = menuPets(); await ctx.editMessageText(m.text, { parse_mode: 'Markdown', ...Markup.inlineKeyboard(m.reply_markup.inline_keyboard) }); });
 bot.action('menu_economia', async (ctx) => { await ctx.answerCbQuery(); const m = menuEconomia(); await ctx.editMessageText(m.text, { parse_mode: 'Markdown', ...Markup.inlineKeyboard(m.reply_markup.inline_keyboard) }); });
 bot.action('menu_util', async (ctx) => { await ctx.answerCbQuery(); const m = menuUtil(); await ctx.editMessageText(m.text, { parse_mode: 'Markdown', ...Markup.inlineKeyboard(m.reply_markup.inline_keyboard) }); });
+
+// WIZARD CRIAR FICHA COM BOTÕES
+bot.action('wiz_start_ficha', async (ctx) => {
+    await ctx.answerCbQuery();
+    const sid = String(ctx.from.id);
+    const pushname = ctx.from.first_name || 'Agente';
+    const s = getSessao(sid);
+
+    s.wizardFicha = {
+        nome: pushname,
+        origem: 'Investigador',
+        classe: 'Combatente',
+        trilha: 'Aniquilador',
+        nex: '15%',
+        pontosRestantes: 4,
+        agi: 1, for: 1, int: 1, pre: 1, vig: 1
+    };
+
+    await ctx.reply('📋 *CRIADOR DE FICHA CRIS — PASSO 1/5: ORIGEM*\n\nEscolha a Origem do seu Agente da Ordo Realitas:', { parse_mode: 'Markdown', ...botoesOrigensWizard() });
+});
+
+bot.action(/^wiz_origem_(.+)$/, async (ctx) => {
+    await ctx.answerCbQuery();
+    const sid = String(ctx.from.id);
+    const s = getSessao(sid);
+    if (!s.wizardFicha) s.wizardFicha = { nome: ctx.from.first_name || 'Agente', agi: 1, for: 1, int: 1, pre: 1, vig: 1, pontosRestantes: 4 };
+
+    s.wizardFicha.origem = ctx.match[1];
+    await ctx.reply(`✅ Origem definida: *${s.wizardFicha.origem}*\n\n📋 *PASSO 2/5: CLASSE*\nEscolha a Classe do seu Agente:`, { parse_mode: 'Markdown', ...botoesClassesWizard() });
+});
+
+bot.action(/^wiz_classe_(.+)$/, async (ctx) => {
+    await ctx.answerCbQuery();
+    const sid = String(ctx.from.id);
+    const s = getSessao(sid);
+    if (!s.wizardFicha) return;
+
+    s.wizardFicha.classe = ctx.match[1];
+    await ctx.reply(`✅ Classe definida: *${s.wizardFicha.classe}*\n\n📋 *PASSO 3/5: TRILHA*\nEscolha a Trilha de Especialização:`, { parse_mode: 'Markdown', ...botoesTrilhasWizard(s.wizardFicha.classe) });
+});
+
+bot.action(/^wiz_trilha_(.+)$/, async (ctx) => {
+    await ctx.answerCbQuery();
+    const sid = String(ctx.from.id);
+    const s = getSessao(sid);
+    if (!s.wizardFicha) return;
+
+    s.wizardFicha.trilha = ctx.match[1];
+    await ctx.reply(
+        `✅ Trilha definida: *${s.wizardFicha.trilha}*\n\n` +
+        `📋 *PASSO 4/5: DISTRIBUIÇÃO DE ATRIBUTOS*\n` +
+        `Todos atributos começam em 1. Você tem *${s.wizardFicha.pontosRestantes} pontos* para distribuir:\n\n` +
+        `• 🏃 Agilidade: *${s.wizardFicha.agi}*\n` +
+        `• 🏋️ Força: *${s.wizardFicha.for}*\n` +
+        `• 🧠 Intelecto: *${s.wizardFicha.int}*\n` +
+        `• 👁️ Presença: *${s.wizardFicha.pre}*\n` +
+        `• 💪 Vigor: *${s.wizardFicha.vig}*`,
+        { parse_mode: 'Markdown', ...botoesAtributosWizard() }
+    );
+});
+
+bot.action(/^wiz_atr_(.+)$/, async (ctx) => {
+    await ctx.answerCbQuery();
+    const sid = String(ctx.from.id);
+    const s = getSessao(sid);
+    const w = s.wizardFicha;
+    if (!w) return;
+
+    const atr = ctx.match[1];
+    if (w.pontosRestantes > 0) {
+        if (w[atr] < 3) {
+            w[atr]++;
+            w.pontosRestantes--;
+        }
+    }
+
+    if (w.pontosRestantes > 0) {
+        return ctx.reply(
+            `📊 *DISTRIBUIÇÃO DE ATRIBUTOS*\nPontos restantes: *${w.pontosRestantes}*\n\n` +
+            `• 🏃 Agilidade: *${w.agi}*\n• 🏋️ Força: *${w.for}*\n• 🧠 Intelecto: *${w.int}*\n• 👁️ Presença: *${w.pre}*\n• 💪 Vigor: *${w.vig}*`,
+            { parse_mode: 'Markdown', ...botoesAtributosWizard() }
+        );
+    }
+
+    await ctx.reply(`✅ Atributos distribuídos!\n\n📋 *PASSO 5/5: ESCOLHA O NEX % INICIAL*`, { parse_mode: 'Markdown', ...botoesNexWizard() });
+});
+
+bot.action(/^wiz_nex_(.+)$/, async (ctx) => {
+    await ctx.answerCbQuery();
+    const sid = String(ctx.from.id);
+    const pushname = ctx.from.first_name || 'Agente';
+    const s = getSessao(sid);
+    const w = s.wizardFicha;
+    if (!w) return;
+
+    w.nex = ctx.match[1];
+
+    let pvBase = 20, pvNex = 6, peBase = 2, peNex = 2, sanBase = 12, sanNex = 3;
+    if (w.classe === 'Especialista') { pvBase = 16; pvNex = 4; peBase = 3; peNex = 3; sanBase = 16; sanNex = 4; }
+    else if (w.classe === 'Ocultista') { pvBase = 12; pvNex = 3; peBase = 4; peNex = 4; sanBase = 20; sanNex = 5; }
+
+    const nexVal = parseInt(w.nex) || 15;
+    const multiplicador = Math.floor(nexVal / 5) - 1;
+
+    const pvMax = pvBase + w.vig + (multiplicador * (pvNex + w.vig));
+    const peMax = peBase + w.pre + (multiplicador * (peNex + w.pre));
+    const sanMax = sanBase + (multiplicador * sanNex);
+
+    const db = getFichasDB();
+    db[sid] = {
+        nome: w.nome || pushname,
+        origem: w.origem || 'Investigador',
+        classe: w.classe || 'Combatente',
+        trilha: w.trilha || 'Aniquilador',
+        nex: w.nex,
+        agi: w.agi, for: w.for, int: w.int, pre: w.pre, vig: w.vig,
+        pv: pvMax, pvMax: pvMax,
+        pe: peMax, peMax: peMax,
+        san: sanMax, sanMax: sanMax,
+        defesa: 10 + w.agi + 2,
+        cargaMax: 5 + (w.for * 2),
+        inventario: [
+            { id: 'item_pistola', nome: 'Pistola .40', tipo: 'arma', dano: '1d12', categoria: 'I', peso: 1 },
+            { id: 'item_faca', nome: 'Faca Tática', tipo: 'arma', dano: '1d4', categoria: '0', peso: 1 },
+            { id: 'item_lanterna', nome: 'Lanterna Tática', tipo: 'utensilio', categoria: '0', peso: 1 },
+            { id: 'item_colete', nome: 'Colete Balístico (+2 DEF)', tipo: 'protecao', defesaBonus: 2, categoria: 'I', peso: 2 },
+            { id: 'item_cicatrizante', nome: 'Cicatrizante (+10 PV)', tipo: 'consumivel', curaPV: 10, qtd: 2, categoria: 'I', peso: 1 }
+        ]
+    };
+
+    saveFichasDB(db);
+    s.wizardFicha = null;
+
+    const f = db[sid];
+    const txt = `🎉 *FICHA DO AGENTE CRIADA COM SUCESSO! — C.R.I.S.*\n\n` +
+        `👤 *Nome:* ${f.nome}\n` +
+        `🕵️ *Origem:* ${f.origem}\n` +
+        `🛡️ *Classe:* ${f.classe} | ⭐ *Trilha:* ${f.trilha}\n` +
+        `☣️ *NEX:* ${f.nex}\n\n` +
+        `📊 *ATRIBUTOS CRIS:*\n` +
+        `• 🏃 AGI: ${f.agi} | 🏋️ FOR: ${f.for}\n` +
+        `• 🧠 INT: ${f.int} | 👁️ PRE: ${f.pre}\n` +
+        `• 💪 VIG: ${f.vig}\n\n` +
+        `❤️ *PV:* ${f.pv}/${f.pvMax} | ⚡ *PE:* ${f.pe}/${f.peMax} | 🧠 *SAN:* ${f.san}/${f.sanMax}\n` +
+        `🛡️ *Defesa:* ${f.defesa} | 📦 *Carga:* ${f.cargaMax} Espaços\n\n` +
+        `📖 *Livro de Regras Official PDF:* ${LINK_LIVRO_REGRAS}\n` +
+        `🌐 *Site CRIS:* https://cris.site`;
+
+    const btns = Markup.inlineKeyboard([
+        [Markup.button.callback('🤖 Jogar Solo com Mestre White Lotus', 'cmd_mestresolo_start')],
+        [Markup.button.callback('🎒 Ver Inventário', 'cris_ver_itens'), Markup.button.callback('🎯 Rolar Perícia', 'cris_menu_pericias')],
+        [Markup.button.callback('🔮 Rituais', 'cris_menu_rituais')],
+        [Markup.button.url('📖 Livro de Regras PDF', LINK_LIVRO_REGRAS)]
+    ]);
+
+    await ctx.reply(txt, { parse_mode: 'Markdown', ...btns });
+});
 
 bot.action('cmd_mestresolo_start', async (ctx) => {
     await ctx.answerCbQuery();
@@ -1007,7 +1251,7 @@ bot.on(['text', 'photo', 'video', 'audio', 'voice', 'document', 'sticker', 'anim
 
     const knownCommands = new Set([
         'start', 'menu', 'ajuda', 'ajuda2', 'comandos', 'ping', 'info',
-        'cris', 'ordem', 'rpg', 'ordemparanormal', 'op', 'rolarop', 'dadoop', 'fichacris', 'fichaop', 'agente', 'sanidade', 'san', 'rituais', 'elementos', 'rolar', 'mestresolo', 'jogarsolo', 'mestre', 'iniciativa', 'monstro', 'pv', 'pe', 'mestra', 'itens', 'inventario', 'mochila', 'additem', 'usaritem', 'trilha', 'trilhas', 'habilidades',
+        'cris', 'ordem', 'rpg', 'ordemparanormal', 'op', 'rolarop', 'dadoop', 'fichacris', 'fichaop', 'agente', 'sanidade', 'san', 'rituais', 'elementos', 'rolar', 'mestresolo', 'jogarsolo', 'mestre', 'iniciativa', 'monstro', 'pv', 'pe', 'mestra', 'itens', 'inventario', 'mochila', 'additem', 'usaritem', 'trilha', 'trilhas', 'habilidades', 'criarficha',
         'gpt', 'gemini', 'ia', 'signo', 'horoscopo', 'traduzir', 'nick', 'gerarnick', 'simi', 'simsimi', 'letra', 'lyrics', 'letramusic', 'letramusica',
         'assistir', 'assistiranime', 'anime', 'buscaranime', 'playanime', 'watchanime', 'anirecente', 'animesrecentes', 'aniinfo', 'sushianimes', 'animes',
         'play', 'p', 'playaudio', 'ytaudio', 'ytmp3', 'playvideo', 'playmp4', 'playvid', 'ytmp4', 'ytsearch', 'pesquisa_yt', 'yt-info', 'baixar', 'download',
@@ -1042,6 +1286,7 @@ bot.on(['text', 'photo', 'video', 'audio', 'voice', 'document', 'sticker', 'anim
 `🪷 *WHITE LOTUS — COMANDOS COMPLETO*\n
 *👁️ RPG ORDEM PARANORMAL (CRIS)*
 /cris — Menu do Ordem Paranormal e CRIS com botões
+/criarficha — Assistente interativo de criação de ficha com botões
 /mestresolo — Jogar solo com Mestre White Lotus (IA)
 /op <atributo> [perícia] — Rola dados de Ordem Paranormal (3d20)
 /fichacris — Ficha e inventário do Agente
@@ -1111,6 +1356,20 @@ bot.on(['text', 'photo', 'video', 'audio', 'voice', 'document', 'sticker', 'anim
             case 'cris': case 'ordem': case 'rpg': case 'ordemparanormal': {
                 const m = menuOrdem();
                 await ctx.reply(m.text, { parse_mode: 'Markdown', ...Markup.inlineKeyboard(m.reply_markup.inline_keyboard) });
+                break;
+            }
+
+            case 'criarficha': {
+                s.wizardFicha = {
+                    nome: pushname,
+                    origem: 'Investigador',
+                    classe: 'Combatente',
+                    trilha: 'Aniquilador',
+                    nex: '15%',
+                    pontosRestantes: 4,
+                    agi: 1, for: 1, int: 1, pre: 1, vig: 1
+                };
+                await ctx.reply('📋 *CRIADOR DE FICHA CRIS — PASSO 1/5: ORIGEM*\n\nEscolha a Origem do seu Agente da Ordo Realitas:', { parse_mode: 'Markdown', ...botoesOrigensWizard() });
                 break;
             }
 
@@ -1207,6 +1466,7 @@ bot.on(['text', 'photo', 'video', 'audio', 'voice', 'document', 'sticker', 'anim
                 });
 
                 txt += `\n📦 *Carga:* ${pesoTotal}/${f.cargaMax} Espaços\n`;
+                txt += `📖 *Livro de Regras:* ${LINK_LIVRO_REGRAS}\n`;
                 txt += `🌐 *Ficha Oficial CRIS:* https://cris.site`;
 
                 const btns = Markup.inlineKeyboard([
@@ -1287,21 +1547,24 @@ bot.on(['text', 'photo', 'video', 'audio', 'voice', 'document', 'sticker', 'anim
 
                 const txt = `👁️ *FICHA DE AGENTE — ORDO REALITAS*\n\n` +
                     `👤 *Nome:* ${f.nome}\n` +
+                    `🕵️ *Origem:* ${f.origem || 'Investigador'}\n` +
                     `🛡️ *Classe:* ${f.classe} | ⭐ *Trilha:* ${f.trilha || 'Aniquilador'}\n` +
                     `☣️ *NEX:* ${f.nex}\n\n` +
-                    `📊 *ATRIBUTOS:*\n` +
+                    `📊 *ATRIBUTOS CRIS:*\n` +
                     `• 🏃 AGI: ${f.agi} | 🏋️ FOR: ${f.for}\n` +
                     `• 🧠 INT: ${f.int} | 👁️ PRE: ${f.pre}\n` +
                     `• 💪 VIG: ${f.vig}\n\n` +
                     `❤️ *PV:* ${f.pv}/${f.pvMax} | ⚡ *PE:* ${f.pe}/${f.peMax} | 🧠 *SAN:* ${f.san}/${f.sanMax}\n` +
-                    `🛡️ *Defesa:* ${f.defesa}\n\n` +
+                    `🛡️ *Defesa:* ${f.defesa} | 📦 *Carga:* ${f.cargaMax} Espaços\n\n` +
+                    `📖 *Livro de Regras:* ${LINK_LIVRO_REGRAS}\n` +
                     `🌐 *Site CRIS:* https://cris.site`;
 
                 const btns = Markup.inlineKeyboard([
                     [Markup.button.callback('🎒 Ver Inventário & Itens', 'cris_ver_itens')],
                     [Markup.button.callback('🎯 Rolar Perícia', 'cris_menu_pericias')],
                     [Markup.button.callback('🔮 Rituais', 'cris_menu_rituais'), Markup.button.callback('🛡️ Escolher Trilha', 'cris_menu_trilhas')],
-                    [Markup.button.callback('💊 Usar Cicatrizante (+10 PV)', 'cris_usar_cicatrizante')]
+                    [Markup.button.callback('💊 Usar Cicatrizante (+10 PV)', 'cris_usar_cicatrizante')],
+                    [Markup.button.url('📖 Livro de Regras PDF', LINK_LIVRO_REGRAS)]
                 ]);
 
                 await ctx.reply(txt, { parse_mode: 'Markdown', ...btns });
