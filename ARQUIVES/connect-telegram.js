@@ -550,6 +550,30 @@ const ELEMENTOS_DATA = {
         afinidade: "Conexão com o inexplicável, manipulação de enigmas e imunidade a condicionamentos mundanos.",
         reliquia: "O Enigma de Medo Supremo",
         fraseGuia: "O Medo é a chave de todas as portas do Outro Lado."
+    },
+    intencao: {
+        nome: "🎯 Intenção",
+        conceito: "A União Impossível de Sangue 🩸 e Conhecimento 👁️. Representa o instinto primal e sentimento direcionado e racionalizado em um desejo absoluto.",
+        relacao: "Rejeita a sorte e se liga intrinsecamente à vontade absoluta daqueles afetados por ele.",
+        afinidade: "Manifestação de pictogramas, estigmas da Coroa de Espinhos (Desejo, Ambição, Inveja e Fome), e rasgos de intenção na realidade.",
+        reliquia: "Estigmas do Sacrifício / Coroa de Espinhos",
+        fraseGuia: "Um instinto moldado em uma forma, direcionado para um desejo inabalável."
+    },
+    transmissao: {
+        nome: "📡 Transmissão",
+        conceito: "Elemento do Alheio e dos Sinais do Outro Lado. Manifesta-se através de frequências cósmicas, ondas de transmissão, estática e o eco do espaço.",
+        relacao: "Conecta a Terra com os segredos celestiais e o abismo infinito das estrelas.",
+        afinidade: "Percepção de ruído branco, sintonização de frequências cósmicas e sensibilidade a entidades celestes.",
+        reliquia: "O Alheio / Sinais do Outro Lado",
+        fraseGuia: "O cosmo transmite a verdade por frequências que a mente humana mal pode sintonizar."
+    },
+    tipora: {
+        nome: "🔔 Sino de Tipora",
+        conceito: "Elemento de O Segredo na Ilha. Manifesta-se pelas badaladas profundas do Sino, metal dourado, desespero e corrupção temporal na ilha de Tipora.",
+        relacao: "Corrompe memórias e retém almas no laço eterno do Sino de Tipora.",
+        afinidade: "Ressoar de badaladas na mente, marcas douradas de ouro corrompido e distorções locais de memória.",
+        reliquia: "O Sino da Ilha de Tipora",
+        fraseGuia: "Quando o Sino de Tipora dobra, a realidade da ilha se curva ao seu toque."
     }
 };
 
@@ -790,14 +814,19 @@ function botoesElementosHub() {
             Markup.button.callback('⚡ Energia', 'elem_det_energia')
         ],
         [
-            Markup.button.callback('🖤 Medo', 'elem_det_medo')
+            Markup.button.callback('🖤 Medo', 'elem_det_medo'),
+            Markup.button.callback('🎯 Intenção', 'elem_det_intencao')
+        ],
+        [
+            Markup.button.callback('📡 Transmissão', 'elem_det_transmissao'),
+            Markup.button.callback('🔔 Sino de Tipora', 'elem_det_tipora')
         ],
         [
             Markup.button.callback('🔮 Rituais por Círculo (1º ao 4º)', 'cris_menu_circulos_rit'),
             Markup.button.callback('👾 Bestiário Paranormal', 'cris_menu_bestiario')
         ],
         [
-            Markup.button.url('🌐 Fandom: Elementos do Outro Lado', LINK_ELEMENTOS_WIKI)
+            Markup.button.url('🌐 Fandom: Categoria Elementos do Outro Lado', 'https://ordemparanormal.fandom.com/wiki/Categoria:Elementos_do_Outro_Lado')
         ],
         [
             Markup.button.callback('◀️ Voltar ao Menu CRIS', 'cris')
@@ -812,7 +841,7 @@ function botoesCardElemento(elemKey) {
             Markup.button.callback(`👾 Criaturas de ${elemKey.toUpperCase()}`, `best_cat_${elemKey}`)
         ],
         [
-            Markup.button.url('🌐 Wiki Fandom Elementos', LINK_ELEMENTOS_WIKI)
+            Markup.button.url('🌐 Wiki Fandom Elementos', 'https://ordemparanormal.fandom.com/wiki/Categoria:Elementos_do_Outro_Lado')
         ],
         [
             Markup.button.callback('◀️ Voltar aos Elementos', 'cris_menu_elementos')
@@ -827,8 +856,18 @@ function botoesRituaisElemento(elemKey) {
         if (elemKey === 'conhecimento') return r.elemento.includes('Conhecimento');
         if (elemKey === 'energia') return r.elemento.includes('Energia');
         if (elemKey === 'medo') return r.elemento.includes('Medo');
+        if (elemKey === 'intencao') return r.elemento.includes('Sangue') || r.elemento.includes('Conhecimento');
+        if (elemKey === 'transmissao') return r.elemento.includes('Energia');
+        if (elemKey === 'tipora') return r.elemento.includes('Morte');
         return false;
     });
+
+    if (rits.length === 0) {
+        return Markup.inlineKeyboard([
+            [Markup.button.callback('🔮 Ver Todos os Rituais', 'cris_menu_circulos_rit')],
+            [Markup.button.callback('◀️ Voltar aos Elementos', 'cris_menu_elementos')]
+        ]);
+    }
 
     const btns = rits.map(([k, r]) => [
         Markup.button.callback(`${r.elemento.split(' ')[0]} ${r.nome} (${r.circulo}, ${r.custoPE} PE)`, `cris_rit_${k}`)
