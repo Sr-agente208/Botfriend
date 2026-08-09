@@ -42,9 +42,10 @@ function getSessao(id) {
     return sessoes[id];
 }
 
-// ====== BANCO DE DADOS ECONOMIA & COINS ======
+// ====== BANCO DE DADOS ECONOMIA, COINS & FICHAS RPG ======
 const coinsPath = './DADOS DO KEISEN/usuarios/coins.json';
 const bancoPath = './DADOS DO KEISEN/usuarios/banco.json';
+const fichasPath = './DADOS DO KEISEN/usuarios/fichas_op.json';
 
 function getCoinsDB() {
     try {
@@ -70,6 +71,45 @@ function saveBancoDB(db) {
         fs.ensureFileSync(bancoPath);
         fs.writeJsonSync(bancoPath, db, { spaces: 2 });
     } catch (e) { console.error('[saveBancoDB]', e); }
+}
+
+function getFichasDB() {
+    try {
+        if (!fs.existsSync(fichasPath)) return {};
+        return fs.readJsonSync(fichasPath);
+    } catch { return {}; }
+}
+function saveFichasDB(db) {
+    try {
+        fs.ensureFileSync(fichasPath);
+        fs.writeJsonSync(fichasPath, db, { spaces: 2 });
+    } catch (e) { console.error('[saveFichasDB]', e); }
+}
+
+function getOuCriarFicha(sid, pushname) {
+    const db = getFichasDB();
+    if (!db[sid]) {
+        db[sid] = {
+            nome: pushname || 'Agente Anônimo',
+            classe: 'Combatente',
+            nex: '15%',
+            agi: 2, for: 2, int: 2, pre: 2, vig: 2,
+            pv: 25, pvMax: 25,
+            pe: 10, peMax: 10,
+            san: 30, sanMax: 30,
+            defesa: 14,
+            cargaMax: 10,
+            inventario: [
+                { id: 'item_pistola', nome: 'Pistola .40', tipo: 'arma', dano: '1d12', categoria: 'I', peso: 1 },
+                { id: 'item_faca', nome: 'Faca Tática', tipo: 'arma', dano: '1d4', categoria: '0', peso: 1 },
+                { id: 'item_lanterna', nome: 'Lanterna Tática', tipo: 'utensilio', categoria: '0', peso: 1 },
+                { id: 'item_colete', nome: 'Colete Balístico (+2 DEF)', tipo: 'protecao', defesaBonus: 2, categoria: 'I', peso: 2 },
+                { id: 'item_cicatrizante', nome: 'Cicatrizante (+10 PV)', tipo: 'consumivel', curaPV: 10, qtd: 2, categoria: 'I', peso: 1 }
+            ]
+        };
+        saveFichasDB(db);
+    }
+    return db[sid];
 }
 
 // ====== SERVIDOR WEB ======
@@ -112,9 +152,9 @@ Diretrizes da sua mestragem:
 1. Mantenha o clima de suspense, horror e investigação da Ordo Realitas (Morte ⏳, Sangue 🩸, Conhecimento 👁️, Energia ⚡, Medo 🖤).
 2. Escreva respostas envolventes, mas concisas para chat de mensagens (2 a 4 parágrafos por turno).
 3. Descreva o ambiente, os detalhes perturbadores e as pistas.
-4. Quando o jogador fizer uma ação que exija teste, peça o comando do bot (ex: "Faça um teste de /op 2 5 para Investigação" ou "/sanidade").
+4. Quando o jogador fizer uma ação que exija teste, peça o teste de atributo/perícia (ex: "Faça um teste de Agilidade ou Investigação").
 5. Quando houver combate, narre a ameaça e peça o ataque ou reação do agente.
-6. Termine sempre dando opções ou perguntando: "O que você faz, Agente?".
+6. Termine sempre dando opções claras e perguntando: "O que você faz, Agente?".
 `;
 
 async function imgParaWebp(buffer, texto) {
@@ -175,7 +215,7 @@ async function criarWastickers(pacoteInfo) {
             ios_app_store_link: '',
             publisher: pacoteInfo.autor || 'White Lotus',
             privacy_policy_website: '',
-License_agreement_website: '',
+            license_agreement_website: '',
             title: pacoteInfo.nome || 'Meu Pacote',
             identifier: pacoteInfo.id,
             sticker_packs: [{
@@ -218,6 +258,47 @@ async function tryFetchAudioDownloadUrl(videoUrl, videoId) {
     return null;
 }
 
+function botoesSoloAcoes() {
+    return Markup.inlineKeyboard([
+        [
+            Markup.button.callback('🔍 Investigar Local', 'solo_act_investigar'),
+            Markup.button.callback('🗡️ Atacar Ameaca', 'solo_act_atacar')
+        ],
+        [
+            Markup.button.callback('👥 Falar / Negociar', 'solo_act_falar'),
+            Markup.button.callback('🔮 Usar Ocultismo', 'solo_act_ocultismo')
+        ],
+        [
+            Markup.button.callback('🎒 Ver Inventario', 'cris_ver_itens'),
+            Markup.button.callback('🎲 Teste 3d20', 'solo_act_rolar')
+        ],
+        [
+            Markup.button.callback('🛑 Sair da Campanha', 'solo_act_sair')
+        ]
+    ]);
+}
+
+function botoesPericiasCris() {
+    return Markup.inlineKeyboard([
+        [
+            Markup.button.callback('🎯 Pontaria', 'cris_p_pontaria'),
+            Markup.button.callback('🗡️ Luta', 'cris_p_luta')
+        ],
+        [
+            Markup.button.callback('🔍 Investigacao', 'cris_p_investigacao'),
+            Markup.button.callback('🔮 Ocultismo', 'cris_p_ocultismo')
+        ],
+        [
+            Markup.button.callback('👁️ Percepcao', 'cris_p_percepcao'),
+            Markup.button.callback('🧠 Vontade', 'cris_p_vontade')
+        ],
+        [
+            Markup.button.callback('💪 Fortitude', 'cris_p_fortitude'),
+            Markup.button.callback('👟 Reflexos', 'cris_p_reflexos')
+        ]
+    ]);
+}
+
 // ====== MENUS PRINCIPAIS ======
 
 function menuPrincipal() {
@@ -237,23 +318,19 @@ function menuPrincipal() {
 function menuOrdem() {
     return {
         text: '👁️ *ORDEM PARANORMAL RPG — C.R.I.S.*\n\n' +
-            'Plataforma oficial e sistema de RPG de Ordem Paranormal direto no Telegram!\n\n' +
+            'Plataforma oficial e sistema de RPG de Ordem Paranormal com botões interativos!\n\n' +
             '🤖 *Modo Mestre Solo (IA):*\n' +
-            'Jogue sozinho onde o *White Lotus* é o Mestre da sua missão de investigação!\n\n' +
-            '👥 *Mesa no Telegram:*\n' +
-            'Jogue em grupo no Telegram com gerenciador de iniciativa, vida e monstros!\n\n' +
-            '🌐 *Acesse o site oficial:* https://cris.site\n\n' +
-            '🎲 *Comandos Rápidos:*\n' +
-            '• `/mestresolo` — Inicia campanha solo com White Lotus como Mestre\n' +
-            '• `/op <atributo> [perícia]` — Rola dados (ex: `/op 3 5`)\n' +
-            '• `/fichacris` — Ficha de Agente da Ordo Realitas\n' +
-            '• `/sanidade` | `/rituais` | `/monstro`',
+            'Jogue sozinho com botões de escolhas práticas e Mestre White Lotus narrando!\n\n' +
+            '🎒 *Sistema de Itens & Ficha CRIS:*\n' +
+            'Gerencie armas, cicatrizantes, equipamentos, PV, PE, Sanidade e perícias!\n\n' +
+            '🌐 *Acesse o site oficial:* https://cris.site',
         ...Markup.inlineKeyboard([
             [Markup.button.callback('🤖 Jogar Solo com Mestre White Lotus', 'cmd_mestresolo_start')],
-            [Markup.button.callback('👥 Mesa de RPG no Telegram', 'cmd_mesa_info')],
+            [Markup.button.callback('🎒 Meu Inventário & Itens CRIS', 'cris_ver_itens')],
+            [Markup.button.callback('🎯 Rolar Perícias com Botões', 'cris_menu_pericias')],
+            [Markup.button.callback('💊 Usar Cicatrizante (+10 PV)', 'cris_usar_cicatrizante')],
             [Markup.button.url('🌐 Abrir Site CRIS (cris.site)', 'https://cris.site')],
-            [Markup.button.callback('🎲 Rolar Dados (3d20)', 'cmd_rolar_op'), Markup.button.callback('📋 Minha Ficha', 'cmd_ficha_op')],
-            [Markup.button.callback('🔮 Rituais & Elementos', 'cmd_rituais_op')],
+            [Markup.button.callback('📋 Minha Ficha Agente', 'cmd_ficha_op'), Markup.button.callback('🔮 Rituais & Elementos', 'cmd_rituais_op')],
             [Markup.button.callback('◀️ Voltar', 'menu_principal')]
         ])
     };
@@ -390,15 +467,148 @@ bot.action('menu_util', async (ctx) => { await ctx.answerCbQuery(); const m = me
 
 bot.action('cmd_mestresolo_start', async (ctx) => {
     await ctx.answerCbQuery();
-    await ctx.reply('🤖 *Iniciando Campanha Solo com Mestre White Lotus...*\n\nUse: `/mestresolo` para começar!', { parse_mode: 'Markdown' });
+    const sid = String(ctx.from.id);
+    const s = getSessao(sid);
+    s.soloActive = true;
+    s.soloHistory = [];
+    await ctx.reply(
+        '👁️ *MESTRE WHITE LOTUS — ORDEM PARANORMAL SOLO*\n\n' +
+        '_Iniciando investigação paranormal..._\n\n' +
+        'O ar fica gélido no recinto. Os relógios de ponteiro começam a desacelerar. A Ordo Realitas enviou você para investigar uma anomalia numa casa abandonada no centro da cidade, onde relatos afirmam que vizinhos escutam sussurros em um idioma incompreensível...\n\n' +
+        'Você segura sua lanterna e seu equipamento. O que você faz, Agente?\n\n' +
+        '👇 *Escolha uma ação nos botões abaixo ou digite seu texto:*',
+        { parse_mode: 'Markdown', ...botoesSoloAcoes() }
+    );
+    s.soloHistory.push({
+        role: 'assistant',
+        content: 'O ar fica gélido no recinto. A Ordo Realitas enviou você para investigar uma anomalia numa casa abandonada onde vizinhos escutam sussurros em um idioma incompreensível... Você segura sua lanterna e seu equipamento. O que você faz, Agente?'
+    });
 });
-bot.action('cmd_mesa_info', async (ctx) => {
+
+bot.action(/^solo_act_(.+)$/, async (ctx) => {
     await ctx.answerCbQuery();
-    await ctx.reply('👥 *Mesa de RPG Ordem Paranormal no Telegram*\n\nPara jogar em grupo no grupo/chat:\n• `/mestre` — Define o Mestre humano do grupo\n• `/iniciativa <agente> <valor>` — Adiciona à ordem de combate\n• `/monstro <nome> <pv>` — Spawna criatura paranormal\n• `/op <atributo> [perícia]` — Rola testes no grupo', { parse_mode: 'Markdown' });
+    const act = ctx.match[1];
+    const sid = String(ctx.from.id);
+    const s = getSessao(sid);
+
+    if (act === 'sair') {
+        s.soloActive = false;
+        s.soloHistory = [];
+        return ctx.reply('👁️ *Campanha Solo Finalizada.* Você saiu do modo Mestre Solo.', { parse_mode: 'Markdown' });
+    }
+
+    if (act === 'rolar') {
+        const d = Math.floor(Math.random() * 20) + 1;
+        return ctx.reply(`🎲 *Teste Rápido d20:* Total = *${d}*${d === 20 ? ' 🔥 CRÍTICO!' : ''}`, { parse_mode: 'Markdown' });
+    }
+
+    const acoesTexto = {
+        investigar: 'Examina o local detalhadamente buscando pistas e marcas paranormais.',
+        atacar: 'Saca sua arma e ataca a ameaça com determinação!',
+        falar: 'Tenta conversar e entender os sussurros e a situação.',
+        ocultismo: 'Concentra-se para sentir o elemento paranormal e usar rituais.'
+    };
+
+    const textoAcao = acoesTexto[act] || 'Realiza uma ação no local.';
+    await ctx.reply(`👉 *Você:* ${textoAcao}`);
+
+    s.soloHistory.push({ role: 'user', content: textoAcao });
+    if (s.soloHistory.length > 12) s.soloHistory = s.soloHistory.slice(s.soloHistory.length - 12);
+
+    try {
+        await ctx.reply('👁️ *Mestre White Lotus narrando...*', { parse_mode: 'Markdown' });
+        const respMestre = await groqMestreSolo(MESTRE_SYSTEM_PROMPT, s.soloHistory);
+        s.soloHistory.push({ role: 'assistant', content: respMestre });
+        await ctx.reply(respMestre, { parse_mode: 'Markdown', ...botoesSoloAcoes() });
+    } catch (e) {
+        ctx.reply('👁️ *Mestre White Lotus:* Algo perturbou o Paranormal. Tente novamente!', { parse_mode: 'Markdown', ...botoesSoloAcoes() });
+    }
 });
-bot.action('cmd_rolar_op', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('🎲 Use: `/op <atributo> [perícia]`\nEx: `/op 3 5` (3 de Agilidade + 5 de Pontaria)', { parse_mode: 'Markdown' }); });
-bot.action('cmd_ficha_op', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('📋 Use: `/fichacris <Nome> | <Classe> | <NEX>`\nEx: `/fichacris Veríssimo | Ocultista | 45%`', { parse_mode: 'Markdown' }); });
-bot.action('cmd_rituais_op', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('🔮 Use: `/rituais` para ver o guia de Elementos Paranormais (Sangue 🩸, Morte ⏳, Conhecimento 👁️, Energia ⚡, Medo 🖤)', { parse_mode: 'Markdown' }); });
+
+bot.action('cris_ver_itens', async (ctx) => {
+    await ctx.answerCbQuery();
+    const sid = String(ctx.from.id);
+    const pushname = ctx.from.first_name || 'Agente';
+    const f = getOuCriarFicha(sid, pushname);
+
+    let txt = `🎒 *INVENTÁRIO DO AGENTE ${f.nome.toUpperCase()} — CRIS*\n\n`;
+    let pesoTotal = 0;
+
+    f.inventario.forEach((it, i) => {
+        pesoTotal += (it.peso || 1) * (it.qtd || 1);
+        txt += `*${i + 1}.* ${it.nome} (Cat. ${it.categoria} | Peso: ${it.peso || 1})\n`;
+    });
+
+    txt += `\n📦 *Carga:* ${pesoTotal}/${f.cargaMax} Espaços\n`;
+    txt += `🌐 *Ficha Oficial CRIS:* https://cris.site`;
+
+    const btns = Markup.inlineKeyboard([
+        [Markup.button.callback('💊 Usar Cicatrizante (+10 PV)', 'cris_usar_cicatrizante')],
+        [Markup.button.callback('🗡️ Equipar / Atacar', 'cris_atacar_arma')],
+        [Markup.button.callback('📋 Ver Ficha Completa', 'cmd_ficha_op')]
+    ]);
+
+    await ctx.reply(txt, { parse_mode: 'Markdown', ...btns });
+});
+
+bot.action('cris_usar_cicatrizante', async (ctx) => {
+    await ctx.answerCbQuery();
+    const sid = String(ctx.from.id);
+    const pushname = ctx.from.first_name || 'Agente';
+    const db = getFichasDB();
+    const f = getOuCriarFicha(sid, pushname);
+
+    f.pv = Math.min(f.pvMax, f.pv + 10);
+    db[sid] = f;
+    saveFichasDB(db);
+
+    await ctx.reply(`💊 *Item Usado: Cicatrizante!*\n\n❤️ Você recuperou +10 PV!\n❤️ Pontos de Vida Atuais: *${f.pv}/${f.pvMax} PV*`, { parse_mode: 'Markdown' });
+});
+
+bot.action('cris_atacar_arma', async (ctx) => {
+    await ctx.answerCbQuery();
+    const d1 = Math.floor(Math.random() * 20) + 1;
+    const d2 = Math.floor(Math.random() * 20) + 1;
+    const maior = Math.max(d1, d2);
+    const dano = Math.floor(Math.random() * 12) + 1 + 2;
+
+    await ctx.reply(
+        `🗡️ *Ataque com Pistola .40 — CRIS*\n\n` +
+        `🎲 *Teste de Pontaria (2d20):* [ ${d1}, ${d2} ] -> Maior: *${maior}*\n` +
+        `💥 *Dano:* *${dano}* Dano de Perfuração!\n` +
+        `${maior >= 19 ? '🔥 *ACERTO CRÍTICO!* Dano Dobrado!' : ''}`,
+        { parse_mode: 'Markdown' }
+    );
+});
+
+bot.action('cris_menu_pericias', async (ctx) => {
+    await ctx.answerCbQuery();
+    await ctx.reply('🎯 *Escolha a perícia para rolar o teste:*', { parse_mode: 'Markdown', ...botoesPericiasCris() });
+});
+
+bot.action(/^cris_p_(.+)$/, async (ctx) => {
+    await ctx.answerCbQuery();
+    const p = ctx.match[1];
+    const sid = String(ctx.from.id);
+    const pushname = ctx.from.first_name || 'Agente';
+    const f = getOuCriarFicha(sid, pushname);
+
+    const d1 = Math.floor(Math.random() * 20) + 1;
+    const d2 = Math.floor(Math.random() * 20) + 1;
+    const maior = Math.max(d1, d2);
+    const bonus = 5;
+    const total = maior + bonus;
+
+    await ctx.reply(
+        `🎲 *Teste de Perícia CRIS — ${p.toUpperCase()}*\n\n` +
+        `👤 *Agente:* ${f.nome}\n` +
+        `🎲 *Dados Rolados (2d20):* [ ${d1}, ${d2} ] -> Maior: *${maior}*\n` +
+        `➕ *Bônus Perícia:* +${bonus}\n` +
+        `📊 *TOTAL:* *${total}*\n` +
+        `${maior === 20 ? '🔥 *SUCESSO CRÍTICO!*' : ''}`,
+        { parse_mode: 'Markdown' }
+    );
+});
 
 // Botões de ajuda rápida
 bot.action('cmd_gerarlink', async (ctx) => {
@@ -679,16 +889,15 @@ bot.on(['text', 'photo', 'video', 'audio', 'voice', 'document', 'sticker', 'anim
             await ctx.reply('👁️ *Mestre White Lotus está narrando...*', { parse_mode: 'Markdown' });
             s.soloHistory.push({ role: 'user', content: text });
 
-            // Mantém histórico razoável
             if (s.soloHistory.length > 12) s.soloHistory = s.soloHistory.slice(s.soloHistory.length - 12);
 
             const respostaMestre = await groqMestreSolo(MESTRE_SYSTEM_PROMPT, s.soloHistory);
             s.soloHistory.push({ role: 'assistant', content: respostaMestre });
 
-            return await ctx.reply(respostaMestre, { parse_mode: 'Markdown' });
+            return await ctx.reply(respostaMestre, { parse_mode: 'Markdown', ...botoesSoloAcoes() });
         } catch (eErr) {
             console.error('[Mestre Solo]', eErr?.message);
-            return ctx.reply('👁️ *Mestre White Lotus:* Algo estranho aconteceu com o Paranormal... Tente novamente ou digite `/mestresolo sair`.', { parse_mode: 'Markdown' });
+            return ctx.reply('👁️ *Mestre White Lotus:* Algo estranho aconteceu com o Paranormal... Tente novamente ou aperte no botão "Sair da Campanha".', { parse_mode: 'Markdown', ...botoesSoloAcoes() });
         }
     }
 
@@ -703,7 +912,7 @@ bot.on(['text', 'photo', 'video', 'audio', 'voice', 'document', 'sticker', 'anim
 
     const knownCommands = new Set([
         'start', 'menu', 'ajuda', 'ajuda2', 'comandos', 'ping', 'info',
-        'cris', 'ordem', 'rpg', 'ordemparanormal', 'op', 'rolarop', 'dadoop', 'fichacris', 'fichaop', 'agente', 'sanidade', 'san', 'rituais', 'elementos', 'rolar', 'mestresolo', 'jogarsolo', 'mestre', 'iniciativa', 'monstro', 'pv', 'pe', 'mestra',
+        'cris', 'ordem', 'rpg', 'ordemparanormal', 'op', 'rolarop', 'dadoop', 'fichacris', 'fichaop', 'agente', 'sanidade', 'san', 'rituais', 'elementos', 'rolar', 'mestresolo', 'jogarsolo', 'mestre', 'iniciativa', 'monstro', 'pv', 'pe', 'mestra', 'itens', 'inventario', 'mochila', 'additem', 'usaritem',
         'gpt', 'gemini', 'ia', 'signo', 'horoscopo', 'traduzir', 'nick', 'gerarnick', 'simi', 'simsimi', 'letra', 'lyrics', 'letramusic', 'letramusica',
         'assistir', 'assistiranime', 'anime', 'buscaranime', 'playanime', 'watchanime', 'anirecente', 'animesrecentes', 'aniinfo', 'sushianimes', 'animes',
         'play', 'p', 'playaudio', 'ytaudio', 'ytmp3', 'playvideo', 'playmp4', 'playvid', 'ytmp4', 'ytsearch', 'pesquisa_yt', 'yt-info', 'baixar', 'download',
@@ -737,10 +946,11 @@ bot.on(['text', 'photo', 'video', 'audio', 'voice', 'document', 'sticker', 'anim
                 await ctx.reply(
 `🪷 *WHITE LOTUS — COMANDOS COMPLETO*\n
 *👁️ RPG ORDEM PARANORMAL (CRIS)*
-/cris — Menu do Ordem Paranormal e link do CRIS
+/cris — Menu do Ordem Paranormal e CRIS com botões
 /mestresolo — Jogar solo com Mestre White Lotus (IA)
 /op <atributo> [perícia] — Rola dados de Ordem Paranormal (3d20)
-/fichacris — Ficha do Agente da Ordo Realitas
+/fichacris — Ficha e inventário do Agente
+/itens — Ver mochila e armas equipadas
 /mestre — Gerenciar mesa e iniciativa no Telegram
 /sanidade | /rituais | /monstro\n
 *🤖 IA & TEXTO*
@@ -811,19 +1021,26 @@ bot.on(['text', 'photo', 'video', 'audio', 'voice', 'document', 'sticker', 'anim
                 if (q === 'sair' || q === 'parar' || q === 'fechar') {
                     s.soloActive = false;
                     s.soloHistory = [];
-                    return ctx.reply('👁️ *Campanha Solo Finalizada.* Você saiu do modo Mestre Solo. Volte quando quiser investigações paranormais!', { parse_mode: 'Markdown' });
+                    return ctx.reply('👁️ *Campanha Solo Finalizada.* Você saiu do modo Mestre Solo.', { parse_mode: 'Markdown' });
                 }
 
                 s.soloActive = true;
                 if (!s.soloHistory || s.soloHistory.length === 0) {
                     s.soloHistory = [];
-                    await ctx.reply('👁️ *MESTRE WHITE LOTUS — ORDEM PARANORMAL SOLO*\n\n_Iniciando investigação paranormal..._\n\nO ar fica gélido no recinto. Os relógios de ponteiro começam a desacelerar. A Ordo Realitas enviou você para investigar uma anomalia numa casa abandonada no centro da cidade, onde relatos afirmam que vizinhos escutam sussurros em um idioma incompreensível...\n\nVocê segura sua lanterna e seu equipamento. O que você faz, Agente?\n\n_(Para responder, basta digitar sua ação em texto normal! Para sair a qualquer momento, digite `/mestresolo sair`)_', { parse_mode: 'Markdown' });
+                    await ctx.reply(
+                        '👁️ *MESTRE WHITE LOTUS — ORDEM PARANORMAL SOLO*\n\n' +
+                        '_Iniciando investigação paranormal..._\n\n' +
+                        'O ar fica gélido no recinto. Os relógios de ponteiro começam a desacelerar. A Ordo Realitas enviou você para investigar uma anomalia numa casa abandonada no centro da cidade, onde relatos afirmam que vizinhos escutam sussurros em um idioma incompreensível...\n\n' +
+                        'Você segura sua lanterna e seu equipamento. O que você faz, Agente?\n\n' +
+                        '👇 *Escolha uma ação nos botões ou digite no chat:*',
+                        { parse_mode: 'Markdown', ...botoesSoloAcoes() }
+                    );
                     s.soloHistory.push({
                         role: 'assistant',
                         content: 'O ar fica gélido no recinto. A Ordo Realitas enviou você para investigar uma anomalia numa casa abandonada onde vizinhos escutam sussurros em um idioma incompreensível... Você segura sua lanterna e seu equipamento. O que você faz, Agente?'
                     });
                 } else {
-                    await ctx.reply('👁️ *Modo Mestre Solo Ativo!*\n\nBasta digitar sua ação normalmente no chat para continuar jogando com o Mestre White Lotus!\n\nPara sair: `/mestresolo sair`', { parse_mode: 'Markdown' });
+                    await ctx.reply('👁️ *Modo Mestre Solo Ativo!*\n\nBasta clicar nos botões ou digitar no chat para continuar!', { parse_mode: 'Markdown', ...botoesSoloAcoes() });
                 }
                 break;
             }
@@ -877,8 +1094,43 @@ bot.on(['text', 'photo', 'video', 'audio', 'voice', 'document', 'sticker', 'anim
                 break;
             }
 
-            case 'pv': case 'pe': {
-                await ctx.reply(`❤️⚡ *Ajuste de PV / PE / SAN*\n\nAnote em sua ficha ou use \`/fichacris\` para atualizar seus pontos de agente!`, { parse_mode: 'Markdown' });
+            case 'itens': case 'inventario': case 'mochila': {
+                const f = getOuCriarFicha(sid, pushname);
+                let txt = `🎒 *INVENTÁRIO DO AGENTE ${f.nome.toUpperCase()} — CRIS*\n\n`;
+                let pesoTotal = 0;
+
+                f.inventario.forEach((it, i) => {
+                    pesoTotal += (it.peso || 1) * (it.qtd || 1);
+                    txt += `*${i + 1}.* ${it.nome} (Cat. ${it.categoria} | Peso: ${it.peso || 1})\n`;
+                });
+
+                txt += `\n📦 *Carga:* ${pesoTotal}/${f.cargaMax} Espaços\n`;
+                txt += `🌐 *Ficha Oficial CRIS:* https://cris.site`;
+
+                const btns = Markup.inlineKeyboard([
+                    [Markup.button.callback('💊 Usar Cicatrizante (+10 PV)', 'cris_usar_cicatrizante')],
+                    [Markup.button.callback('🗡️ Equipar / Atacar', 'cris_atacar_arma')],
+                    [Markup.button.callback('📋 Ver Ficha Completa', 'cmd_ficha_op')]
+                ]);
+
+                await ctx.reply(txt, { parse_mode: 'Markdown', ...btns });
+                break;
+            }
+
+            case 'additem': {
+                if (!q) return ctx.reply('Use: `/additem <Nome do Item> | <Categoria> | <Peso>`\nEx: `/additem Kit de Primeiro Socorros | I | 1`', { parse_mode: 'Markdown' });
+                const db = getFichasDB();
+                const f = getOuCriarFicha(sid, pushname);
+                const parts = q.split('|').map(s => s.trim());
+                const nome = parts[0];
+                const categoria = parts[1] || '0';
+                const peso = parseInt(parts[2]) || 1;
+
+                f.inventario.push({ id: `item_${Date.now()}`, nome, tipo: 'utensilio', categoria, peso });
+                db[sid] = f;
+                saveFichasDB(db);
+
+                await ctx.reply(`✅ *Item Adicionado ao Inventário CRIS!*\n\n📦 *Item:* ${nome}\n🏷️ *Categoria:* ${categoria} | ⚖️ *Peso:* ${peso}`, { parse_mode: 'Markdown' });
                 break;
             }
 
@@ -918,25 +1170,17 @@ bot.on(['text', 'photo', 'video', 'audio', 'voice', 'document', 'sticker', 'anim
             }
 
             case 'fichacris': case 'fichaop': case 'agente': {
-                const sender = String(ctx.from.id);
-                const fichasPath = './DADOS DO KEISEN/usuarios/fichas_op.json';
-                let dbFichas = {};
-                try { if (fs.existsSync(fichasPath)) dbFichas = fs.readJsonSync(fichasPath); } catch {}
+                const f = getOuCriarFicha(sid, pushname);
 
                 if (q) {
+                    const db = getFichasDB();
                     const parts = q.split('|').map(s => s.trim());
-                    const nome = parts[0] || pushname;
-                    const classe = parts[1] || 'Combatente';
-                    const nex = parts[2] || '5%';
-                    dbFichas[sender] = { nome, classe, nex, agi: 2, for: 2, int: 2, pre: 2, vig: 2, pv: 20, pe: 5, san: 20 };
-                    fs.ensureFileSync(fichasPath);
-                    fs.writeJsonSync(fichasPath, dbFichas, { spaces: 2 });
-                    return ctx.reply(`✅ *Ficha de Agente Criada!*\n\n👤 *Nome:* ${nome}\n🛡️ *Classe:* ${classe}\n☣️ *NEX:* ${nex}\n\n🌐 Crie sua ficha completa no site oficial: https://cris.site`, { parse_mode: 'Markdown' });
-                }
-
-                const f = dbFichas[sender];
-                if (!f) {
-                    return ctx.reply('📋 *Ficha de Agente - Ordem Paranormal*\n\nVocê ainda não tem uma ficha criada.\nCrie com: `/fichacris <Nome> | <Classe> | <NEX>`\nEx: `/fichacris Arthur Cervero | Especialista | 30%`\n\n🌐 Ou acesse o site CRIS: https://cris.site', { parse_mode: 'Markdown' });
+                    f.nome = parts[0] || f.nome;
+                    f.classe = parts[1] || f.classe;
+                    f.nex = parts[2] || f.nex;
+                    db[sid] = f;
+                    saveFichasDB(db);
+                    return ctx.reply(`✅ *Ficha de Agente Atualizada!*\n\n👤 *Nome:* ${f.nome}\n🛡️ *Classe:* ${f.classe}\n☣️ *NEX:* ${f.nex}\n\n🌐 Crie sua ficha completa no site oficial: https://cris.site`, { parse_mode: 'Markdown' });
                 }
 
                 const txt = `👁️ *FICHA DE AGENTE — ORDO REALITAS*\n\n` +
@@ -947,10 +1191,17 @@ bot.on(['text', 'photo', 'video', 'audio', 'voice', 'document', 'sticker', 'anim
                     `• 🏃 AGI: ${f.agi} | 🏋️ FOR: ${f.for}\n` +
                     `• 🧠 INT: ${f.int} | 👁️ PRE: ${f.pre}\n` +
                     `• 💪 VIG: ${f.vig}\n\n` +
-                    `❤️ *PV:* ${f.pv} | ⚡ *PE:* ${f.pe} | 🧠 *SAN:* ${f.san}\n\n` +
+                    `❤️ *PV:* ${f.pv}/${f.pvMax} | ⚡ *PE:* ${f.pe}/${f.peMax} | 🧠 *SAN:* ${f.san}/${f.sanMax}\n` +
+                    `🛡️ *Defesa:* ${f.defesa}\n\n` +
                     `🌐 *Site CRIS:* https://cris.site`;
 
-                await ctx.reply(txt, { parse_mode: 'Markdown' });
+                const btns = Markup.inlineKeyboard([
+                    [Markup.button.callback('🎒 Ver Inventário & Itens', 'cris_ver_itens')],
+                    [Markup.button.callback('🎯 Rolar Perícia', 'cris_menu_pericias')],
+                    [Markup.button.callback('💊 Usar Cicatrizante (+10 PV)', 'cris_usar_cicatrizante')]
+                ]);
+
+                await ctx.reply(txt, { parse_mode: 'Markdown', ...btns });
                 break;
             }
 
