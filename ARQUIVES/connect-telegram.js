@@ -97,6 +97,8 @@ function getOuCriarFicha(sid, pushname) {
             classe: 'Combatente',
             trilha: 'Aniquilador',
             nex: '15%',
+            patente: 'Recruta',
+            pp: 0,
             agi: 2, for: 2, int: 2, pre: 2, vig: 2,
             pv: 28, pvMax: 28,
             pe: 12, peMax: 12,
@@ -537,6 +539,26 @@ function botoesCatalogoArmas() {
     ]);
 }
 
+function botoesWikiOrdem() {
+    return Markup.inlineKeyboard([
+        [
+            Markup.button.callback('📚 1. Universo & Ordo Realitas', 'wiki_op_universo'),
+            Markup.button.callback('👁️ 2. Elementos Paranormais', 'wiki_op_elementos')
+        ],
+        [
+            Markup.button.callback('🧬 3. Origens & Benefícios', 'wiki_op_origens'),
+            Markup.button.callback('⚔️ 4. Classes & Trilhas', 'wiki_op_classes')
+        ],
+        [
+            Markup.button.callback('🔮 5. Rituais & Círculos', 'cris_menu_circulos_rit'),
+            Markup.button.callback('🎒 6. Equipamentos & Patentes', 'wiki_op_equipamentos')
+        ],
+        [
+            Markup.button.url('📖 Livro de Regras PDF Oficial', LINK_LIVRO_REGRAS)
+        ]
+    ]);
+}
+
 // ====== MENUS PRINCIPAIS ======
 
 function menuPrincipal() {
@@ -561,6 +583,7 @@ function menuOrdem() {
             '🔮 *Biblioteca de Rituais por Círculo:* 1º, 2º, 3º e 4º Círculo por botões!\n' +
             '🎒 *Gerenciador de Mochila:* Adicione e remova itens com 1 clique!\n' +
             '🤖 *Mestre Solo IA:* Jogue sozinho com botões de ação!\n' +
+            '📚 *Wiki Ordem Paranormal:* Consulte origens, trilhas e regras do livro!\n' +
             '👾 *Bestiário & Catálogo:* Ameaças e armas do Livro de Regras!\n\n' +
             '📖 *Livro de Regras PDF:* Acesse o livro completo no acervo.\n' +
             '🌐 *Site oficial CRIS:* https://cris.site',
@@ -568,6 +591,7 @@ function menuOrdem() {
             [Markup.button.callback('📝 Criar Minha Ficha com Botões', 'wiz_start_ficha')],
             [Markup.button.callback('🔮 Rituais Separados por Círculo', 'cris_menu_circulos_rit')],
             [Markup.button.callback('🤖 Jogar Solo com Mestre White Lotus', 'cmd_mestresolo_start')],
+            [Markup.button.callback('📚 Wiki Ordem Paranormal RPG', 'wiki_op_main')],
             [Markup.button.callback('🎒 Inventário & Gerenciar Itens', 'cris_ver_itens')],
             [Markup.button.callback('➕ Adicionar Item', 'cris_prompt_additem'), Markup.button.callback('🗑️ Remover Item', 'cris_rm_item_menu')],
             [Markup.button.callback('🛡️ Trilhas & Habilidades', 'cris_menu_trilhas'), Markup.button.callback('🎯 Rolar Perícias', 'cris_menu_pericias')],
@@ -708,6 +732,36 @@ bot.action('menu_jogos', async (ctx) => { await ctx.answerCbQuery(); const m = m
 bot.action('menu_pets', async (ctx) => { await ctx.answerCbQuery(); const m = menuPets(); await ctx.editMessageText(m.text, { parse_mode: 'Markdown', ...Markup.inlineKeyboard(m.reply_markup.inline_keyboard) }); });
 bot.action('menu_economia', async (ctx) => { await ctx.answerCbQuery(); const m = menuEconomia(); await ctx.editMessageText(m.text, { parse_mode: 'Markdown', ...Markup.inlineKeyboard(m.reply_markup.inline_keyboard) }); });
 bot.action('menu_util', async (ctx) => { await ctx.answerCbQuery(); const m = menuUtil(); await ctx.editMessageText(m.text, { parse_mode: 'Markdown', ...Markup.inlineKeyboard(m.reply_markup.inline_keyboard) }); });
+
+bot.action('wiki_op_main', async (ctx) => {
+    await ctx.answerCbQuery();
+    await ctx.reply('📚 *WIKI ORDEM PARANORMAL RPG — ACERVO LIVRO DE REGRAS*\n\nEscolha um tópico para consultar:', { parse_mode: 'Markdown', ...botoesWikiOrdem() });
+});
+
+bot.action('wiki_op_universo', async (ctx) => {
+    await ctx.answerCbQuery();
+    await ctx.reply('🕯️ *1. O UNIVERSO DE ORDEM PARANORMAL*\n\n🌎 *Realidade:* O plano físico onde vivem os humanos.\n👁️ *Outro Lado:* A dimensão paralela de onde vêm as manifestações e criaturas paranormais.\n🧱 *Membrana:* A barreira entre a Realidade e o Outro Lado. Quanto mais enfraquecida, mais o Paranormal se manifesta.\n🏛️ *Ordo Realitas:* A organização secreta responsável por proteger a Realidade.', { parse_mode: 'Markdown' });
+});
+
+bot.action('wiki_op_elementos', async (ctx) => {
+    await ctx.answerCbQuery();
+    await ctx.reply('👁️ *2. OS 5 ELEMENTOS PARANORMAIS*\n\n🟡 *Conhecimento:* Consciência, descoberta e informação.\n🔵 *Energia:* Caos, transformação e eletricidade.\n⚫ *Morte:* Tempo, entropia e decomposição.\n🔴 *Sangue:* Sentimento, dor, fúria e intensidade física.\n🟣 *Medo:* A manifestação suprema do Outro Lado.\n\n⚔️ *Relação Elemental:*\nSangue 🩸 → Conhecimento 👁️ → Energia ⚡ → Morte ⏳ → Sangue 🩸', { parse_mode: 'Markdown' });
+});
+
+bot.action('wiki_op_origens', async (ctx) => {
+    await ctx.answerCbQuery();
+    await ctx.reply('🧬 *3. AS 24 ORIGENS DO LIVRO DE REGRAS*\n\n1. Acadêmico\n2. Agente de Saúde\n3. Amnésico\n4. Artista\n5. Atleta\n6. Criminoso\n7. Cultista Arrependido\n8. Desgarrado\n9. Engenheiro\n10. Executivo\n11. Investigador\n12. Lutador\n13. Magnata\n14. Mercenário\n15. Militar\n16. Operário\n17. Policial\n18. Religioso\n19. Servidor Público\n20. Teórico da Conspiração\n21. T.I. (Computação Avançada)\n22. Trabalhador Rural\n23. Trambiqueiro\n24. Universitário', { parse_mode: 'Markdown' });
+});
+
+bot.action('wiki_op_classes', async (ctx) => {
+    await ctx.answerCbQuery();
+    await ctx.reply('⚔️ *4. CLASSES E TRILHAS*\n\n🛡️ *Combatente:* Focado em combate e resistência.\n• Trilhas: Aniquilador, Comandante de Campo, Guerreiro, Operações Especiais, Tropa de Choque.\n\n🔍 *Especialista:* Focado em perícias e investigação.\n• Trilhas: Atirador de Élite, Infiltrador, Médico de Campo, Negociador, Técnico.\n\n🔮 *Ocultista:* Focado em rituais e paranormal.\n• Trilhas: Conduíte, Flagelador, Graduado, Intuitivo, Lâmina Paranormal.', { parse_mode: 'Markdown' });
+});
+
+bot.action('wiki_op_equipamentos', async (ctx) => {
+    await ctx.answerCbQuery();
+    await ctx.reply('🎒 *5. EQUIPAMENTOS E PATENTES*\n\n🏅 *Patentes da Ordem:*\n• Recrita (0 PP)\n• Operador (20 PP)\n• Agente Especial (50 PP)\n• Oficial de Operações (100 PP)\n• Agente de Élite (200 PP)\n\n🎒 *Categorias de Itens:* 0, I, II, III e IV. Controlam o limite de inventário pelo peso e patente do Agente.', { parse_mode: 'Markdown' });
+});
 
 // ACTIONS DE RITUAIS SEPARADOS POR CÍRCULO
 bot.action('cris_menu_circulos_rit', async (ctx) => {
@@ -1575,7 +1629,7 @@ bot.on(['text', 'photo', 'video', 'audio', 'voice', 'document', 'sticker', 'anim
 
     const knownCommands = new Set([
         'start', 'menu', 'ajuda', 'ajuda2', 'comandos', 'ping', 'info',
-        'cris', 'ordem', 'rpg', 'ordemparanormal', 'op', 'rolarop', 'dadoop', 'fichacris', 'fichaop', 'agente', 'sanidade', 'san', 'rituais', 'elementos', 'rolar', 'mestresolo', 'jogarsolo', 'mestre', 'iniciativa', 'monstro', 'pv', 'pe', 'mestra', 'itens', 'inventario', 'mochila', 'additem', 'usaritem', 'trilha', 'trilhas', 'habilidades', 'criarficha', 'livro', 'bestiario', 'criaturas', 'catalogo', 'lojadearmas', 'condicoes', 'condicao',
+        'cris', 'ordem', 'rpg', 'ordemparanormal', 'op', 'rolarop', 'dadoop', 'fichacris', 'fichaop', 'agente', 'sanidade', 'san', 'rituais', 'elementos', 'rolar', 'mestresolo', 'jogarsolo', 'mestre', 'iniciativa', 'monstro', 'pv', 'pe', 'mestra', 'itens', 'inventario', 'mochila', 'additem', 'usaritem', 'trilha', 'trilhas', 'habilidades', 'criarficha', 'livro', 'bestiario', 'criaturas', 'catalogo', 'lojadearmas', 'condicoes', 'condicao', 'wikiop', 'wikiordem',
         'gpt', 'gemini', 'ia', 'signo', 'horoscopo', 'traduzir', 'nick', 'gerarnick', 'simi', 'simsimi', 'letra', 'lyrics', 'letramusic', 'letramusica',
         'assistir', 'assistiranime', 'anime', 'buscaranime', 'playanime', 'watchanime', 'anirecente', 'animesrecentes', 'aniinfo', 'sushianimes', 'animes',
         'play', 'p', 'playaudio', 'ytaudio', 'ytmp3', 'playvideo', 'playmp4', 'playvid', 'ytmp4', 'ytsearch', 'pesquisa_yt', 'yt-info', 'baixar', 'download',
@@ -1611,6 +1665,7 @@ bot.on(['text', 'photo', 'video', 'audio', 'voice', 'document', 'sticker', 'anim
 *👁️ RPG ORDEM PARANORMAL (CRIS)*
 /cris — Menu completo do Ordem Paranormal e CRIS com botões
 /criarficha — Assistente de criação de ficha com botões
+/wikiop — Wiki completa do Livro de Regras
 /mestresolo — Jogar solo com Mestre White Lotus (IA)
 /op <atributo> [perícia] — Rola dados de Ordem Paranormal (3d20)
 /fichacris — Ficha e inventário do Agente
@@ -1682,6 +1737,11 @@ bot.on(['text', 'photo', 'video', 'audio', 'voice', 'document', 'sticker', 'anim
             case 'cris': case 'ordem': case 'rpg': case 'ordemparanormal': {
                 const m = menuOrdem();
                 await ctx.reply(m.text, { parse_mode: 'Markdown', ...Markup.inlineKeyboard(m.reply_markup.inline_keyboard) });
+                break;
+            }
+
+            case 'wikiop': case 'wikiordem': {
+                await ctx.reply('📚 *WIKI ORDEM PARANORMAL RPG — ACERVO LIVRO DE REGRAS*\n\nEscolha um tópico para consultar:', { parse_mode: 'Markdown', ...botoesWikiOrdem() });
                 break;
             }
 
@@ -1923,8 +1983,8 @@ bot.on(['text', 'photo', 'video', 'audio', 'voice', 'document', 'sticker', 'anim
                 const btns = Markup.inlineKeyboard([
                     [Markup.button.callback('🎒 Ver Inventário & Itens', 'cris_ver_itens')],
                     [Markup.button.callback('🗑️ Remover Item', 'cris_rm_item_menu'), Markup.button.callback('➕ Add Item', 'cris_prompt_additem')],
-                    [Markup.button.callback('🎯 Rolar Perícia', 'cris_menu_pericias'), Markup.button.callback('🔮 Rituais por Círculo', 'cris_menu_circulos_rit')],
-                    [Markup.button.callback('🛡️ Escolher Trilha', 'cris_menu_trilhas'), Markup.button.callback('blood Condições', 'cris_menu_condicoes')],
+                    [Markup.button.callback('🎯 Rolar Perícia', 'cris_menu_pericias'), Markup.button.callback('🔮 Rituais Por Círculo', 'cris_menu_circulos_rit')],
+                    [Markup.button.callback('🛡️ Escolher Trilha', 'cris_menu_trilhas'), Markup.button.callback('🩸 Condições', 'cris_menu_condicoes')],
                     [Markup.button.url('📖 Livro de Regras PDF', LINK_LIVRO_REGRAS)]
                 ]);
 
@@ -1944,7 +2004,7 @@ bot.on(['text', 'photo', 'video', 'audio', 'voice', 'document', 'sticker', 'anim
                     `⏳ *MORTE:* Tempo, cinzas, entropia e decomposição. Acelera ou desacelera a realidade.\n` +
                     `👁️ *CONHECIMENTO:* Razão, símbolos, verdades e segredos. Altera percepção e revelação.\n` +
                     `⚡ *ENERGIA:* Caos, eletricidade, transformação e o imprevisível. Muda a matéria instantaneamente.\n` +
-                    `🖤 *MEDO:* O elemento impossível. Origem de todos os rituais.\n\n` +
+                    `🖤 *MEDO:* O elemento impossível. Origem dos rituais.\n\n` +
                     `🌐 *Acesse rituais e fichas em:* https://cris.site`;
                 await ctx.reply(txt, { parse_mode: 'Markdown', ...botoesCirculosRituais() });
                 break;
