@@ -316,6 +316,10 @@ function botoesRituais1Circulo() {
         [
             Markup.button.callback('⚡ Chama do Caos (1d12 Fogo)', 'cris_rit_chama'),
             Markup.button.callback('⚡ Coincidência Forçada (+2 Bônus)', 'cris_rit_coincidencia')
+        ],
+        [
+            Markup.button.callback('👁️ Compreensão Paranormal', 'cris_rit_compreensao'),
+            Markup.button.callback('⏳ Consumir Matéria (Decompor)', 'cris_rit_consumirmat')
         ]
     ]);
 }
@@ -333,6 +337,10 @@ function botoesRituais2Circulo() {
         [
             Markup.button.callback('🧠 Aprimorar Mente (+1 INT/PRE)', 'cris_rit_aprimorarmente'),
             Markup.button.callback('👁️ Visão das Sombras (Ver Tudo)', 'cris_rit_visao')
+        ],
+        [
+            Markup.button.callback('⏳ Poeira da Morte (4d6 Morte)', 'cris_rit_poeira'),
+            Markup.button.callback('⚡ Chuva de Faíscas (4d6 Energia)', 'cris_rit_faiscas')
         ]
     ]);
 }
@@ -342,6 +350,10 @@ function botoesRituais3e4Circulo() {
         [
             Markup.button.callback('🩸 Forma Monstruosa (3º Círculo, 6 PE)', 'cris_rit_monstruosa'),
             Markup.button.callback('⏳ Âncora Temporal (3º Círculo, 6 PE)', 'cris_rit_ancora')
+        ],
+        [
+            Markup.button.callback('⚡ Polarização Caótica (3º Círculo, 6 PE)', 'cris_rit_polarizacao'),
+            Markup.button.callback('⚡ Sobrecarga Total (3º Círculo, 6 PE)', 'cris_rit_sobrecarga')
         ],
         [
             Markup.button.callback('🖤 Lâmina do Medo (4º Círculo, 10 PE)', 'cris_rit_laminamedo'),
@@ -1155,7 +1167,7 @@ bot.action('cris_menu_pericias', async (ctx) => {
 
 bot.action('cris_menu_rituais', async (ctx) => {
     await ctx.answerCbQuery();
-    await ctx.reply('🔮 *RITUAIS PARANORMAIS — C.R.I.S.*\n\nEscolha o Círculo de Ritual:', { parse_mode: 'Markdown', ...botoesCirculosRituais() });
+    await ctx.reply('🔮 *BIBLIOTECA DE RITUAIS PARANORMAIS — C.R.I.S.*\n\nEscolha o Círculo para conjurar:', { parse_mode: 'Markdown', ...botoesCirculosRituais() });
 });
 
 bot.action('cris_menu_trilhas', async (ctx) => {
@@ -1172,8 +1184,8 @@ bot.action(/^cris_rit_(.+)$/, async (ctx) => {
     const f = getOuCriarFicha(sid, pushname);
 
     let peCusto = 1;
-    if (rit === 'sanguefervente' || rit === 'velocidade' || rit === 'salto' || rit === 'tela' || rit === 'aprimorarmente' || rit === 'visao') peCusto = 3;
-    if (rit === 'monstruosa' || rit === 'ancora') peCusto = 6;
+    if (rit === 'sanguefervente' || rit === 'velocidade' || rit === 'salto' || rit === 'tela' || rit === 'aprimorarmente' || rit === 'visao' || rit === 'poeira' || rit === 'faiscas') peCusto = 3;
+    if (rit === 'monstruosa' || rit === 'ancora' || rit === 'polarizacao' || rit === 'sobrecarga') peCusto = 6;
     if (rit === 'laminamedo' || rit === 'fimtempos') peCusto = 10;
 
     if (f.pe < peCusto) return ctx.reply(`❌ PE insuficiente para conjurar este ritual (Custo: ${peCusto} PE).`);
@@ -1190,15 +1202,21 @@ bot.action(/^cris_rit_(.+)$/, async (ctx) => {
         sussurros: '👁️ *Sussurros Paranormais (1º Círculo, Conhecimento)*\nRevela segredos e concede +5 em testes de Investigação!',
         coincidencia: '⚡ *Coincidência Forçada (1º Círculo, Energia)*\nAltera a probabilidade! Bônus de +2 em todos os testes no próximo turno!',
         descarnar: '🩸 *Descarnar (1º Círculo, Sangue)*\nDesaloca tecidos da vítima causando *2d8 Dano de Sangue*!',
-        faiscas: '⚡ *Chuva de Faíscas (2º Círculo, Energia)*\nLança rajada de eletricidade causando *4d6 Dano de Energia*!',
+        chama: '⚡ *Chama do Caos (1º Círculo, Energia)*\nProvoca uma explosão caótica de fogo! Dano: *1d12 Fogo*!',
+        compreensao: '👁️ *Compreensão Paranormal (1º Círculo, Conhecimento)*\nPermite ler e compreender símbolos e idiomas ocultos!',
+        consumirmat: '⏳ *Consumir Matéria (1º Círculo, Morte)*\nDecompõe matéria inanimada reduzindo sua resistência!',
         sanguefervente: '🩸 *Sangue Fervente (2º Círculo, Sangue)*\nProvoca hemorragia interna! Dano: *4d8 Sangue*!',
         velocidade: '⏳ *Velocidade Mortal (2º Círculo, Morte)*\nAcelera seu tempo interno! Ganha +1 Ação Padrão Extra no turno!',
         salto: '⚡ *Salto Quântico (2º Círculo, Energia)*\nDesintegra e surge a até 15m instantaneamente!',
         tela: '⚡ *Tela de Ruído (2º Círculo, Energia)*\nCria barreira estática concedendo +30 PV temporários!',
         aprimorarmente: '🧠 *Aprimorar Mente (2º Círculo, Conhecimento)*\nAumenta Intelecto/Presença do Agente em +1!',
         visao: '👁️ *Visão das Sombras (2º Círculo, Conhecimento)*\nPermite enxergar através de paredes, trevas e ilusões!',
+        poeira: '⏳ *Poeira da Morte (2º Círculo, Morte)*\nSopra cinzas temporais causando *4d6 Dano de Morte*!',
+        faiscas: '⚡ *Chuva de Faíscas (2º Círculo, Energia)*\nLança rajada de eletricidade causando *4d6 Dano de Energia*!',
         monstruosa: '🩸 *Forma Monstruosa (3º Círculo, Sangue)*\nTransforma o agente em uma abominação física devastadora!',
         ancora: '⏳ *Âncora Temporal (3º Círculo, Morte)*\nCongela o tempo ao redor dos inimigos na área!',
+        polarizacao: '⚡ *Polarização Caótica (3º Círculo, Energia)*\nInverte forças de atração manipulando alvos na cena!',
+        sobrecarga: '⚡ *Sobrecarga Total (3º Círculo, Energia)*\nLança descarga devastadora de *6d10 Dano de Energia*!',
         laminamedo: '🖤 *Lâmina do Medo (4º Círculo, Medo)*\nForja lâmina irrestrita que ignora imunidades e defesas!',
         fimtempos: '⏳ *Fim dos Tempos (4º Círculo, Morte)*\nAcelera a entropia de tudo ao redor causando 10d10 Dano de Morte!'
     };
@@ -1905,8 +1923,8 @@ bot.on(['text', 'photo', 'video', 'audio', 'voice', 'document', 'sticker', 'anim
                 const btns = Markup.inlineKeyboard([
                     [Markup.button.callback('🎒 Ver Inventário & Itens', 'cris_ver_itens')],
                     [Markup.button.callback('🗑️ Remover Item', 'cris_rm_item_menu'), Markup.button.callback('➕ Add Item', 'cris_prompt_additem')],
-                    [Markup.button.callback('🎯 Rolar Perícia', 'cris_menu_pericias'), Markup.button.callback('🔮 Rituais Por Círculo', 'cris_menu_circulos_rit')],
-                    [Markup.button.callback('🛡️ Escolher Trilha', 'cris_menu_trilhas'), Markup.button.callback('🩸 Condições', 'cris_menu_condicoes')],
+                    [Markup.button.callback('🎯 Rolar Perícia', 'cris_menu_pericias'), Markup.button.callback('🔮 Rituais por Círculo', 'cris_menu_circulos_rit')],
+                    [Markup.button.callback('🛡️ Escolher Trilha', 'cris_menu_trilhas'), Markup.button.callback('blood Condições', 'cris_menu_condicoes')],
                     [Markup.button.url('📖 Livro de Regras PDF', LINK_LIVRO_REGRAS)]
                 ]);
 
