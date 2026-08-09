@@ -300,6 +300,14 @@ function botoesPericiasCris() {
         [
             Markup.button.callback('💪 Fortitude', 'cris_p_fortitude'),
             Markup.button.callback('👟 Reflexos', 'cris_p_reflexos')
+        ],
+        [
+            Markup.button.callback('🕵️ Furtividade', 'cris_p_furtividade'),
+            Markup.button.callback('🩺 Medicina', 'cris_p_medicina')
+        ],
+        [
+            Markup.button.callback('🏃 Atletismo', 'cris_p_atletismo'),
+            Markup.button.callback('💻 Tecnologia', 'cris_p_tecnologia')
         ]
     ]);
 }
@@ -317,6 +325,10 @@ function botoesRituaisCris() {
         [
             Markup.button.callback('👁️ Sussurros Paranormais (+5 Int)', 'cris_rit_sussurros'),
             Markup.button.callback('⚡ Coincidência Forçada (+2 Bônus)', 'cris_rit_coincidencia')
+        ],
+        [
+            Markup.button.callback('🩸 Descarnar (2d8 Sangue)', 'cris_rit_descarnar'),
+            Markup.button.callback('⚡ Chuva de Faíscas (4d6)', 'cris_rit_faiscas')
         ]
     ]);
 }
@@ -459,6 +471,10 @@ function botoesCatalogoArmas() {
         [
             Markup.button.callback('💥 Add: Granada Incendiária 3d6', 'cat_add_granada'),
             Markup.button.callback('🛡️ Add: Escudo Tático (+2 DEF)', 'cat_add_escudo')
+        ],
+        [
+            Markup.button.callback('🩹 Add: Elixir de Sanidade (+10 SAN)', 'cat_add_elixir'),
+            Markup.button.callback('🩺 Add: Kit de Medicina (+15 PV)', 'cat_add_medkit')
         ]
     ]);
 }
@@ -760,7 +776,9 @@ bot.action(/^cat_add_(.+)$/, async (ctx) => {
         fuzil: { id: `item_fuzil_${Date.now()}`, nome: 'Fuzil de Precisão (2d12)', tipo: 'arma', dano: '2d12', categoria: 'III', peso: 2 },
         katana: { id: `item_katana_${Date.now()}`, nome: 'Katana Tática (1d10, Crit 19/x3)', tipo: 'arma', dano: '1d10', categoria: 'II', peso: 1 },
         granada: { id: `item_granada_${Date.now()}`, nome: 'Granada Incendiária (3d6 Fogo)', tipo: 'consumivel', categoria: 'I', peso: 1 },
-        escudo: { id: `item_escudo_${Date.now()}`, nome: 'Escudo Tático (+2 DEF e Cobertura)', tipo: 'protecao', defesaBonus: 2, categoria: 'II', peso: 2 }
+        escudo: { id: `item_escudo_${Date.now()}`, nome: 'Escudo Tático (+2 DEF)', tipo: 'protecao', defesaBonus: 2, categoria: 'II', peso: 2 },
+        elixir: { id: `item_elixir_${Date.now()}`, nome: 'Elixir de Sanidade (+10 SAN)', tipo: 'consumivel', curaSAN: 10, categoria: 'I', peso: 1 },
+        medkit: { id: `item_medkit_${Date.now()}`, nome: 'Kit de Medicina (+15 PV)', tipo: 'consumivel', curaPV: 15, categoria: 'I', peso: 1 }
     };
 
     const newItem = catalogItens[itemKey];
@@ -1082,7 +1100,9 @@ bot.action(/^cris_rit_(.+)$/, async (ctx) => {
         eletrocussão: '⚡ *Eletrocussão (Energia)*\nDispara arcos elétricos! Dano: *2d6 Energia* + atordoamento!',
         decadencia: '⏳ *Decadência (Morte)*\nAcelera o envelhecimento da matéria! Dano: *2d8 Morte*!',
         sussurros: '👁️ *Sussurros Paranormais (Conhecimento)*\nRevela segredos e concede +5 em testes de Investigação!',
-        coincidencia: '⚡ *Coincidência Forçada (Energia)*\nAltera a probabilidade! Bônus de +2 em todos os testes no próximo turno!'
+        coincidencia: '⚡ *Coincidência Forçada (Energia)*\nAltera a probabilidade! Bônus de +2 em todos os testes no próximo turno!',
+        descarnar: '🩸 *Descarnar (Sangue)*\nDesaloca tecidos da vítima causando *2d8 Dano de Sangue*!',
+        faiscas: '⚡ *Chuva de Faíscas (Energia)*\nLança rajada de eletricidade causando *4d6 Dano de Energia*!'
     };
 
     const desc = rituaisInfo[rit] || '🔮 Ritual Paranormal Conjurado com sucesso!';
@@ -1785,10 +1805,10 @@ bot.on(['text', 'photo', 'video', 'audio', 'voice', 'document', 'sticker', 'anim
                     `🌐 *Site CRIS:* https://cris.site`;
 
                 const btns = Markup.inlineKeyboard([
-                    [Markup.button.callback('🎒 Ver Inventário & Itens', 'cris_ver_itens'), Markup.button.callback('🗑️ Remover Item', 'cris_rm_item_menu')],
-                    [Markup.button.callback('🎯 Rolar Perícia', 'cris_menu_pericias')],
-                    [Markup.button.callback('🔮 Rituais', 'cris_menu_rituais'), Markup.button.callback('🛡️ Escolher Trilha', 'cris_menu_trilhas')],
-                    [Markup.button.callback('💊 Usar Cicatrizante (+10 PV)', 'cris_usar_cicatrizante')],
+                    [Markup.button.callback('🎒 Ver Inventário & Itens', 'cris_ver_itens')],
+                    [Markup.button.callback('🗑️ Remover Item', 'cris_rm_item_menu'), Markup.button.callback('➕ Add Item', 'cris_prompt_additem')],
+                    [Markup.button.callback('🎯 Rolar Perícia', 'cris_menu_pericias'), Markup.button.callback('🔮 Rituais', 'cris_menu_rituais')],
+                    [Markup.button.callback('🛡️ Escolher Trilha', 'cris_menu_trilhas'), Markup.button.callback('🩸 Condições', 'cris_menu_condicoes')],
                     [Markup.button.url('📖 Livro de Regras PDF', LINK_LIVRO_REGRAS)]
                 ]);
 
