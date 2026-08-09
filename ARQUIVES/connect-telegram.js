@@ -484,7 +484,8 @@ function menuOrdem() {
         text: '👁️ *ORDEM PARANORMAL RPG — C.R.I.S. COMPLETO*\n\n' +
             'Sistema completo de Ordem Paranormal RPG do Livro de Regras no Telegram!\n\n' +
             '📝 *Criador Guiado:* Crie fichas completas por botões!\n' +
-            '🤖 *Mestre Solo IA:* Jogue com Mestre White Lotus e botões de ação!\n' +
+            '🎒 *Gerenciador de Mochila:* Adicione e remova itens com 1 clique!\n' +
+            '🤖 *Mestre Solo IA:* Jogue sozinho com botões de ação!\n' +
             '👾 *Bestiário:* Zumbi de Sangue, Existido, Sombra, Anomalia!\n' +
             '🔫 *Catálogo de Armas:* Katana, Fuzil de Precisão, Escudo, Granadas!\n' +
             '🩸 *Rituais & Trilhas:* Todos os Elementos e Habilidades do Livro!\n\n' +
@@ -493,10 +494,11 @@ function menuOrdem() {
         ...Markup.inlineKeyboard([
             [Markup.button.callback('📝 Criar Minha Ficha com Botões', 'wiz_start_ficha')],
             [Markup.button.callback('🤖 Jogar Solo com Mestre White Lotus', 'cmd_mestresolo_start')],
+            [Markup.button.callback('🎒 Inventário & Gerenciar Itens', 'cris_ver_itens')],
+            [Markup.button.callback('➕ Adicionar Novo Item', 'cris_prompt_additem'), Markup.button.callback('🗑️ Remover Item', 'cris_rm_item_menu')],
             [Markup.button.callback('🔮 Rituais Paranormais', 'cris_menu_rituais'), Markup.button.callback('🛡️ Trilhas & Habilidades', 'cris_menu_trilhas')],
-            [Markup.button.callback('🎒 Inventário & Itens CRIS', 'cris_ver_itens'), Markup.button.callback('🎯 Rolar Perícias', 'cris_menu_pericias')],
-            [Markup.button.callback('👾 Bestiário Paranormal', 'cris_menu_bestiario'), Markup.button.callback('🔫 Catálogo de Armas', 'cris_menu_catalogo')],
-            [Markup.button.callback('🩸 Condições de Saúde & Mente', 'cris_menu_condicoes')],
+            [Markup.button.callback('🎯 Rolar Perícias', 'cris_menu_pericias'), Markup.button.callback('👾 Bestiário Paranormal', 'cris_menu_bestiario')],
+            [Markup.button.callback('🔫 Catálogo de Armas', 'cris_menu_catalogo'), Markup.button.callback('🩸 Condições de Saúde', 'cris_menu_condicoes')],
             [Markup.button.url('📖 Livro de Regras Oficial (PDF)', LINK_LIVRO_REGRAS)],
             [Markup.button.url('🌐 Abrir Site CRIS (cris.site)', 'https://cris.site')],
             [Markup.button.callback('📋 Minha Ficha Atual', 'cmd_ficha_op')],
@@ -643,6 +645,46 @@ bot.action('cris_menu_bestiario', async (ctx) => {
 bot.action('cris_menu_catalogo', async (ctx) => {
     await ctx.answerCbQuery();
     await ctx.reply('🔫 *CATÁLOGO DE ARMAS E EQUIPAMENTOS*\n\nEscolha um item para adicionar à sua mochila:', { parse_mode: 'Markdown', ...botoesCatalogoArmas() });
+});
+
+bot.action('cris_prompt_additem', async (ctx) => {
+    await ctx.answerCbQuery();
+    await ctx.reply('➕ *Adicionar Item ao Inventário*\n\nVocê pode adicionar pelo catálogo ou usando o comando:\n`/additem <Nome do Item> | <Categoria> | <Peso>`\nEx: `/additem Kit de Medicina | I | 1`', { parse_mode: 'Markdown', ...botoesCatalogoArmas() });
+});
+
+bot.action('cris_rm_item_menu', async (ctx) => {
+    await ctx.answerCbQuery();
+    const sid = String(ctx.from.id);
+    const pushname = ctx.from.first_name || 'Agente';
+    const f = getOuCriarFicha(sid, pushname);
+
+    if (!f.inventario || f.inventario.length === 0) {
+        return ctx.reply('🎒 Seu inventário está vazio.');
+    }
+
+    const delButtons = f.inventario.map((it, idx) => [
+        Markup.button.callback(`🗑️ Remover ${idx + 1}. ${it.nome}`, `cris_del_idx_${idx}`)
+    ]);
+
+    await ctx.reply('🗑️ *Clique no item que deseja remover da sua mochila:*', { parse_mode: 'Markdown', ...Markup.inlineKeyboard(delButtons) });
+});
+
+bot.action(/^cris_del_idx_(\d+)$/, async (ctx) => {
+    await ctx.answerCbQuery();
+    const idx = parseInt(ctx.match[1]);
+    const sid = String(ctx.from.id);
+    const pushname = ctx.from.first_name || 'Agente';
+    const db = getFichasDB();
+    const f = getOuCriarFicha(sid, pushname);
+
+    if (f.inventario && f.inventario[idx]) {
+        const removido = f.inventario.splice(idx, 1)[0];
+        db[sid] = f;
+        saveFichasDB(db);
+        await ctx.reply(`🗑️ *Item Removido:* \`${removido.nome}\` foi retirado da sua mochila!`, { parse_mode: 'Markdown' });
+    } else {
+        await ctx.reply('❌ Item não encontrado.');
+    }
 });
 
 bot.action('cris_menu_condicoes', async (ctx) => {
@@ -881,8 +923,8 @@ bot.action(/^wiz_nex_(.+)$/, async (ctx) => {
 
     const btns = Markup.inlineKeyboard([
         [Markup.button.callback('🤖 Jogar Solo com Mestre White Lotus', 'cmd_mestresolo_start')],
-        [Markup.button.callback('🎒 Ver Inventário', 'cris_ver_itens'), Markup.button.callback('🎯 Rolar Perícia', 'cris_menu_pericias')],
-        [Markup.button.callback('🔮 Rituais', 'cris_menu_rituais')],
+        [Markup.button.callback('🎒 Ver Inventário', 'cris_ver_itens'), Markup.button.callback('🗑️ Remover Item', 'cris_rm_item_menu')],
+        [Markup.button.callback('🎯 Rolar Perícia', 'cris_menu_pericias'), Markup.button.callback('🔮 Rituais', 'cris_menu_rituais')],
         [Markup.button.url('📖 Livro de Regras PDF', LINK_LIVRO_REGRAS)]
     ]);
 
@@ -967,8 +1009,8 @@ bot.action('cris_ver_itens', async (ctx) => {
     txt += `🌐 *Ficha Oficial CRIS:* https://cris.site`;
 
     const btns = Markup.inlineKeyboard([
-        [Markup.button.callback('💊 Usar Cicatrizante (+10 PV)', 'cris_usar_cicatrizante')],
-        [Markup.button.callback('🗡️ Equipar / Atacar', 'cris_atacar_arma')],
+        [Markup.button.callback('➕ Adicionar Item', 'cris_prompt_additem'), Markup.button.callback('🗑️ Remover Item', 'cris_rm_item_menu')],
+        [Markup.button.callback('💊 Usar Cicatrizante (+10 PV)', 'cris_usar_cicatrizante'), Markup.button.callback('🗡️ Atacar com Arma', 'cris_atacar_arma')],
         [Markup.button.callback('📋 Ver Ficha Completa', 'cmd_ficha_op')]
     ]);
 
@@ -1431,12 +1473,13 @@ bot.on(['text', 'photo', 'video', 'audio', 'voice', 'document', 'sticker', 'anim
                 await ctx.reply(
 `🪷 *WHITE LOTUS — COMANDOS COMPLETO*\n
 *👁️ RPG ORDEM PARANORMAL (CRIS)*
-/cris — Menu completo do Ordem Paranormal com botões
+/cris — Menu completo do Ordem Paranormal e CRIS com botões
 /criarficha — Assistente de criação de ficha com botões
 /mestresolo — Jogar solo com Mestre White Lotus (IA)
 /op <atributo> [perícia] — Rola dados de Ordem Paranormal (3d20)
 /fichacris — Ficha e inventário do Agente
 /itens — Ver mochila e armas equipadas
+/additem <Nome> | <Cat> | <Peso> — Adicionar novo item
 /rituais — Conjurar rituais paranormais com botões
 /trilhas — Selecionar Trilha e ver Habilidades
 /bestiario — Bestiário Paranormal do Livro
@@ -1623,7 +1666,7 @@ bot.on(['text', 'photo', 'video', 'audio', 'voice', 'document', 'sticker', 'anim
                     const nome = parts.slice(0, parts.length - 1).join(' ') || parts[0];
                     const pv = parseInt(parts[parts.length - 1]) || 30;
                     mesa.monstros.push({ nome, pv });
-                    return ctx.reply(`👾 *Ameaça Paranormal Manifestada:*\n\n*Nome:* ${nome}\n❤️ *PV:* ${pv}`, { parse_mode: 'Markdown' });
+                    return ctx.reply(`👾 *AMEAÇA PARANORMAL MANIFESTADA:*\n\n*Nome:* ${nome}\n❤️ *PV:* ${pv}`, { parse_mode: 'Markdown' });
                 }
                 if (mesa.monstros.length === 0) {
                     return ctx.reply('👾 Nenhum monstro presente na cena. Use: `/monstro Zumbi de Sangue 35`', { parse_mode: 'Markdown' });
@@ -1651,8 +1694,8 @@ bot.on(['text', 'photo', 'video', 'audio', 'voice', 'document', 'sticker', 'anim
                 txt += `🌐 *Ficha Oficial CRIS:* https://cris.site`;
 
                 const btns = Markup.inlineKeyboard([
-                    [Markup.button.callback('💊 Usar Cicatrizante (+10 PV)', 'cris_usar_cicatrizante')],
-                    [Markup.button.callback('🗡️ Equipar / Atacar', 'cris_atacar_arma')],
+                    [Markup.button.callback('➕ Adicionar Item', 'cris_prompt_additem'), Markup.button.callback('🗑️ Remover Item', 'cris_rm_item_menu')],
+                    [Markup.button.callback('💊 Usar Cicatrizante (+10 PV)', 'cris_usar_cicatrizante'), Markup.button.callback('🗡️ Atacar com Arma', 'cris_atacar_arma')],
                     [Markup.button.callback('📋 Ver Ficha Completa', 'cmd_ficha_op')]
                 ]);
 
@@ -1742,7 +1785,7 @@ bot.on(['text', 'photo', 'video', 'audio', 'voice', 'document', 'sticker', 'anim
                     `🌐 *Site CRIS:* https://cris.site`;
 
                 const btns = Markup.inlineKeyboard([
-                    [Markup.button.callback('🎒 Ver Inventário & Itens', 'cris_ver_itens')],
+                    [Markup.button.callback('🎒 Ver Inventário & Itens', 'cris_ver_itens'), Markup.button.callback('🗑️ Remover Item', 'cris_rm_item_menu')],
                     [Markup.button.callback('🎯 Rolar Perícia', 'cris_menu_pericias')],
                     [Markup.button.callback('🔮 Rituais', 'cris_menu_rituais'), Markup.button.callback('🛡️ Escolher Trilha', 'cris_menu_trilhas')],
                     [Markup.button.callback('💊 Usar Cicatrizante (+10 PV)', 'cris_usar_cicatrizante')],
