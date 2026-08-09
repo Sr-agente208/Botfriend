@@ -508,22 +508,697 @@ function botoesCondicoesCris() {
     ]);
 }
 
+// ====== BESTIÁRIO PARANORMAL — BANCO DE DADOS ======
+const BESTIARIO_DATA = {
+    // SANGUE
+    zumbi_sangue: {
+        id: "zumbi_sangue",
+        nome: "Zumbi de Sangue (VD 10)",
+        elemento: "🩸 Sangue",
+        tamanho: "Médio",
+        pv: "45",
+        defesa: "17",
+        pericias: "Fortitude 1d+5 | Reflexos 2d+5 | Vontade 1d+5",
+        resistencias: "Balístico 5, Corte 5, Impacto 5, Perfuração 5, Sangue 5",
+        vulnerabilidade: "💀 Morte",
+        ataques: "2 Garras — 2d+5 (Dano: 2d6+5 Impacto/Corte)",
+        habilidades: "• Presença Perturbadora: 2d6 Mental (DT 12, NEX 10%)\n• Percepção Sensorial: Imune a condições que dependem da visão.",
+        deslocamento: "9m"
+    },
+    aberracao_carne: {
+        id: "aberracao_carne",
+        nome: "Aberração de Carne (VD 40)",
+        elemento: "🩸 Sangue",
+        tamanho: "Grande",
+        pv: "70",
+        defesa: "20",
+        pericias: "Fortitude 3d+10 | Reflexos 2d | Vontade 1d",
+        resistencias: "Balístico 5, Corte 5, Impacto 5, Perfuração 5, Sangue 5",
+        vulnerabilidade: "💀 Morte",
+        ataques: "2 Pancadas — 3d+10 (Dano: 2d8+6 Impacto)",
+        habilidades: "• Presença Perturbadora: 3d6 Mental (DT 15, NEX 15%)\n• Agarrão: Pode agarrar alvo após acertar pancada.\n• Abocanhar: Causa 3d6 Sangue/turno no alvo agarrado.",
+        deslocamento: "9m"
+    },
+    zumbi_bestial: {
+        id: "zumbi_bestial",
+        nome: "Zumbi de Sangue Bestial (VD 80)",
+        elemento: "🩸 Sangue",
+        tamanho: "Grande",
+        pv: "112",
+        defesa: "15",
+        pericias: "Fortitude 3d+5 | Reflexos 3d+5 | Vontade 1d+5",
+        resistencias: "Balístico 5, Corte 5, Impacto 5, Perfuração 5, Sangue 5",
+        vulnerabilidade: "💀 Morte",
+        ataques: "Mordida 3d+10 (2d10+4 Sangue) | 2 Garras 3d+10 (2d8+2 Sangue)",
+        habilidades: "• Presença Perturbadora: 5d6 Mental (DT 15, NEX 20%)\n• Furtivo e Letal: +1d nos ataques e +2d no dano contra desavisados.",
+        deslocamento: "9m"
+    },
+    enpap_x: {
+        id: "enpap_x",
+        nome: "Enpap-X (VD 80)",
+        elemento: "🩸🟡 Sangue + Conhecimento",
+        tamanho: "Grande",
+        pv: "245",
+        defesa: "22",
+        pericias: "Fortitude 4d+15 | Reflexos 3d+10 | Vontade 2d+10",
+        resistencias: "Balístico 5, Corte 5, Impacto 5, Perfuração 5, Sangue 5",
+        vulnerabilidade: "💀 Morte",
+        ataques: "2 Correntes — 3d+15 (Dano: 3d6 Sangue)",
+        habilidades: "• Presença Perturbadora: 10d6 Mental (DT 20, NEX 45%)\n• Transformação: Recupera PV total + 40 PV Temp ao zerar PV.\n• Acorrentar: Agarra à distância e sufoca.\n• Crescer: +1d6 cumulativo no dano.",
+        deslocamento: "9m"
+    },
+    mulher_afogada: {
+        id: "mulher_afogada",
+        nome: "Mulher Afogada (VD 100)",
+        elemento: "🩸 Sangue",
+        tamanho: "Médio",
+        pv: "160",
+        defesa: "23",
+        pericias: "Fortitude 3d+10 | Reflexos 2d+10 | Vontade 3d+10",
+        resistencias: "Sangue 10, Corte 5, Perfuração 5",
+        vulnerabilidade: "💀 Morte",
+        ataques: "Toque Gélido 3d+10 (2d8+6 Sangue)",
+        habilidades: "• Presença Perturbadora: 6d6 Mental (DT 22)\n• Canto do Afogamento: Atrai agentes em direção à água.\n• Asfixia Submersa: Drena oxigênio do alvo.",
+        deslocamento: "9m (Natação 18m)"
+    },
+    minotauro: {
+        id: "minotauro",
+        nome: "Minotauro (VD 140)",
+        elemento: "🩸 Sangue",
+        tamanho: "Grande",
+        pv: "220",
+        defesa: "26",
+        pericias: "Fortitude 4d+15 | Reflexos 2d+10 | Vontade 2d+10",
+        resistencias: "Impacto 10, Balístico 5, Sangue 10",
+        vulnerabilidade: "💀 Morte",
+        ataques: "Machado Gigante 4d+15 (3d12+10 Corte, Crit x3)",
+        habilidades: "• Presença Perturbadora: 8d6 Mental (DT 25)\n• Investida Feroz: Duplica o dano ao se mover e atacar.",
+        deslocamento: "12m"
+    },
+    carente: {
+        id: "carente",
+        nome: "O Carente (VD 220)",
+        elemento: "🩸 Sangue",
+        tamanho: "Grande",
+        pv: "380",
+        defesa: "32",
+        pericias: "Fortitude 4d+20 | Reflexos 3d+15 | Vontade 3d+15",
+        resistencias: "Sangue 15, Corte 10, Balístico 10",
+        vulnerabilidade: "💀 Morte",
+        ataques: "Garras Famintas 4d+20 (3d10+15 Sangue)",
+        habilidades: "• Presença Perturbadora: 10d6 Mental (DT 28)\n• Absorção de Afeto: Recupera PV ao causar dano mental.\n• Abraço Mortal: Zera ações do alvo abalado.",
+        deslocamento: "12m"
+    },
+    tita_sangue: {
+        id: "tita_sangue",
+        nome: "Titã de Sangue (VD 280)",
+        elemento: "🩸 Sangue",
+        tamanho: "Colossal",
+        pv: "550",
+        defesa: "36",
+        pericias: "Fortitude 5d+25 | Reflexos 2d+15 | Vontade 3d+15",
+        resistencias: "Balístico 15, Corte 15, Impacto 15, Perfuração 15, Sangue 20",
+        vulnerabilidade: "💀 Morte",
+        ataques: "Pisotear Colossal 5d+25 (4d12+20 Impacto)",
+        habilidades: "• Presença Perturbadora: 12d6 Mental (DT 30)\n• Onda de Sangue: Causa 6d12 Sangue em área.",
+        deslocamento: "15m"
+    },
+
+    // MORTE
+    esqueleto_lodo: {
+        id: "esqueleto_lodo",
+        nome: "Esqueleto de Lodo (VD 20)",
+        elemento: "⏳ Morte",
+        tamanho: "Médio",
+        pv: "35",
+        defesa: "15",
+        pericias: "Fortitude 2d+5 | Reflexos 2d+5 | Vontade 1d+5",
+        resistencias: "Morte 5, Corte 5, Perfuração 5",
+        vulnerabilidade: "⚡ Energia",
+        ataques: "Garras Entrópicas 2d+5 (1d8+3 Morte)",
+        habilidades: "• Lodo Viscoso: Reduz o deslocamento de quem for atingido.\n• Recomposição Temporal: Recupera 5 PV no início do turno.",
+        deslocamento: "9m"
+    },
+    enraizado: {
+        id: "enraizado",
+        nome: "Enraizado (VD 40)",
+        elemento: "⏳ Morte",
+        tamanho: "Médio",
+        pv: "75",
+        defesa: "18",
+        pericias: "Fortitude 3d+10 | Reflexos 1d+5 | Vontade 2d+5",
+        resistencias: "Morte 10, Impacto 5",
+        vulnerabilidade: "⚡ Energia",
+        ataques: "Raízes Espinhosas 3d+10 (2d6+5 Perfuração/Morte)",
+        habilidades: "• Enredar: Drena 1d6 PV por turno do alvo preso.\n• Presença Entrópica.",
+        deslocamento: "6m"
+    },
+    aracnasita: {
+        id: "aracnasita",
+        nome: "Aracnasita (VD 60)",
+        elemento: "⏳ Morte",
+        tamanho: "Grande",
+        pv: "110",
+        defesa: "21",
+        pericias: "Fortitude 3d+10 | Reflexos 3d+10 | Vontade 2d+5",
+        resistencias: "Morte 10, Perfuração 5",
+        vulnerabilidade: "⚡ Energia",
+        ataques: "Picada Temporal 3d+10 (2d8+6 Morte)",
+        habilidades: "• Teia do Fim: Impede esquivas do alvo preso.\n• Veneno Entrópico: Reduz atributos temporariamente.",
+        deslocamento: "12m (Escalar 12m)"
+    },
+    escutado: {
+        id: "escutado",
+        nome: "Escutado (VD 80)",
+        elemento: "⏳ Morte",
+        tamanho: "Médio",
+        pv: "150",
+        defesa: "24",
+        pericias: "Fortitude 3d+10 | Reflexos 3d+10 | Vontade 3d+10",
+        resistencias: "Morte 10, Balístico 5",
+        vulnerabilidade: "⚡ Energia",
+        ataques: "Eco Entrópico 3d+10 (3d8+5 Morte)",
+        habilidades: "• Presença Perturbadora: 4d6 Mental (DT 18)\n• Paralisia Acústica: Cancela conjurações ruidosas.",
+        deslocamento: "9m"
+    },
+    carnical_preto: {
+        id: "carnical_preto",
+        nome: "Carniçal Preto da Morte (VD 100)",
+        elemento: "⏳ Morte",
+        tamanho: "Grande",
+        pv: "180",
+        defesa: "25",
+        pericias: "Fortitude 4d+10 | Reflexos 3d+10 | Vontade 2d+10",
+        resistencias: "Morte 10, Balístico 10, Corte 5",
+        vulnerabilidade: "⚡ Energia",
+        ataques: "Garras de Lodo 4d+10 (2d10+8 Morte)",
+        habilidades: "• Sufocamento de Lodo: Agarra e sufoca o alvo com lodo.\n• Decomposição Acelerada.",
+        deslocamento: "9m"
+    },
+    marionete: {
+        id: "marionete",
+        nome: "A Marionete (VD 180)",
+        elemento: "⏳ Morte",
+        tamanho: "Grande",
+        pv: "320",
+        defesa: "30",
+        pericias: "Fortitude 3d+15 | Reflexos 4d+15 | Vontade 3d+15",
+        resistencias: "Morte 15, Perfuração 10",
+        vulnerabilidade: "⚡ Energia",
+        ataques: "Fios do Fim 4d+15 (3d8+10 Morte)",
+        habilidades: "• Presença Perturbadora: 8d6 Mental (DT 25)\n• Titiriteiro Paranormal: Controla agente inconsciente.",
+        deslocamento: "12m"
+    },
+    ceifador_espiral: {
+        id: "ceifador_espiral",
+        nome: "Ceifador Espiral (VD 280)",
+        elemento: "⏳ Morte",
+        tamanho: "Grande",
+        pv: "500",
+        defesa: "35",
+        pericias: "Fortitude 4d+20 | Reflexos 4d+20 | Vontade 4d+20",
+        resistencias: "Morte 20, Balístico 15, Corte 15, Perfuração 15",
+        vulnerabilidade: "⚡ Energia",
+        ataques: "Foice da Entropia 5d+25 (4d10+20 Morte)",
+        habilidades: "• Presença Perturbadora: 12d6 Mental (DT 30)\n• Dobra Temporal: Anula a última ação executada.",
+        deslocamento: "15m"
+    },
+
+    // CONHECIMENTO
+    existido: {
+        id: "existido",
+        nome: "Existido (VD 10)",
+        elemento: "👁️ Conhecimento",
+        tamanho: "Médio",
+        pv: "20",
+        defesa: "12",
+        pericias: "Fortitude 1d | Reflexos 1d | Vontade 2d+5",
+        resistencias: "Conhecimento 5",
+        vulnerabilidade: "🩸 Sangue",
+        ataques: "Toque Oculto 2d+3 (1d6+2 Mental)",
+        habilidades: "• Apagamento da Memória: Drena Sanidade lentamente.\n• Passivo.",
+        deslocamento: "6m"
+    },
+    lembrado: {
+        id: "lembrado",
+        nome: "Lembrado (VD 20)",
+        elemento: "👁️ Conhecimento",
+        tamanho: "Médio",
+        pv: "35",
+        defesa: "14",
+        pericias: "Fortitude 1d+5 | Reflexos 2d+5 | Vontade 3d+5",
+        resistencias: "Conhecimento 5",
+        vulnerabilidade: "🩸 Sangue",
+        ataques: "Olhar Obcecado 3d+5 (1d8+3 Mental)",
+        habilidades: "• Sussurros Reveladores: Expõe segredos do agente.",
+        deslocamento: "9m"
+    },
+    vulto: {
+        id: "vulto",
+        nome: "Vulto (VD 40)",
+        elemento: "👁️ Conhecimento",
+        tamanho: "Médio",
+        pv: "65",
+        defesa: "19",
+        pericias: "Fortitude 2d+5 | Reflexos 3d+10 | Vontade 3d+10",
+        resistencias: "Conhecimento 10, Intangível",
+        vulnerabilidade: "🩸 Sangue",
+        ataques: "Toque Sombrio 3d+10 (2d6+4 Mental)",
+        habilidades: "• Camuflagem Simbólica: Imune a ataques físicos mundanos.",
+        deslocamento: "12m"
+    },
+    parasita_culpa: {
+        id: "parasita_culpa",
+        nome: "Parasita de Culpa (VD 60)",
+        elemento: "👁️ Conhecimento",
+        tamanho: "Pequeno",
+        pv: "100",
+        defesa: "20",
+        pericias: "Fortitude 2d+10 | Reflexos 3d+10 | Vontade 4d+10",
+        resistencias: "Conhecimento 10",
+        vulnerabilidade: "🩸 Sangue",
+        ataques: "Remorso Induzido 4d+10 (2d8+5 Mental)",
+        habilidades: "• Sugador de Sanidade: Induz traumas e pânico.",
+        deslocamento: "9m"
+    },
+    rastejador_sombrio: {
+        id: "rastejador_sombrio",
+        nome: "Rastejador Sombrio (VD 80)",
+        elemento: "👁️ Conhecimento",
+        tamanho: "Médio",
+        pv: "140",
+        defesa: "23",
+        pericias: "Fortitude 3d+10 | Reflexos 4d+10 | Vontade 3d+10",
+        resistencias: "Conhecimento 10, Corte 5",
+        vulnerabilidade: "🩸 Sangue",
+        ataques: "Tentáculos de Tinta 4d+10 (2d10+6 Mental)",
+        habilidades: "• Presença Perturbadora: 4d6 Mental (DT 18)\n• Cegueira Simbólica: Envolve a cabeça impedindo visão.",
+        deslocamento: "12m"
+    },
+    ocioso: {
+        id: "ocioso",
+        nome: "Ocioso (VD 100)",
+        elemento: "👁️ Conhecimento",
+        tamanho: "Médio",
+        pv: "175",
+        defesa: "24",
+        pericias: "Fortitude 3d+10 | Reflexos 2d+10 | Vontade 4d+10",
+        resistencias: "Conhecimento 10, Balístico 5",
+        vulnerabilidade: "🩸 Sangue",
+        ataques: "Toque da Apatia 4d+10 (3d6+6 Mental)",
+        habilidades: "• Paralisia do Pensamento: Zera ações de quem falhar no teste.",
+        deslocamento: "9m"
+    },
+    espreitador: {
+        id: "espreitador",
+        nome: "O Espreitador (VD 180)",
+        elemento: "👁️ Conhecimento",
+        tamanho: "Grande",
+        pv: "300",
+        defesa: "29",
+        pericias: "Fortitude 3d+15 | Reflexos 4d+15 | Vontade 5d+15",
+        resistencias: "Conhecimento 15, Intangível",
+        vulnerabilidade: "🩸 Sangue",
+        ataques: "Olhar Onipresente 5d+15 (3d10+10 Mental)",
+        habilidades: "• Presença Perturbadora: 8d6 Mental (DT 25)\n• Apagamento de Memória Total.",
+        deslocamento: "15m"
+    },
+    anjo: {
+        id: "anjo",
+        nome: "Anjo (VD 280)",
+        elemento: "👁️ Conhecimento",
+        tamanho: "Grande",
+        pv: "480",
+        defesa: "34",
+        pericias: "Fortitude 4d+20 | Reflexos 4d+20 | Vontade 5d+20",
+        resistencias: "Conhecimento 20, Balístico 15, Corte 15",
+        vulnerabilidade: "🩸 Sangue",
+        ataques: "Espada Geimétrica 5d+20 (4d10+15 Perfurante/Mental)",
+        habilidades: "• Presença Perturbadora: 12d6 Mental (DT 30)\n• Julgamento Perfeito.",
+        deslocamento: "15m (Voo 18m)"
+    },
+
+    // ENERGIA
+    anarquico: {
+        id: "anarquico",
+        nome: "Anárquico (VD 10)",
+        elemento: "⚡ Energia",
+        tamanho: "Médio",
+        pv: "25",
+        defesa: "13",
+        pericias: "Fortitude 1d+5 | Reflexos 2d+5 | Vontade 1d+5",
+        resistencias: "Energia 5",
+        vulnerabilidade: "👁️ Conhecimento",
+        ataques: "Arco Elétrico 2d+5 (1d6+3 Energia)",
+        habilidades: "• Caos Probabilístico.",
+        deslocamento: "12m"
+    },
+    anomalia: {
+        id: "anomalia",
+        nome: "Anomalia (VD 20)",
+        elemento: "⚡ Energia",
+        tamanho: "Médio",
+        pv: "40",
+        defesa: "16",
+        pericias: "Fortitude 1d+5 | Reflexos 3d+5 | Vontade 2d+5",
+        resistencias: "Energia 5",
+        vulnerabilidade: "👁️ Conhecimento",
+        ataques: "Pulso Caótico 3d+5 (1d10+4 Energia)",
+        habilidades: "• Teletransporte Instantâneo.",
+        deslocamento: "12m"
+    },
+    perturbado_energia: {
+        id: "perturbado_energia",
+        nome: "Perturbado de Energia (VD 40)",
+        elemento: "⚡ Energia",
+        tamanho: "Médio",
+        pv: "70",
+        defesa: "19",
+        pericias: "Fortitude 2d+10 | Reflexos 3d+10 | Vontade 2d+5",
+        resistencias: "Energia 10",
+        vulnerabilidade: "👁️ Conhecimento",
+        ataques: "Descarga Plasmática 3d+10 (2d8+5 Energia)",
+        habilidades: "• Explosão de Sobrecarga: 3d6 Energia em área ao morrer.",
+        deslocamento: "12m"
+    },
+    anarquico_descontrolado: {
+        id: "anarquico_descontrolado",
+        nome: "Anárquico Descontrolado (VD 60)",
+        elemento: "⚡ Energia",
+        tamanho: "Grande",
+        pv: "105",
+        defesa: "21",
+        pericias: "Fortitude 2d+10 | Reflexos 4d+10 | Vontade 2d+10",
+        resistencias: "Energia 10",
+        vulnerabilidade: "👁️ Conhecimento",
+        ataques: "Raio de Plasma 4d+10 (2d10+6 Energia)",
+        habilidades: "• Instabilidade Térmica.",
+        deslocamento: "15m"
+    },
+    anomiatico: {
+        id: "anomiatico",
+        nome: "Anomiático (VD 80)",
+        elemento: "⚡ Energia",
+        tamanho: "Grande",
+        pv: "145",
+        defesa: "23",
+        pericias: "Fortitude 3d+10 | Reflexos 4d+10 | Vontade 3d+10",
+        resistencias: "Energia 10",
+        vulnerabilidade: "👁️ Conhecimento",
+        ataques: "Feixe Desintegrador 4d+10 (3d8+8 Energia)",
+        habilidades: "• Distorção Gravitacional.",
+        deslocamento: "12m"
+    },
+    infecticidio: {
+        id: "infecticidio",
+        nome: "Infecticídio (VD 100)",
+        elemento: "⚡ Energia",
+        tamanho: "Médio",
+        pv: "180",
+        defesa: "25",
+        pericias: "Fortitude 3d+10 | Reflexos 4d+10 | Vontade 3d+10",
+        resistencias: "Energia 10, Balístico 5",
+        vulnerabilidade: "👁️ Conhecimento",
+        ataques: "Vírus Sintético 4d+10 (3d6+8 Energia)",
+        habilidades: "• Pulso Eletromagnético: Desativa eletrônicos em 15m.",
+        deslocamento: "12m"
+    },
+    ciborgue: {
+        id: "ciborgue",
+        nome: "Ciborgue (VD 140)",
+        elemento: "⚡ Energia",
+        tamanho: "Médio",
+        pv: "230",
+        defesa: "27",
+        pericias: "Fortitude 4d+15 | Reflexos 3d+10 | Vontade 2d+10",
+        resistencias: "Balístico 10, Corte 10, Energia 10",
+        vulnerabilidade: "👁️ Conhecimento",
+        ataques: "Canhão de Plasma 4d+15 (3d10+10 Energia) | Lâmina Laser",
+        habilidades: "• Mira Computadorizada (+5 em ataques).",
+        deslocamento: "12m"
+    },
+
+    // RELÍQUIAS & AMEAÇAS SUPREMAS
+    diabo: {
+        id: "diabo",
+        nome: "O Diabo (VD 400 — Relíquia de Sangue)",
+        elemento: "🩸 Sangue Puro",
+        tamanho: "Colossal",
+        pv: "1000",
+        defesa: "42",
+        pericias: "Fortitude 6d+30 | Reflexos 5d+25 | Vontade 5d+25",
+        resistencias: "Resistência Geral 20, Sangue Imune",
+        vulnerabilidade: "💀 Morte Pura",
+        ataques: "Tridente da Dor 6d+30 (6d12+30 Sangue, Crit x4)",
+        habilidades: "• Presença Perturbadora: 15d6 Mental (DT 35)\n• Pacto Demoníaco: Força acordos perigosos.\n• Trono de Sangue: Regenera com a dor de todos.",
+        deslocamento: "18m (Voo 18m)"
+    },
+    deus_morte: {
+        id: "deus_morte",
+        nome: "O Deus da Morte (VD 400 — Relíquia de Morte)",
+        elemento: "⏳ Morte Pura",
+        tamanho: "Colossal",
+        pv: "1000",
+        defesa: "42",
+        pericias: "Fortitude 6d+30 | Reflexos 4d+25 | Vontade 6d+30",
+        resistencias: "Resistência Geral 20, Morte Imune",
+        vulnerabilidade: "⚡ Energia Pura",
+        ataques: "Espiral da Entropia 6d+30 (6d12+30 Morte)",
+        habilidades: "• Presença Perturbadora: 15d6 Mental (DT 35)\n• Parada Temporal: Para o tempo por 1 rodada.\n• Espiral do Fim: Reduz idade e vida.",
+        deslocamento: "18m"
+    },
+    magistrada: {
+        id: "magistrada",
+        nome: "A Magistrada (VD 400 — Relíquia de Conhecimento)",
+        elemento: "👁️ Conhecimento Puro",
+        tamanho: "Grande",
+        pv: "1000",
+        defesa: "42",
+        pericias: "Fortitude 5d+25 | Reflexos 5d+25 | Vontade 6d+30",
+        resistencias: "Resistência Geral 20, Conhecimento Imune",
+        vulnerabilidade: "🩸 Sangue Puro",
+        ataques: "Veredito da Razão 6d+30 (6d12+30 Mental)",
+        habilidades: "• Presença Perturbadora: 15d6 Mental (DT 35)\n• Reescrever Leis: Modifica regras do combate.\n• Balança da Equidade.",
+        deslocamento: "18m"
+    },
+    anfitriao: {
+        id: "anfitriao",
+        nome: "O Anfitrião (VD 400 — Relíquia de Energia)",
+        elemento: "⚡ Energia Pura",
+        tamanho: "Médio",
+        pv: "1000",
+        defesa: "42",
+        pericias: "Fortitude 5d+25 | Reflexos 6d+30 | Vontade 5d+25",
+        resistencias: "Resistência Geral 20, Energia Imune",
+        vulnerabilidade: "👁️ Conhecimento Puro",
+        ataques: "Caos Absoluto 6d+30 (6d12+30 Energia Imprevisível)",
+        habilidades: "• Presença Perturbadora: 15d6 Mental (DT 35)\n• Roleta Paranormal: Efeito totalmente aleatório a cada turno.\n• Gargalhada Insana.",
+        deslocamento: "24m"
+    },
+    nidere: {
+        id: "nidere",
+        nome: "Nidere (VD 220)",
+        elemento: "🩸⏳ Sangue + Morte",
+        tamanho: "Grande",
+        pv: "360",
+        defesa: "31",
+        pericias: "Fortitude 4d+15 | Reflexos 4d+15 | Vontade 3d+15",
+        resistencias: "Sangue 10, Morte 10, Balístico 10",
+        vulnerabilidade: "⚡ Energia",
+        ataques: "Presas Entrópicas 4d+15 (3d10+12 Sangue/Morte)",
+        habilidades: "• Presença Perturbadora: 8d6 Mental (DT 25)\n• Caçador Solitário: +2d20 e +3d no dano contra alvo isolado.",
+        deslocamento: "15m"
+    },
+    semptiternal: {
+        id: "semptiternal",
+        nome: "Sempiternal (VD 320)",
+        elemento: "⏳⚡ Morte + Energia",
+        tamanho: "Grande",
+        pv: "600",
+        defesa: "38",
+        pericias: "Fortitude 5d+20 | Reflexos 4d+20 | Vontade 4d+20",
+        resistencias: "Morte 15, Energia 15, Geral 10",
+        vulnerabilidade: "🩸 Sangue",
+        ataques: "Anomalia Temporal 5d+20 (4d12+15 Morte/Energia)",
+        habilidades: "• Presença Perturbadora: 12d6 Mental (DT 30)\n• Ciclo Eterno: Ressuscita com 100 PV se não for destruído com Sangue.",
+        deslocamento: "15m"
+    },
+    bicho_papao: {
+        id: "bicho_papao",
+        nome: "Bicho-Papão (VD 220)",
+        elemento: "👁️🩸 Conhecimento + Sangue",
+        tamanho: "Grande",
+        pv: "350",
+        defesa: "30",
+        pericias: "Fortitude 4d+15 | Reflexos 3d+15 | Vontade 4d+15",
+        resistencias: "Conhecimento 10, Sangue 10",
+        vulnerabilidade: "⚡ Energia",
+        ataques: "Garras de Pavor 4d+15 (3d8+12 Mental/Sangue)",
+        habilidades: "• Presença Perturbadora: 8d6 Mental (DT 25)\n• Ingestão de Agentes: Engole alvo e drena SAN.\n• Terror Escuro.",
+        deslocamento: "12m"
+    }
+};
+
+function formatarCriatura(c) {
+    if (!c) return '👾 Criatura Paranormal não encontrada.';
+    return `👾 *${c.nome.toUpperCase()}*\n\n` +
+        `🔮 *Elemento:* ${c.elemento} | 📐 *Tamanho:* ${c.tamanho}\n` +
+        `❤️ *PV:* ${c.pv} | 🛡️ *Defesa:* ${c.defesa}\n` +
+        `🏃 *Perícias / Testes:* ${c.pericias}\n` +
+        `🛡️ *Resistências:* ${c.resistencias}\n` +
+        `💀 *Vulnerabilidade:* ${c.vulnerabilidade}\n` +
+        `💥 *Ataques:* ${c.ataques}\n\n` +
+        `👁️ *Habilidades Paranormais:*\n${c.habilidades}\n\n` +
+        `🏃 *Deslocamento:* ${c.deslocamento}`;
+}
+
 function botoesBestiarioCris() {
     return Markup.inlineKeyboard([
         [
-            Markup.button.callback('🧟 Zumbi de Sangue (VD 10)', 'best_zumbi_10'),
-            Markup.button.callback('🩸 Aberração de Carne (VD 40)', 'best_aberracao_40')
+            Markup.button.callback('🩸 Sangue', 'best_cat_sangue'),
+            Markup.button.callback('⏳ Morte', 'best_cat_morte')
         ],
         [
-            Markup.button.callback('🧟‍♂️ Zumbi Bestial (VD 80)', 'best_zumbibestial_80'),
-            Markup.button.callback('⛓️ Enpap-X (VD 80)', 'best_enpapx_80')
+            Markup.button.callback('👁️ Conhecimento', 'best_cat_conhecimento'),
+            Markup.button.callback('⚡ Energia', 'best_cat_energia')
         ],
         [
-            Markup.button.callback('⏳ Existido (VD 10)', 'best_existido'),
-            Markup.button.callback('👁️ Sombra (VD 20)', 'best_sombra')
+            Markup.button.callback('🖤 Relíquias & Ameaças Supremas', 'best_cat_reliquias')
         ],
         [
             Markup.button.url('🌐 Bestiário Fandom Completo', LINK_BESTIARIO_WIKI)
+        ],
+        [
+            Markup.button.callback('◀️ Voltar ao Menu CRIS', 'cris')
+        ]
+    ]);
+}
+
+function botoesBestiarioSangue() {
+    return Markup.inlineKeyboard([
+        [
+            Markup.button.callback('🧟 Zumbi de Sangue (VD 10)', 'best_show_zumbi_sangue'),
+            Markup.button.callback('🩸 Aberração de Carne (VD 40)', 'best_show_aberracao_carne')
+        ],
+        [
+            Markup.button.callback('🧟‍♂️ Zumbi Bestial (VD 80)', 'best_show_zumbi_bestial'),
+            Markup.button.callback('⛓️ Enpap-X (VD 80)', 'best_show_enpap_x')
+        ],
+        [
+            Markup.button.callback('🌊 Mulher Afogada (VD 100)', 'best_show_mulher_afogada'),
+            Markup.button.callback('🐂 Minotauro (VD 140)', 'best_show_minotauro')
+        ],
+        [
+            Markup.button.callback('💔 O Carente (VD 220)', 'best_show_carente'),
+            Markup.button.callback('🩸 Titã de Sangue (VD 280)', 'best_show_tita_sangue')
+        ],
+        [
+            Markup.button.callback('◀️ Voltar ao Bestiário', 'cris_menu_bestiario')
+        ]
+    ]);
+}
+
+function botoesBestiarioMorte() {
+    return Markup.inlineKeyboard([
+        [
+            Markup.button.callback('💀 Esqueleto de Lodo (VD 20)', 'best_show_esqueleto_lodo'),
+            Markup.button.callback('🌿 Enraizado (VD 40)', 'best_show_enraizado')
+        ],
+        [
+            Markup.button.callback('🕷️ Aracnasita (VD 60)', 'best_show_aracnasita'),
+            Markup.button.callback('👂 Escutado (VD 80)', 'best_show_escutado')
+        ],
+        [
+            Markup.button.callback('🧟 Carniçal Preto (VD 100)', 'best_show_carnical_preto'),
+            Markup.button.callback('🎭 A Marionete (VD 180)', 'best_show_marionete')
+        ],
+        [
+            Markup.button.callback('⏳ Ceifador Espiral (VD 280)', 'best_show_ceifador_espiral')
+        ],
+        [
+            Markup.button.callback('◀️ Voltar ao Bestiário', 'cris_menu_bestiario')
+        ]
+    ]);
+}
+
+function botoesBestiarioConhecimento() {
+    return Markup.inlineKeyboard([
+        [
+            Markup.button.callback('👁️ Existido (VD 10)', 'best_show_existido'),
+            Markup.button.callback('🧠 Lembrado (VD 20)', 'best_show_lembrado')
+        ],
+        [
+            Markup.button.callback('👤 Vulto (VD 40)', 'best_show_vulto'),
+            Markup.button.callback('🖤 Parasita de Culpa (VD 60)', 'best_show_parasita_culpa')
+        ],
+        [
+            Markup.button.callback('🖋️ Rastejador Sombrio (VD 80)', 'best_show_rastejador_sombrio'),
+            Markup.button.callback('💤 Ocioso (VD 100)', 'best_show_ocioso')
+        ],
+        [
+            Markup.button.callback('👁️‍🗨️ O Espreitador (VD 180)', 'best_show_espreitador'),
+            Markup.button.callback('🪽 Anjo (VD 280)', 'best_show_anjo')
+        ],
+        [
+            Markup.button.callback('◀️ Voltar ao Bestiário', 'cris_menu_bestiario')
+        ]
+    ]);
+}
+
+function botoesBestiarioEnergia() {
+    return Markup.inlineKeyboard([
+        [
+            Markup.button.callback('⚡ Anárquico (VD 10)', 'best_show_anarquico'),
+            Markup.button.callback('🌀 Anomalia (VD 20)', 'best_show_anomalia')
+        ],
+        [
+            Markup.button.callback('💥 Perturbado de Energia (VD 40)', 'best_show_perturbado_energia'),
+            Markup.button.callback('⚡ Anárquico Descontrolado (VD 60)', 'best_show_anarquico_descontrolado')
+        ],
+        [
+            Markup.button.callback('⚙️ Anomiático (VD 80)', 'best_show_anomiatico'),
+            Markup.button.callback('🧪 Infecticídio (VD 100)', 'best_show_infecticidio')
+        ],
+        [
+            Markup.button.callback('🤖 Ciborgue (VD 140)', 'best_show_ciborgue')
+        ],
+        [
+            Markup.button.callback('◀️ Voltar ao Bestiário', 'cris_menu_bestiario')
+        ]
+    ]);
+}
+
+function botoesBestiarioReliquias() {
+    return Markup.inlineKeyboard([
+        [
+            Markup.button.callback('🩸 O Diabo (VD 400)', 'best_show_diabo'),
+            Markup.button.callback('⏳ Deus da Morte (VD 400)', 'best_show_deus_morte')
+        ],
+        [
+            Markup.button.callback('👁️ A Magistrada (VD 400)', 'best_show_magistrada'),
+            Markup.button.callback('⚡ O Anfitrião (VD 400)', 'best_show_anfitriao')
+        ],
+        [
+            Markup.button.callback('🐺 Nidere (VD 220)', 'best_show_nidere'),
+            Markup.button.callback('⏳ Sempiternal (VD 320)', 'best_show_semptiternal')
+        ],
+        [
+            Markup.button.callback('🧸 Bicho-Papão (VD 220)', 'best_show_bicho_papao')
+        ],
+        [
+            Markup.button.callback('◀️ Voltar ao Bestiário', 'cris_menu_bestiario')
+        ]
+    ]);
+}
+
+function botoesCardCriatura(key) {
+    return Markup.inlineKeyboard([
+        [
+            Markup.button.callback('🎲 Rolar Ataque da Criatura', `best_roll_atq_${key}`),
+            Markup.button.callback('🧠 Presença Perturbadora', `best_roll_pres_${key}`)
+        ],
+        [
+            Markup.button.callback('◀️ Voltar ao Bestiário', 'cris_menu_bestiario')
         ]
     ]);
 }
@@ -908,99 +1583,100 @@ bot.action('cond_clear', async (ctx) => {
     await ctx.reply(`✨ *Condições Limpas!* Agente ${f.nome} está *Saudável*.`, { parse_mode: 'Markdown' });
 });
 
+bot.action('best_cat_sangue', async (ctx) => {
+    await ctx.answerCbQuery();
+    await ctx.reply('🩸 *BESTIÁRIO — CRIATURAS DE SANGUE*\n\nEscolha uma criatura para consultar:', { parse_mode: 'Markdown', ...botoesBestiarioSangue() });
+});
+
+bot.action('best_cat_morte', async (ctx) => {
+    await ctx.answerCbQuery();
+    await ctx.reply('⏳ *BESTIÁRIO — CRIATURAS DE MORTE*\n\nEscolha uma criatura para consultar:', { parse_mode: 'Markdown', ...botoesBestiarioMorte() });
+});
+
+bot.action('best_cat_conhecimento', async (ctx) => {
+    await ctx.answerCbQuery();
+    await ctx.reply('👁️ *BESTIÁRIO — CRIATURAS DE CONHECIMENTO*\n\nEscolha uma criatura para consultar:', { parse_mode: 'Markdown', ...botoesBestiarioConhecimento() });
+});
+
+bot.action('best_cat_energia', async (ctx) => {
+    await ctx.answerCbQuery();
+    await ctx.reply('⚡ *BESTIÁRIO — CRIATURAS DE ENERGIA*\n\nEscolha uma criatura para consultar:', { parse_mode: 'Markdown', ...botoesBestiarioEnergia() });
+});
+
+bot.action('best_cat_reliquias', async (ctx) => {
+    await ctx.answerCbQuery();
+    await ctx.reply('🖤 *BESTIÁRIO — RELÍQUIAS E AMEAÇAS SUPREMAS*\n\nEscolha uma entidade para consultar:', { parse_mode: 'Markdown', ...botoesBestiarioReliquias() });
+});
+
+bot.action(/^best_show_(.+)$/, async (ctx) => {
+    await ctx.answerCbQuery();
+    const key = ctx.match[1];
+    const c = BESTIARIO_DATA[key];
+    if (c) {
+        await ctx.reply(formatarCriatura(c), { parse_mode: 'Markdown', ...botoesCardCriatura(key) });
+    } else {
+        await ctx.reply('👾 Criatura não encontrada no banco de dados.', { parse_mode: 'Markdown' });
+    }
+});
+
+bot.action(/^best_roll_atq_(.+)$/, async (ctx) => {
+    await ctx.answerCbQuery();
+    const key = ctx.match[1];
+    const c = BESTIARIO_DATA[key];
+    if (c) {
+        const d20_1 = Math.floor(Math.random() * 20) + 1;
+        const d20_2 = Math.floor(Math.random() * 20) + 1;
+        const d20_3 = Math.floor(Math.random() * 20) + 1;
+        const maior = Math.max(d20_1, d20_2, d20_3);
+        await ctx.reply(`⚔️ *Ataque de ${c.nome}:*\n\n🎲 Dados Rolados (3d20): \`[${d20_1}, ${d20_2}, ${d20_3}]\` (Maior = *${maior}*)\n💥 *Ataque Registrado:* ${c.ataques}`, { parse_mode: 'Markdown' });
+    }
+});
+
+bot.action(/^best_roll_pres_(.+)$/, async (ctx) => {
+    await ctx.answerCbQuery();
+    const key = ctx.match[1];
+    const c = BESTIARIO_DATA[key];
+    if (c) {
+        await ctx.reply(`🧠 *Presença Perturbadora de ${c.nome}:*\n\nTodos os agentes no ambiente devem fazer um Teste de Vontade contra a DT da criatura!\n\n${c.habilidades}`, { parse_mode: 'Markdown' });
+    }
+});
+
+// Backward compatibility handlers
 bot.action('best_zumbi_10', async (ctx) => {
     await ctx.answerCbQuery();
-    await ctx.reply(
-        `🧟 *ZUMBI DE SANGUE (VD 10)*\n\n` +
-        `🩸 *Elemento:* Sangue | *Tamanho:* Médio\n` +
-        `❤️ *PV:* 45 | 🛡️ *Defesa:* 17\n` +
-        `🏃 *Fortitude:* 1d+5 | *Reflexos:* 2d+5 | *Vontade:* 1d+5\n` +
-        `🛡️ *Resistências:* Balístico 5, Corte 5, Impacto 5, Perfuração 5 e Sangue 5\n` +
-        `💀 *Vulnerabilidade:* Morte\n` +
-        `💥 *Ataques:* 2 Garras — 2d+5 (Dano: 2d6+5)\n\n` +
-        `👁️ *Habilidades Paranormais:*\n` +
-        `• *Presença Perturbadora:* 2d6 Mental (DT 12, NEX 10%)\n` +
-        `• *Percepção Sensorial:* Não depende da visão; imune a condições de sentidos.\n` +
-        `🏃 *Deslocamento:* 9m`,
-        { parse_mode: 'Markdown' }
-    );
+    const c = BESTIARIO_DATA.zumbi_sangue;
+    await ctx.reply(formatarCriatura(c), { parse_mode: 'Markdown', ...botoesCardCriatura('zumbi_sangue') });
 });
 
 bot.action('best_aberracao_40', async (ctx) => {
     await ctx.answerCbQuery();
-    await ctx.reply(
-        `🩸 *ABERRAÇÃO DE CARNE (VD 40)*\n\n` +
-        `🩸 *Elemento:* Sangue | *Tamanho:* Grande\n` +
-        `❤️ *PV:* 70 | 🛡️ *Defesa:* 20\n` +
-        `🏃 *Fortitude:* 3d+10 | *Reflexos:* 2d | *Vontade:* 1d\n` +
-        `🛡️ *Resistências:* Balístico 5, Corte 5, Impacto 5, Perfuração 5 e Sangue 5\n` +
-        `💀 *Vulnerabilidade:* Morte\n` +
-        `💥 *Ataques:* 2 Pancadas — 3d+10 (Dano: 2d8+6)\n\n` +
-        `👁️ *Habilidades Paranormais:*\n` +
-        `• *Presença Perturbadora:* 3d6 Mental (DT 15, NEX 15%)\n` +
-        `• *Agarrão:* Após acertar pancada, pode agarrar criatura Média ou menor.\n` +
-        `• *Abocanhar:* Leva até dois alvos agarrados à boca e causa 3d6 Sangue por turno (Fortitude DT 15 reduz à metade).\n` +
-        `🏃 *Deslocamento:* 9m`,
-        { parse_mode: 'Markdown' }
-    );
+    const c = BESTIARIO_DATA.aberracao_carne;
+    await ctx.reply(formatarCriatura(c), { parse_mode: 'Markdown', ...botoesCardCriatura('aberracao_carne') });
 });
 
 bot.action('best_zumbibestial_80', async (ctx) => {
     await ctx.answerCbQuery();
-    await ctx.reply(
-        `🧟‍♂️ *ZUMBI DE SANGUE BESTIAL (VD 80)*\n\n` +
-        `🩸 *Elemento:* Sangue | *Tamanho:* Grande\n` +
-        `❤️ *PV:* 112 | 🛡️ *Defesa:* 15\n` +
-        `🏃 *Fortitude:* 3d+5 | *Reflexos:* 3d+5 | *Vontade:* 1d+5\n` +
-        `🛡️ *Resistências:* Balístico 5, Corte 5, Impacto 5, Perfuração 5 e Sangue 5\n` +
-        `💀 *Vulnerabilidade:* Morte\n` +
-        `💥 *Ataques:*\n` +
-        `• Mordida de Sangue — 3d+10 (Dano: 2d10+4 Sangue)\n` +
-        `• 2 Garras de Sangue — 3d+10 (Dano: 2d8+2 Sangue)\n\n` +
-        `👁️ *Habilidades Paranormais:*\n` +
-        `• *Presença Perturbadora:* 5d6 Mental (DT 15, NEX 20%)\n` +
-        `• *Furtivo e Letal:* Contra alvo desprevenido recebe +1d nos ataques e +2 dados de dano.\n` +
-        `• *Instinto Predatório:* Não sofre penalidade de Furtividade ao se mover normalmente.\n` +
-        `• *Percepção Sensorial:* Imune a condições de sentidos.\n` +
-        `🏃 *Deslocamento:* 9m`,
-        { parse_mode: 'Markdown' }
-    );
+    const c = BESTIARIO_DATA.zumbi_bestial;
+    await ctx.reply(formatarCriatura(c), { parse_mode: 'Markdown', ...botoesCardCriatura('zumbi_bestial') });
 });
 
 bot.action('best_enpapx_80', async (ctx) => {
     await ctx.answerCbQuery();
-    await ctx.reply(
-        `⛓️ *ENPAP-X (VD 80)*\n\n` +
-        `🩸🟡 *Elementos:* Sangue + Conhecimento | *Tamanho:* Grande\n` +
-        `❤️ *PV:* 245 | 🛡️ *Defesa:* 22\n` +
-        `🏃 *Fortitude:* 4d+15 | *Reflexos:* 3d+10 | *Vontade:* 2d+10\n` +
-        `🛡️ *Resistências:* Balístico 5, Corte 5, Impacto 5, Perfuração 5 e Sangue 5\n` +
-        `💀 *Vulnerabilidade:* Morte\n` +
-        `💥 *Ataque:* 2 Correntes — 3d+15 (Dano: 3d6 Sangue, alcance curto)\n\n` +
-        `👁️ *Habilidades Paranormais:*\n` +
-        `• *Presença Perturbadora:* 10d6 Mental (DT 20, NEX 45%)\n` +
-        `• *Força Desencadeada:* Em acerto crítico, empurra/derruba o alvo a 3m.\n` +
-        `• *Transformação:* Ao chegar a 0 PV, recupera TODOS os PV e ganha +40 PV temporários!\n` +
-        `• *Acorrentar:* Agarra à distância e causa 2d6 Sangue/turno por estrangulamento.\n` +
-        `• *Crescer:* Cada soco acertado concede +1d6 cumulativo no dano do turno.\n` +
-        `• *Marcas do Terror:* Inimigos adjacentes sofrem 2d6 Mental (Vontade DT 15 reduz à metade).\n` +
-        `🏃 *Deslocamento:* 9m`,
-        { parse_mode: 'Markdown' }
-    );
+    const c = BESTIARIO_DATA.enpap_x;
+    await ctx.reply(formatarCriatura(c), { parse_mode: 'Markdown', ...botoesCardCriatura('enpap_x') });
 });
 
 bot.action(/^best_(.+)$/, async (ctx) => {
     await ctx.answerCbQuery();
     const b = ctx.match[1];
-
-    const bests = {
-        zumbi: '👾 *ZUMBI DE SANGUE (VD 10)*\n\n❤️ *PV:* 45 | 🛡️ *Defesa:* 17\n🩸 *Elemento:* Sangue\n💥 *Ataque:* Garra 2d20+5 (Dano 2d6+5)\n👁️ *Habilidade:* Presença Perturbadora (SAN -2)',
-        existido: '👾 *EXISTIDO (VD 10)*\n\n❤️ *PV:* 20 | 🛡️ *Defesa:* 12\n⏳ *Elemento:* Morte\n💥 *Ataque:* Toque Entrópico 2d20+3 (Dano 1d6+2 Morte)\n⏳ *Habilidade:* Descomposição Lenta',
-        sombra: '👾 *SOMBRA (VD 20)*\n\n❤️ *PV:* 30 | 🛡️ *Defesa:* 16\n👁️ *Elemento:* Conhecimento\n💥 *Ataque:* Suspiro Obsessivo 2d20+6 (Dano 1d8 Mental)\n🧠 *Habilidade:* Invisibilidade na Escuridão',
-        anomalia: '👾 *ANOMALIA (VD 20)*\n\n❤️ *PV:* 25 | 🛡️ *Defesa:* 15\n⚡ *Elemento:* Energia\n💥 *Ataque:* Arcos Elétricos 2d20+5 (Dano 1d10 Energia)\n⚡ *Habilidade:* Caos Estático'
-    };
-
-    await ctx.reply(bests[b] || '👾 Criatura Paranormal do Livro de Regras!', { parse_mode: 'Markdown' });
+    const keyMap = { zumbi: 'zumbi_sangue', existido: 'existido', sombra: 'vulto', anomalia: 'anomalia' };
+    const targetKey = keyMap[b] || b;
+    const c = BESTIARIO_DATA[targetKey];
+    if (c) {
+        await ctx.reply(formatarCriatura(c), { parse_mode: 'Markdown', ...botoesCardCriatura(targetKey) });
+    } else {
+        await ctx.reply('👾 Criatura Paranormal do Livro de Regras!', { parse_mode: 'Markdown', ...botoesBestiarioCris() });
+    }
 });
 
 bot.action(/^cat_add_(.+)$/, async (ctx) => {
@@ -1847,7 +2523,27 @@ bot.on(['text', 'photo', 'video', 'audio', 'voice', 'document', 'sticker', 'anim
             }
 
             case 'bestiario': case 'criaturas': {
-                await ctx.reply('👾 *BESTIÁRIO PARANORMAL — LIVRO DE REGRAS*\n\nEscolha uma ameaça para consultar a ficha:', { parse_mode: 'Markdown', ...botoesBestiarioCris() });
+                if (q) {
+                    const termo = q.toLowerCase();
+                    const matches = Object.values(BESTIARIO_DATA).filter(c =>
+                        c.nome.toLowerCase().includes(termo) ||
+                        c.elemento.toLowerCase().includes(termo) ||
+                        c.id.toLowerCase().includes(termo)
+                    );
+
+                    if (matches.length === 1) {
+                        const c = matches[0];
+                        await ctx.reply(formatarCriatura(c), { parse_mode: 'Markdown', ...botoesCardCriatura(c.id) });
+                    } else if (matches.length > 1) {
+                        const btns = matches.map(c => [Markup.button.callback(`👾 ${c.nome}`, `best_show_${c.id}`)]);
+                        btns.push([Markup.button.callback('◀️ Voltar ao Bestiário', 'cris_menu_bestiario')]);
+                        await ctx.reply(`🔎 *Ameaças encontradas para "${q}":*`, { parse_mode: 'Markdown', ...Markup.inlineKeyboard(btns) });
+                    } else {
+                        await ctx.reply(`❌ Nenhuma ameaça encontrada para "${q}". Escolha um elemento abaixo para navegar:`, { parse_mode: 'Markdown', ...botoesBestiarioCris() });
+                    }
+                } else {
+                    await ctx.reply('👾 *BESTIÁRIO PARANORMAL — LIVRO DE REGRAS*\n\nEscolha um elemento para consultar as criaturas do livro:', { parse_mode: 'Markdown', ...botoesBestiarioCris() });
+                }
                 break;
             }
 
