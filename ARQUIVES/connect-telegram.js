@@ -92,6 +92,7 @@ function getOuCriarFicha(sid, pushname) {
         db[sid] = {
             nome: pushname || 'Agente Anônimo',
             classe: 'Combatente',
+            trilha: 'Aniquilador',
             nex: '15%',
             agi: 2, for: 2, int: 2, pre: 2, vig: 2,
             pv: 25, pvMax: 25,
@@ -266,7 +267,7 @@ function botoesSoloAcoes() {
         ],
         [
             Markup.button.callback('👥 Falar / Negociar', 'solo_act_falar'),
-            Markup.button.callback('🔮 Usar Ocultismo', 'solo_act_ocultismo')
+            Markup.button.callback('🔮 Conjurar Ritual', 'cris_menu_rituais')
         ],
         [
             Markup.button.callback('🎒 Ver Inventario', 'cris_ver_itens'),
@@ -299,6 +300,40 @@ function botoesPericiasCris() {
     ]);
 }
 
+function botoesRituaisCris() {
+    return Markup.inlineKeyboard([
+        [
+            Markup.button.callback('🩸 Cicatrização (3d8 PV)', 'cris_rit_cicatrizacao'),
+            Markup.button.callback('🩸 Armadura de Sangue (+5 DEF)', 'cris_rit_armadura')
+        ],
+        [
+            Markup.button.callback('⚡ Eletrocussão (2d6 Dano)', 'cris_rit_eletrocussao'),
+            Markup.button.callback('⏳ Decadência (2d8 Dano)', 'cris_rit_decadencia')
+        ],
+        [
+            Markup.button.callback('👁️ Sussurros Paranormais (+5 Int)', 'cris_rit_sussurros'),
+            Markup.button.callback('⚡ Coincidência Forçada (+2 Bônus)', 'cris_rit_coincidencia')
+        ]
+    ]);
+}
+
+function botoesTrilhasCris() {
+    return Markup.inlineKeyboard([
+        [
+            Markup.button.callback('🛡️ Combatente: Aniquilador', 'cris_trilha_aniquilador'),
+            Markup.button.callback('⚔️ Ocultista: Lâmina Paranormal', 'cris_trilha_lamina')
+        ],
+        [
+            Markup.button.callback('🎯 Especialista: Atirador de Élite', 'cris_trilha_atirador'),
+            Markup.button.callback('🩺 Especialista: Médico de Campo', 'cris_trilha_medico')
+        ],
+        [
+            Markup.button.callback('🎒 Especialista: Técnico', 'cris_trilha_tecnico'),
+            Markup.button.callback('🔮 Ocultista: Graduado', 'cris_trilha_graduado')
+        ]
+    ]);
+}
+
 // ====== MENUS PRINCIPAIS ======
 
 function menuPrincipal() {
@@ -318,19 +353,18 @@ function menuPrincipal() {
 function menuOrdem() {
     return {
         text: '👁️ *ORDEM PARANORMAL RPG — C.R.I.S.*\n\n' +
-            'Plataforma oficial e sistema de RPG de Ordem Paranormal com botões interativos!\n\n' +
-            '🤖 *Modo Mestre Solo (IA):*\n' +
-            'Jogue sozinho com botões de escolhas práticas e Mestre White Lotus narrando!\n\n' +
-            '🎒 *Sistema de Itens & Ficha CRIS:*\n' +
-            'Gerencie armas, cicatrizantes, equipamentos, PV, PE, Sanidade e perícias!\n\n' +
-            '🌐 *Acesse o site oficial:* https://cris.site',
+            'Plataforma oficial e sistema completo de Ordem Paranormal RPG no Telegram!\n\n' +
+            '🤖 *Mestre Solo IA:* Jogue com Mestre White Lotus e botões de ação!\n' +
+            '🔮 *Rituais Paranormais:* Sangue, Morte, Conhecimento e Energia!\n' +
+            '🛡️ *Trilhas & Habilidades:* Aniquilador, Lâmina Paranormal, Atirador de Élite, Médico e Técnico!\n' +
+            '🎒 *Inventário & Itens CRIS:* Armas, coletes, cicatrizantes e gerenciamento de carga!\n\n' +
+            '🌐 *Site oficial CRIS:* https://cris.site',
         ...Markup.inlineKeyboard([
             [Markup.button.callback('🤖 Jogar Solo com Mestre White Lotus', 'cmd_mestresolo_start')],
-            [Markup.button.callback('🎒 Meu Inventário & Itens CRIS', 'cris_ver_itens')],
-            [Markup.button.callback('🎯 Rolar Perícias com Botões', 'cris_menu_pericias')],
-            [Markup.button.callback('💊 Usar Cicatrizante (+10 PV)', 'cris_usar_cicatrizante')],
+            [Markup.button.callback('🔮 Rituais Paranormais', 'cris_menu_rituais'), Markup.button.callback('🛡️ Trilhas & Habilidades', 'cris_menu_trilhas')],
+            [Markup.button.callback('🎒 Inventário & Itens CRIS', 'cris_ver_itens'), Markup.button.callback('🎯 Rolar Perícias', 'cris_menu_pericias')],
             [Markup.button.url('🌐 Abrir Site CRIS (cris.site)', 'https://cris.site')],
-            [Markup.button.callback('📋 Minha Ficha Agente', 'cmd_ficha_op'), Markup.button.callback('🔮 Rituais & Elementos', 'cmd_rituais_op')],
+            [Markup.button.callback('📋 Minha Ficha Agente', 'cmd_ficha_op')],
             [Markup.button.callback('◀️ Voltar', 'menu_principal')]
         ])
     };
@@ -584,6 +618,67 @@ bot.action('cris_atacar_arma', async (ctx) => {
 bot.action('cris_menu_pericias', async (ctx) => {
     await ctx.answerCbQuery();
     await ctx.reply('🎯 *Escolha a perícia para rolar o teste:*', { parse_mode: 'Markdown', ...botoesPericiasCris() });
+});
+
+bot.action('cris_menu_rituais', async (ctx) => {
+    await ctx.answerCbQuery();
+    await ctx.reply('🔮 *RITUAIS PARANORMAIS — C.R.I.S.*\n\nEscolha um ritual para conjurar:', { parse_mode: 'Markdown', ...botoesRituaisCris() });
+});
+
+bot.action('cris_menu_trilhas', async (ctx) => {
+    await ctx.answerCbQuery();
+    await ctx.reply('🛡️ *TRILHAS DE CLASSE — ORDEM PARANORMAL*\n\nEscolha sua Trilha:', { parse_mode: 'Markdown', ...botoesTrilhasCris() });
+});
+
+bot.action(/^cris_rit_(.+)$/, async (ctx) => {
+    await ctx.answerCbQuery();
+    const rit = ctx.match[1];
+    const sid = String(ctx.from.id);
+    const pushname = ctx.from.first_name || 'Agente';
+    const db = getFichasDB();
+    const f = getOuCriarFicha(sid, pushname);
+
+    if (f.pe < 1) return ctx.reply('❌ PE insuficiente para conjurar rituais.');
+
+    f.pe -= 1;
+    db[sid] = f;
+    saveFichasDB(db);
+
+    const rituaisInfo = {
+        cicatrização: '🩸 *Cicatrização (Sangue)*\nRecupera +3d8+3 PV do Agente e estanca sangramento!',
+        armadura: '🩸 *Armadura de Sangue*\nSua pele endurece! Defesa aumentada em +5!',
+        eletrocussão: '⚡ *Eletrocussão (Energia)*\nDispara arcos elétricos! Dano: *2d6 Energia* + atordoamento!',
+        decadencia: '⏳ *Decadência (Morte)*\nAcelera o envelhecimento da matéria! Dano: *2d8 Morte*!',
+        sussurros: '👁️ *Sussurros Paranormais (Conhecimento)*\nRevela segredos e concede +5 em testes de Investigação!',
+        coincidencia: '⚡ *Coincidência Forçada (Energia)*\nAltera a probabilidade! Bônus de +2 em todos os testes no próximo turno!'
+    };
+
+    const desc = rituaisInfo[rit] || '🔮 Ritual Paranormal Conjurado com sucesso!';
+    await ctx.reply(`🔮 *RITUAL CONJURADO!* (-1 PE)\n\n${desc}\n⚡ PE Restante: *${f.pe}/${f.peMax} PE*`, { parse_mode: 'Markdown' });
+});
+
+bot.action(/^cris_trilha_(.+)$/, async (ctx) => {
+    await ctx.answerCbQuery();
+    const t = ctx.match[1];
+    const sid = String(ctx.from.id);
+    const pushname = ctx.from.first_name || 'Agente';
+    const db = getFichasDB();
+    const f = getOuCriarFicha(sid, pushname);
+
+    const trilhasNomes = {
+        aniquilador: 'Aniquilador (Combatente)',
+        lamina: 'Lâmina Paranormal (Ocultista)',
+        atirador: 'Atirador de Élite (Especialista)',
+        medico: 'Médico de Campo (Especialista)',
+        tecnico: 'Técnico (Especialista)',
+        graduado: 'Graduado (Ocultista)'
+    };
+
+    f.trilha = trilhasNomes[t] || t;
+    db[sid] = f;
+    saveFichasDB(db);
+
+    await ctx.reply(`🛡️ *Trilha Selecionada no CRIS!*\n\n👤 *Agente:* ${f.nome}\n⭐ *Trilha:* ${f.trilha}\n\nSua trilha desbloqueia habilidades especiais a cada NEX %!`, { parse_mode: 'Markdown' });
 });
 
 bot.action(/^cris_p_(.+)$/, async (ctx) => {
@@ -897,7 +992,7 @@ bot.on(['text', 'photo', 'video', 'audio', 'voice', 'document', 'sticker', 'anim
             return await ctx.reply(respostaMestre, { parse_mode: 'Markdown', ...botoesSoloAcoes() });
         } catch (eErr) {
             console.error('[Mestre Solo]', eErr?.message);
-            return ctx.reply('👁️ *Mestre White Lotus:* Algo estranho aconteceu com o Paranormal... Tente novamente ou aperte no botão "Sair da Campanha".', { parse_mode: 'Markdown', ...botoesSoloAcoes() });
+            return ctx.reply('👁️ *Mestre White Lotus:* Algo perturbou o Paranormal... Tente novamente ou aperte no botão "Sair da Campanha".', { parse_mode: 'Markdown', ...botoesSoloAcoes() });
         }
     }
 
@@ -912,7 +1007,7 @@ bot.on(['text', 'photo', 'video', 'audio', 'voice', 'document', 'sticker', 'anim
 
     const knownCommands = new Set([
         'start', 'menu', 'ajuda', 'ajuda2', 'comandos', 'ping', 'info',
-        'cris', 'ordem', 'rpg', 'ordemparanormal', 'op', 'rolarop', 'dadoop', 'fichacris', 'fichaop', 'agente', 'sanidade', 'san', 'rituais', 'elementos', 'rolar', 'mestresolo', 'jogarsolo', 'mestre', 'iniciativa', 'monstro', 'pv', 'pe', 'mestra', 'itens', 'inventario', 'mochila', 'additem', 'usaritem',
+        'cris', 'ordem', 'rpg', 'ordemparanormal', 'op', 'rolarop', 'dadoop', 'fichacris', 'fichaop', 'agente', 'sanidade', 'san', 'rituais', 'elementos', 'rolar', 'mestresolo', 'jogarsolo', 'mestre', 'iniciativa', 'monstro', 'pv', 'pe', 'mestra', 'itens', 'inventario', 'mochila', 'additem', 'usaritem', 'trilha', 'trilhas', 'habilidades',
         'gpt', 'gemini', 'ia', 'signo', 'horoscopo', 'traduzir', 'nick', 'gerarnick', 'simi', 'simsimi', 'letra', 'lyrics', 'letramusic', 'letramusica',
         'assistir', 'assistiranime', 'anime', 'buscaranime', 'playanime', 'watchanime', 'anirecente', 'animesrecentes', 'aniinfo', 'sushianimes', 'animes',
         'play', 'p', 'playaudio', 'ytaudio', 'ytmp3', 'playvideo', 'playmp4', 'playvid', 'ytmp4', 'ytsearch', 'pesquisa_yt', 'yt-info', 'baixar', 'download',
@@ -951,8 +1046,10 @@ bot.on(['text', 'photo', 'video', 'audio', 'voice', 'document', 'sticker', 'anim
 /op <atributo> [perícia] — Rola dados de Ordem Paranormal (3d20)
 /fichacris — Ficha e inventário do Agente
 /itens — Ver mochila e armas equipadas
+/rituais — Conjurar rituais paranormais com botões
+/trilhas — Selecionar Trilha e ver Habilidades
 /mestre — Gerenciar mesa e iniciativa no Telegram
-/sanidade | /rituais | /monstro\n
+/sanidade | /monstro\n
 *🤖 IA & TEXTO*
 /gpt <pergunta> — IA Chat Llama 3.3
 /gemini <pergunta> — IA Chat
@@ -1042,6 +1139,11 @@ bot.on(['text', 'photo', 'video', 'audio', 'voice', 'document', 'sticker', 'anim
                 } else {
                     await ctx.reply('👁️ *Modo Mestre Solo Ativo!*\n\nBasta clicar nos botões ou digitar no chat para continuar!', { parse_mode: 'Markdown', ...botoesSoloAcoes() });
                 }
+                break;
+            }
+
+            case 'trilha': case 'trilhas': case 'habilidades': {
+                await ctx.reply('🛡️ *TRILHAS DE CLASSE — C.R.I.S. ORDEM PARANORMAL*\n\nEscolha sua Trilha para ver suas habilidades:', { parse_mode: 'Markdown', ...botoesTrilhasCris() });
                 break;
             }
 
@@ -1185,7 +1287,7 @@ bot.on(['text', 'photo', 'video', 'audio', 'voice', 'document', 'sticker', 'anim
 
                 const txt = `👁️ *FICHA DE AGENTE — ORDO REALITAS*\n\n` +
                     `👤 *Nome:* ${f.nome}\n` +
-                    `🛡️ *Classe:* ${f.classe}\n` +
+                    `🛡️ *Classe:* ${f.classe} | ⭐ *Trilha:* ${f.trilha || 'Aniquilador'}\n` +
                     `☣️ *NEX:* ${f.nex}\n\n` +
                     `📊 *ATRIBUTOS:*\n` +
                     `• 🏃 AGI: ${f.agi} | 🏋️ FOR: ${f.for}\n` +
@@ -1198,6 +1300,7 @@ bot.on(['text', 'photo', 'video', 'audio', 'voice', 'document', 'sticker', 'anim
                 const btns = Markup.inlineKeyboard([
                     [Markup.button.callback('🎒 Ver Inventário & Itens', 'cris_ver_itens')],
                     [Markup.button.callback('🎯 Rolar Perícia', 'cris_menu_pericias')],
+                    [Markup.button.callback('🔮 Rituais', 'cris_menu_rituais'), Markup.button.callback('🛡️ Escolher Trilha', 'cris_menu_trilhas')],
                     [Markup.button.callback('💊 Usar Cicatrizante (+10 PV)', 'cris_usar_cicatrizante')]
                 ]);
 
@@ -1219,7 +1322,7 @@ bot.on(['text', 'photo', 'video', 'audio', 'voice', 'document', 'sticker', 'anim
                     `⚡ *ENERGIA:* Caos, eletricidade, transformação e o imprevisível. Muda a matéria instantaneamente.\n` +
                     `🖤 *MEDO:* O elemento impossível. Origem de todos os rituais.\n\n` +
                     `🌐 *Acesse rituais e fichas em:* https://cris.site`;
-                await ctx.reply(txt, { parse_mode: 'Markdown' });
+                await ctx.reply(txt, { parse_mode: 'Markdown', ...botoesRituaisCris() });
                 break;
             }
 
