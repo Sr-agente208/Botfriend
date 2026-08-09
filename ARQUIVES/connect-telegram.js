@@ -103,6 +103,7 @@ function getOuCriarFicha(sid, pushname) {
             san: 30, sanMax: 30,
             defesa: 14,
             cargaMax: 9,
+            condicoes: ['Saudável'],
             inventario: [
                 { id: 'item_pistola', nome: 'Pistola .40', tipo: 'arma', dano: '1d12', categoria: 'I', peso: 1 },
                 { id: 'item_faca', nome: 'Faca Tática', tipo: 'arma', dano: '1d4', categoria: '0', peso: 1 },
@@ -420,6 +421,48 @@ function botoesNexWizard() {
     ]);
 }
 
+function botoesCondicoesCris() {
+    return Markup.inlineKeyboard([
+        [
+            Markup.button.callback('🩸 Apply: Machucado', 'cond_apply_machucado'),
+            Markup.button.callback('💤 Apply: Inconsciente', 'cond_apply_inconsciente')
+        ],
+        [
+            Markup.button.callback('🧠 Apply: Perturbado', 'cond_apply_perturbado'),
+            Markup.button.callback('💀 Apply: Morrendo', 'cond_apply_morrendo')
+        ],
+        [
+            Markup.button.callback('✨ Limpar Condições', 'cond_clear')
+        ]
+    ]);
+}
+
+function botoesBestiarioCris() {
+    return Markup.inlineKeyboard([
+        [
+            Markup.button.callback('🩸 Sangue: Zumbi de Sangue (VD 20)', 'best_zumbi'),
+            Markup.button.callback('⏳ Morte: Existido (VD 10)', 'best_existido')
+        ],
+        [
+            Markup.button.callback('👁️ Conhecimento: Sombra (VD 20)', 'best_sombra'),
+            Markup.button.callback('⚡ Energia: Anomalia (VD 20)', 'best_anomalia')
+        ]
+    ]);
+}
+
+function botoesCatalogoArmas() {
+    return Markup.inlineKeyboard([
+        [
+            Markup.button.callback('🔫 Add: Fuzil de Precisão 2d12', 'cat_add_fuzil'),
+            Markup.button.callback('⚔️ Add: Katana Tática 1d10', 'cat_add_katana')
+        ],
+        [
+            Markup.button.callback('💥 Add: Granada Incendiária 3d6', 'cat_add_granada'),
+            Markup.button.callback('🛡️ Add: Escudo Tático (+2 DEF)', 'cat_add_escudo')
+        ]
+    ]);
+}
+
 // ====== MENUS PRINCIPAIS ======
 
 function menuPrincipal() {
@@ -438,17 +481,22 @@ function menuPrincipal() {
 
 function menuOrdem() {
     return {
-        text: '👁️ *ORDEM PARANORMAL RPG — C.R.I.S.*\n\n' +
-            'Plataforma oficial e sistema de Ordem Paranormal RPG com botões no Telegram!\n\n' +
-            '📝 *Criador de Ficha Guiado:* Crie sua ficha do zero escolhendo Origem, Classe, Trilha e Atributos usando botões!\n\n' +
-            '🤖 *Mestre Solo IA:* Jogue sozinho com botões de escolhas práticas e Mestre White Lotus narrando!\n\n' +
-            '📖 *Livro de Regras Official PDF:* Baixe e consulte as regras oficiais.\n\n' +
+        text: '👁️ *ORDEM PARANORMAL RPG — C.R.I.S. COMPLETO*\n\n' +
+            'Sistema completo de Ordem Paranormal RPG do Livro de Regras no Telegram!\n\n' +
+            '📝 *Criador Guiado:* Crie fichas completas por botões!\n' +
+            '🤖 *Mestre Solo IA:* Jogue com Mestre White Lotus e botões de ação!\n' +
+            '👾 *Bestiário:* Zumbi de Sangue, Existido, Sombra, Anomalia!\n' +
+            '🔫 *Catálogo de Armas:* Katana, Fuzil de Precisão, Escudo, Granadas!\n' +
+            '🩸 *Rituais & Trilhas:* Todos os Elementos e Habilidades do Livro!\n\n' +
+            '📖 *Livro de Regras PDF:* Acesse o livro completo no acervo.\n' +
             '🌐 *Site oficial CRIS:* https://cris.site',
         ...Markup.inlineKeyboard([
             [Markup.button.callback('📝 Criar Minha Ficha com Botões', 'wiz_start_ficha')],
             [Markup.button.callback('🤖 Jogar Solo com Mestre White Lotus', 'cmd_mestresolo_start')],
             [Markup.button.callback('🔮 Rituais Paranormais', 'cris_menu_rituais'), Markup.button.callback('🛡️ Trilhas & Habilidades', 'cris_menu_trilhas')],
             [Markup.button.callback('🎒 Inventário & Itens CRIS', 'cris_ver_itens'), Markup.button.callback('🎯 Rolar Perícias', 'cris_menu_pericias')],
+            [Markup.button.callback('👾 Bestiário Paranormal', 'cris_menu_bestiario'), Markup.button.callback('🔫 Catálogo de Armas', 'cris_menu_catalogo')],
+            [Markup.button.callback('🩸 Condições de Saúde & Mente', 'cris_menu_condicoes')],
             [Markup.button.url('📖 Livro de Regras Oficial (PDF)', LINK_LIVRO_REGRAS)],
             [Markup.button.url('🌐 Abrir Site CRIS (cris.site)', 'https://cris.site')],
             [Markup.button.callback('📋 Minha Ficha Atual', 'cmd_ficha_op')],
@@ -586,6 +634,103 @@ bot.action('menu_pets', async (ctx) => { await ctx.answerCbQuery(); const m = me
 bot.action('menu_economia', async (ctx) => { await ctx.answerCbQuery(); const m = menuEconomia(); await ctx.editMessageText(m.text, { parse_mode: 'Markdown', ...Markup.inlineKeyboard(m.reply_markup.inline_keyboard) }); });
 bot.action('menu_util', async (ctx) => { await ctx.answerCbQuery(); const m = menuUtil(); await ctx.editMessageText(m.text, { parse_mode: 'Markdown', ...Markup.inlineKeyboard(m.reply_markup.inline_keyboard) }); });
 
+// ACTIONS DE BESTIÁRIO, CATÁLOGO E CONDIÇÕES CRIS
+bot.action('cris_menu_bestiario', async (ctx) => {
+    await ctx.answerCbQuery();
+    await ctx.reply('👾 *BESTIÁRIO PARANORMAL — LIVRO DE REGRAS*\n\nEscolha uma ameaça para consultar a ficha:', { parse_mode: 'Markdown', ...botoesBestiarioCris() });
+});
+
+bot.action('cris_menu_catalogo', async (ctx) => {
+    await ctx.answerCbQuery();
+    await ctx.reply('🔫 *CATÁLOGO DE ARMAS E EQUIPAMENTOS*\n\nEscolha um item para adicionar à sua mochila:', { parse_mode: 'Markdown', ...botoesCatalogoArmas() });
+});
+
+bot.action('cris_menu_condicoes', async (ctx) => {
+    await ctx.answerCbQuery();
+    const sid = String(ctx.from.id);
+    const pushname = ctx.from.first_name || 'Agente';
+    const f = getOuCriarFicha(sid, pushname);
+
+    await ctx.reply(
+        `🩸 *GERENCIADOR DE CONDIÇÕES CRIS*\n\n` +
+        `👤 *Agente:* ${f.nome}\n` +
+        `❤️ *PV:* ${f.pv}/${f.pvMax} | 🧠 *SAN:* ${f.san}/${f.sanMax}\n` +
+        `⚠️ *Condições Ativas:* ${f.condicoes?.join(', ') || 'Saudável'}\n\n` +
+        `Clique para aplicar/limpar condições:`,
+        { parse_mode: 'Markdown', ...botoesCondicoesCris() }
+    );
+});
+
+bot.action(/^cond_apply_(.+)$/, async (ctx) => {
+    await ctx.answerCbQuery();
+    const cond = ctx.match[1];
+    const sid = String(ctx.from.id);
+    const pushname = ctx.from.first_name || 'Agente';
+    const db = getFichasDB();
+    const f = getOuCriarFicha(sid, pushname);
+
+    if (!f.condicoes) f.condicoes = [];
+    if (!f.condicoes.includes(cond)) f.condicoes.push(cond.toUpperCase());
+
+    db[sid] = f;
+    saveFichasDB(db);
+
+    await ctx.reply(`⚠️ *Condição Aplicada:* \`${cond.toUpperCase()}\` no Agente ${f.nome}!`, { parse_mode: 'Markdown' });
+});
+
+bot.action('cond_clear', async (ctx) => {
+    await ctx.answerCbQuery();
+    const sid = String(ctx.from.id);
+    const pushname = ctx.from.first_name || 'Agente';
+    const db = getFichasDB();
+    const f = getOuCriarFicha(sid, pushname);
+
+    f.condicoes = ['Saudável'];
+    db[sid] = f;
+    saveFichasDB(db);
+
+    await ctx.reply(`✨ *Condições Limpas!* Agente ${f.nome} está *Saudável*.`, { parse_mode: 'Markdown' });
+});
+
+bot.action(/^best_(.+)$/, async (ctx) => {
+    await ctx.answerCbQuery();
+    const b = ctx.match[1];
+
+    const bests = {
+        zumbi: '👾 *ZUMBI DE SANGUE (VD 20)*\n\n❤️ *PV:* 35 | 🛡️ *Defesa:* 14\n🩸 *Elemento:* Sangue\n💥 *Ataque:* Garra 2d20+5 (Dano 1d8+3)\n👁️ *Habilidade:* Presença Perturbadora (SAN -2)',
+        existido: '👾 *EXISTIDO (VD 10)*\n\n❤️ *PV:* 20 | 🛡️ *Defesa:* 12\n⏳ *Elemento:* Morte\n💥 *Ataque:* Toque Entrópico 2d20+3 (Dano 1d6+2 Morte)\n⏳ *Habilidade:* Descomposição Lenta',
+        sombra: '👾 *SOMBRA (VD 20)*\n\n❤️ *PV:* 30 | 🛡️ *Defesa:* 16\n👁️ *Elemento:* Conhecimento\n💥 *Ataque:* Suspiro Obsessivo 2d20+6 (Dano 1d8 Mental)\n🧠 *Habilidade:* Invisibilidade na Escuridão',
+        anomalia: '👾 *ANOMALIA (VD 20)*\n\n❤️ *PV:* 25 | 🛡️ *Defesa:* 15\n⚡ *Elemento:* Energia\n💥 *Ataque:* Arcos Elétricos 2d20+5 (Dano 1d10 Energia)\n⚡ *Habilidade:* Caos Estático'
+    };
+
+    await ctx.reply(bests[b] || '👾 Criatura Paranormal do Livro de Regras!', { parse_mode: 'Markdown' });
+});
+
+bot.action(/^cat_add_(.+)$/, async (ctx) => {
+    await ctx.answerCbQuery();
+    const itemKey = ctx.match[1];
+    const sid = String(ctx.from.id);
+    const pushname = ctx.from.first_name || 'Agente';
+    const db = getFichasDB();
+    const f = getOuCriarFicha(sid, pushname);
+
+    const catalogItens = {
+        fuzil: { id: `item_fuzil_${Date.now()}`, nome: 'Fuzil de Precisão (2d12)', tipo: 'arma', dano: '2d12', categoria: 'III', peso: 2 },
+        katana: { id: `item_katana_${Date.now()}`, nome: 'Katana Tática (1d10, Crit 19/x3)', tipo: 'arma', dano: '1d10', categoria: 'II', peso: 1 },
+        granada: { id: `item_granada_${Date.now()}`, nome: 'Granada Incendiária (3d6 Fogo)', tipo: 'consumivel', categoria: 'I', peso: 1 },
+        escudo: { id: `item_escudo_${Date.now()}`, nome: 'Escudo Tático (+2 DEF e Cobertura)', tipo: 'protecao', defesaBonus: 2, categoria: 'II', peso: 2 }
+    };
+
+    const newItem = catalogItens[itemKey];
+    if (newItem) {
+        f.inventario.push(newItem);
+        if (newItem.defesaBonus) f.defesa += newItem.defesaBonus;
+        db[sid] = f;
+        saveFichasDB(db);
+        await ctx.reply(`✅ *Item do Livro de Regras Adicionado:*\n\n📦 *${newItem.nome}* (Cat. ${newItem.categoria} | Peso: ${newItem.peso})`, { parse_mode: 'Markdown' });
+    }
+});
+
 // WIZARD CRIAR FICHA COM BOTÕES
 bot.action('wiz_start_ficha', async (ctx) => {
     await ctx.answerCbQuery();
@@ -706,6 +851,7 @@ bot.action(/^wiz_nex_(.+)$/, async (ctx) => {
         san: sanMax, sanMax: sanMax,
         defesa: 10 + w.agi + 2,
         cargaMax: 5 + (w.for * 2),
+        condicoes: ['Saudável'],
         inventario: [
             { id: 'item_pistola', nome: 'Pistola .40', tipo: 'arma', dano: '1d12', categoria: 'I', peso: 1 },
             { id: 'item_faca', nome: 'Faca Tática', tipo: 'arma', dano: '1d4', categoria: '0', peso: 1 },
@@ -1038,7 +1184,7 @@ bot.action('cmd_moedas', async (ctx) => { await ctx.answerCbQuery(); await ctx.r
 bot.action('cmd_encurtar', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('✂️ Use: `/encurtar <link>`', { parse_mode: 'Markdown' }); });
 bot.action('cmd_qrcode', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('📱 Use: `/qrcode <texto ou link>`', { parse_mode: 'Markdown' }); });
 bot.action('cmd_wiki', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('📖 Use: `/wiki <termo>`', { parse_mode: 'Markdown' }); });
-bot.action('cmd_calc', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('🧮 Use: `/calc 10 * 5 + 2`', { parse_mode: 'Markdown' }); });
+bot.action('cmd_calc', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('🧮 Use: `/calc <expressão>\nEx: /calc 10 * 5 + 2`', { parse_mode: 'Markdown' }); });
 bot.action('cmd_cep', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('📮 Use: `/cep 01001000`', { parse_mode: 'Markdown' }); });
 bot.action('cmd_ddd', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('📍 Use: `/ddd 11`', { parse_mode: 'Markdown' }); });
 bot.action('cmd_cpf', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('📋 Use: `/gerarcpf` ou `/validarcpf <cpf>`', { parse_mode: 'Markdown' }); });
@@ -1251,7 +1397,7 @@ bot.on(['text', 'photo', 'video', 'audio', 'voice', 'document', 'sticker', 'anim
 
     const knownCommands = new Set([
         'start', 'menu', 'ajuda', 'ajuda2', 'comandos', 'ping', 'info',
-        'cris', 'ordem', 'rpg', 'ordemparanormal', 'op', 'rolarop', 'dadoop', 'fichacris', 'fichaop', 'agente', 'sanidade', 'san', 'rituais', 'elementos', 'rolar', 'mestresolo', 'jogarsolo', 'mestre', 'iniciativa', 'monstro', 'pv', 'pe', 'mestra', 'itens', 'inventario', 'mochila', 'additem', 'usaritem', 'trilha', 'trilhas', 'habilidades', 'criarficha',
+        'cris', 'ordem', 'rpg', 'ordemparanormal', 'op', 'rolarop', 'dadoop', 'fichacris', 'fichaop', 'agente', 'sanidade', 'san', 'rituais', 'elementos', 'rolar', 'mestresolo', 'jogarsolo', 'mestre', 'iniciativa', 'monstro', 'pv', 'pe', 'mestra', 'itens', 'inventario', 'mochila', 'additem', 'usaritem', 'trilha', 'trilhas', 'habilidades', 'criarficha', 'livro', 'bestiario', 'criaturas', 'catalogo', 'lojadearmas', 'condicoes', 'condicao',
         'gpt', 'gemini', 'ia', 'signo', 'horoscopo', 'traduzir', 'nick', 'gerarnick', 'simi', 'simsimi', 'letra', 'lyrics', 'letramusic', 'letramusica',
         'assistir', 'assistiranime', 'anime', 'buscaranime', 'playanime', 'watchanime', 'anirecente', 'animesrecentes', 'aniinfo', 'sushianimes', 'animes',
         'play', 'p', 'playaudio', 'ytaudio', 'ytmp3', 'playvideo', 'playmp4', 'playvid', 'ytmp4', 'ytsearch', 'pesquisa_yt', 'yt-info', 'baixar', 'download',
@@ -1285,16 +1431,17 @@ bot.on(['text', 'photo', 'video', 'audio', 'voice', 'document', 'sticker', 'anim
                 await ctx.reply(
 `🪷 *WHITE LOTUS — COMANDOS COMPLETO*\n
 *👁️ RPG ORDEM PARANORMAL (CRIS)*
-/cris — Menu do Ordem Paranormal e CRIS com botões
-/criarficha — Assistente interativo de criação de ficha com botões
+/cris — Menu completo do Ordem Paranormal com botões
+/criarficha — Assistente de criação de ficha com botões
 /mestresolo — Jogar solo com Mestre White Lotus (IA)
 /op <atributo> [perícia] — Rola dados de Ordem Paranormal (3d20)
 /fichacris — Ficha e inventário do Agente
 /itens — Ver mochila e armas equipadas
 /rituais — Conjurar rituais paranormais com botões
 /trilhas — Selecionar Trilha e ver Habilidades
-/mestre — Gerenciar mesa e iniciativa no Telegram
-/sanidade | /monstro\n
+/bestiario — Bestiário Paranormal do Livro
+/catalogo — Loja de Armas e Proteções
+/livro — Acessar Livro de Regras Oficial (PDF)\n
 *🤖 IA & TEXTO*
 /gpt <pergunta> — IA Chat Llama 3.3
 /gemini <pergunta> — IA Chat
@@ -1352,10 +1499,44 @@ bot.on(['text', 'photo', 'video', 'audio', 'voice', 'document', 'sticker', 'anim
                 await ctx.reply('🪷 *WHITE LOTUS*\nTelegram Edition\nPrefixos aceitos: `/`, `©`, `.`, `!` ou nome do comando', { parse_mode: 'Markdown' });
                 break;
 
-            // ── RPG ORDEM PARANORMAL (CRIS) ─────────────
+            // ── RPG ORDEM PARANORMAL (CRIS & LIVRO DE REGRAS) ──
             case 'cris': case 'ordem': case 'rpg': case 'ordemparanormal': {
                 const m = menuOrdem();
                 await ctx.reply(m.text, { parse_mode: 'Markdown', ...Markup.inlineKeyboard(m.reply_markup.inline_keyboard) });
+                break;
+            }
+
+            case 'livro': {
+                await ctx.reply(
+                    `📖 *LIVRO DE REGRAS OFICIAL — ORDEM PARANORMAL RPG*\n\n` +
+                    `Acesse o acervo oficial em PDF do Livro de Regras:\n\n` +
+                    `🔗 [Baixar / Visualizar Livro de Regras PDF](${LINK_LIVRO_REGRAS})\n\n` +
+                    `🌐 *Site C.R.I.S.:* https://cris.site`,
+                    { parse_mode: 'Markdown', ...Markup.inlineKeyboard([[Markup.button.url('📖 Abrir Livro em PDF', LINK_LIVRO_REGRAS)]]) }
+                );
+                break;
+            }
+
+            case 'bestiario': case 'criaturas': {
+                await ctx.reply('👾 *BESTIÁRIO PARANORMAL — LIVRO DE REGRAS*\n\nEscolha uma ameaça para consultar a ficha:', { parse_mode: 'Markdown', ...botoesBestiarioCris() });
+                break;
+            }
+
+            case 'catalogo': case 'lojadearmas': {
+                await ctx.reply('🔫 *CATÁLOGO DE ARMAS E EQUIPAMENTOS*\n\nEscolha um item para adicionar à sua mochila:', { parse_mode: 'Markdown', ...botoesCatalogoArmas() });
+                break;
+            }
+
+            case 'condicoes': case 'condicao': {
+                const f = getOuCriarFicha(sid, pushname);
+                await ctx.reply(
+                    `🩸 *GERENCIADOR DE CONDIÇÕES CRIS*\n\n` +
+                    `👤 *Agente:* ${f.nome}\n` +
+                    `❤️ *PV:* ${f.pv}/${f.pvMax} | 🧠 *SAN:* ${f.san}/${f.sanMax}\n` +
+                    `⚠️ *Condições Ativas:* ${f.condicoes?.join(', ') || 'Saudável'}\n\n` +
+                    `Clique para aplicar/limpar condições:`,
+                    { parse_mode: 'Markdown', ...botoesCondicoesCris() }
+                );
                 break;
             }
 
@@ -1555,7 +1736,8 @@ bot.on(['text', 'photo', 'video', 'audio', 'voice', 'document', 'sticker', 'anim
                     `• 🧠 INT: ${f.int} | 👁️ PRE: ${f.pre}\n` +
                     `• 💪 VIG: ${f.vig}\n\n` +
                     `❤️ *PV:* ${f.pv}/${f.pvMax} | ⚡ *PE:* ${f.pe}/${f.peMax} | 🧠 *SAN:* ${f.san}/${f.sanMax}\n` +
-                    `🛡️ *Defesa:* ${f.defesa} | 📦 *Carga:* ${f.cargaMax} Espaços\n\n` +
+                    `🛡️ *Defesa:* ${f.defesa} | 📦 *Carga:* ${f.cargaMax} Espaços\n` +
+                    `⚠️ *Condição:* ${f.condicoes?.join(', ') || 'Saudável'}\n\n` +
                     `📖 *Livro de Regras:* ${LINK_LIVRO_REGRAS}\n` +
                     `🌐 *Site CRIS:* https://cris.site`;
 
