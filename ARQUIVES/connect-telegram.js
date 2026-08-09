@@ -2087,19 +2087,149 @@ function botoesCardCriatura(key) {
     ]);
 }
 
-function botoesCatalogoArmas() {
+// ====== BANCO DE DADOS DO CATÁLOGO DE EQUIPAMENTOS ======
+const CATALOGO_GERAL_DATA = {
+    // ARMAS DE FOGO & COMBATE
+    pistola: { id: "item_pistola", nome: "Pistola .40 (1d12)", tipo: "arma", dano: "1d12", categoria: "I", peso: 1 },
+    revolver: { id: "item_revolver", nome: "Revólver .38 (2d6)", tipo: "arma", dano: "2d6", categoria: "I", peso: 1 },
+    fuzil: { id: "item_fuzil", nome: "Fuzil de Precisão (2d12)", tipo: "arma", dano: "2d12", categoria: "III", peso: 2 },
+    fuzil_assalto: { id: "item_fuzil_assalto", nome: "Fuzil de Assalto (2d10)", tipo: "arma", dano: "2d10", categoria: "III", peso: 2 },
+    submetralhadora: { id: "item_submetralhadora", nome: "Submetralhadora (2d6)", tipo: "arma", dano: "2d6", categoria: "II", peso: 1 },
+    escopeta: { id: "item_escopeta", nome: "Escopeta / Espingarda (3d6)", tipo: "arma", dano: "3d6", categoria: "II", peso: 2 },
+    katana: { id: "item_katana", nome: "Katana Tática (1d10, Crit 19/x3)", tipo: "arma", dano: "1d10", categoria: "II", peso: 1 },
+    machado: { id: "item_machado", nome: "Machado Tático (1d8, Crit x3)", tipo: "arma", dano: "1d8", categoria: "I", peso: 1 },
+    faca: { id: "item_faca", nome: "Faca Tática (1d4, Crit 19)", tipo: "arma", dano: "1d4", categoria: "0", peso: 1 },
+    arco: { id: "item_arco", nome: "Arco Composto (1d10)", tipo: "arma", dano: "1d10", categoria: "I", peso: 1 },
+
+    // PROTEÇÕES
+    colete: { id: "item_colete", nome: "Colete Balístico (+2 DEF)", tipo: "protecao", defesaBonus: 2, categoria: "I", peso: 2 },
+    escudo: { id: "item_escudo", nome: "Escudo Tático (+2 DEF)", tipo: "protecao", defesaBonus: 2, categoria: "II", peso: 2 },
+    protecao_pesada: { id: "item_protecao_pesada", nome: "Proteção Pesada (+5 DEF)", tipo: "protecao", defesaBonus: 5, categoria: "II", peso: 3 },
+    capacete: { id: "item_capacete", nome: "Capacete Tático (+2 DEF)", tipo: "protecao", defesaBonus: 2, categoria: "I", peso: 1 },
+
+    // CONSUMÍVEIS & MEDICINA
+    medkit: { id: "item_medkit", nome: "Kit de Medicina (+15 PV)", tipo: "consumivel", curaPV: 15, categoria: "I", peso: 1 },
+    cicatrizante: { id: "item_cicatrizante", nome: "Cicatrizante Paranormal (+10 PV)", tipo: "consumivel", curaPV: 10, categoria: "I", peso: 1 },
+    elixir: { id: "item_elixir", nome: "Elixir de Sanidade (+10 SAN)", tipo: "consumivel", curaSAN: 10, categoria: "I", peso: 1 },
+    granada: { id: "item_granada", nome: "Granada Incendiária (3d6 Fogo)", tipo: "consumivel", categoria: "I", peso: 1 },
+    granada_frag: { id: "item_granada_frag", nome: "Granada de Fragmentação (4d6 Perfuração)", tipo: "consumivel", categoria: "I", peso: 1 },
+    granada_flash: { id: "item_granada_flash", nome: "Granada de Atordoamento (Cega/Atordoa)", tipo: "consumivel", categoria: "I", peso: 1 },
+
+    // UTENSÍLIOS
+    lanterna: { id: "item_lanterna", nome: "Lanterna Tática", tipo: "utensilio", categoria: "0", peso: 1 },
+    tablet: { id: "item_tablet", nome: "Tablet de Investigação (+2 Investigação)", tipo: "utensilio", categoria: "I", peso: 1 },
+    mochila: { id: "item_mochila", nome: "Mochila Militar (+2 Espaços Carga)", tipo: "utensilio", categoria: "I", peso: 1 },
+    radio: { id: "item_radio", nome: "Rádio Transceptor QG", tipo: "utensilio", categoria: "0", peso: 1 },
+    kit_pericia: { id: "item_kit_pericia", nome: "Kit de Perícia (+2 Testes)", tipo: "utensilio", categoria: "I", peso: 1 },
+    corda: { id: "item_corda", nome: "Corda Tática Reforçada (15m)", tipo: "utensilio", categoria: "0", peso: 1 }
+};
+
+function botoesCatalogoHub() {
     return Markup.inlineKeyboard([
         [
-            Markup.button.callback('🔫 Add: Fuzil de Precisão 2d12', 'cat_add_fuzil'),
-            Markup.button.callback('⚔️ Add: Katana Tática 1d10', 'cat_add_katana')
+            Markup.button.callback('🔫 Armas & Combate', 'cat_sec_armas'),
+            Markup.button.callback('🛡️ Proteções & Coletes', 'cat_sec_protecoes')
         ],
         [
-            Markup.button.callback('💥 Add: Granada Incendiária 3d6', 'cat_add_granada'),
-            Markup.button.callback('🛡️ Add: Escudo Tático (+2 DEF)', 'cat_add_escudo')
+            Markup.button.callback('🩺 Medicina & Consumíveis', 'cat_sec_consumiveis'),
+            Markup.button.callback('🔦 Utensílios & Equipamentos', 'cat_sec_utensilios')
         ],
         [
-            Markup.button.callback('🩹 Add: Elixir de Sanidade (+10 SAN)', 'cat_add_elixir'),
-            Markup.button.callback('🩺 Add: Kit de Medicina (+15 PV)', 'cat_add_medkit')
+            Markup.button.callback('🔮 Itens Amaldiçoados Paranormais', 'cris_menu_amaldicoados')
+        ],
+        [
+            Markup.button.callback('➕ Adicionar Item Personalizado (/additem)', 'cris_prompt_additem')
+        ],
+        [
+            Markup.button.callback('◀️ Voltar ao Menu CRIS', 'cris')
+        ]
+    ]);
+}
+
+function botoesCatalogoArmas() {
+    return botoesCatalogoHub();
+}
+
+function botoesCatArmas() {
+    return Markup.inlineKeyboard([
+        [
+            Markup.button.callback('🔫 Pistola .40 (1d12)', 'cat_add_pistola'),
+            Markup.button.callback('🔫 Revólver .38 (2d6)', 'cat_add_revolver')
+        ],
+        [
+            Markup.button.callback('🔫 Fuzil de Assalto (2d10)', 'cat_add_fuzil_assalto'),
+            Markup.button.callback('🔫 Fuzil de Precisão (2d12)', 'cat_add_fuzil')
+        ],
+        [
+            Markup.button.callback('🔫 Submetralhadora (2d6)', 'cat_add_submetralhadora'),
+            Markup.button.callback('🔫 Escopeta (3d6)', 'cat_add_escopeta')
+        ],
+        [
+            Markup.button.callback('⚔️ Katana Tática (1d10)', 'cat_add_katana'),
+            Markup.button.callback('🪓 Machado Tático (1d8)', 'cat_add_machado')
+        ],
+        [
+            Markup.button.callback('🗡️ Faca Tática (1d4)', 'cat_add_faca'),
+            Markup.button.callback('🏹 Arco Composto (1d10)', 'cat_add_arco')
+        ],
+        [
+            Markup.button.callback('◀️ Voltar ao Catálogo', 'cris_menu_catalogo')
+        ]
+    ]);
+}
+
+function botoesCatProtecoes() {
+    return Markup.inlineKeyboard([
+        [
+            Markup.button.callback('🛡️ Colete Balístico (+2 DEF)', 'cat_add_colete'),
+            Markup.button.callback('🛡️ Escudo Tático (+2 DEF)', 'cat_add_escudo')
+        ],
+        [
+            Markup.button.callback('🛡️ Proteção Pesada (+5 DEF)', 'cat_add_protecao_pesada'),
+            Markup.button.callback('🪖 Capacete Tático (+2 DEF)', 'cat_add_capacete')
+        ],
+        [
+            Markup.button.callback('◀️ Voltar ao Catálogo', 'cris_menu_catalogo')
+        ]
+    ]);
+}
+
+function botoesCatConsumiveis() {
+    return Markup.inlineKeyboard([
+        [
+            Markup.button.callback('🩺 Kit de Medicina (+15 PV)', 'cat_add_medkit'),
+            Markup.button.callback('🩹 Cicatrizante (+10 PV)', 'cat_add_cicatrizante')
+        ],
+        [
+            Markup.button.callback('🧪 Elixir de Sanidade (+10 SAN)', 'cat_add_elixir'),
+            Markup.button.callback('💥 Granada Incendiária (3d6)', 'cat_add_granada')
+        ],
+        [
+            Markup.button.callback('💥 Granada Fragmentação (4d6)', 'cat_add_granada_frag'),
+            Markup.button.callback('💥 Granada Atordoamento', 'cat_add_granada_flash')
+        ],
+        [
+            Markup.button.callback('◀️ Voltar ao Catálogo', 'cris_menu_catalogo')
+        ]
+    ]);
+}
+
+function botoesCatUtensilios() {
+    return Markup.inlineKeyboard([
+        [
+            Markup.button.callback('flashlight Lanterna Tática', 'cat_add_lanterna'),
+            Markup.button.callback('📱 Tablet de Investigação', 'cat_add_tablet')
+        ],
+        [
+            Markup.button.callback('🎒 Mochila Militar (+2 Carga)', 'cat_add_mochila'),
+            Markup.button.callback('📻 Rádio Transceptor QG', 'cat_add_radio')
+        ],
+        [
+            Markup.button.callback('🕵️ Kit de Perícia (+2 Teste)', 'cat_add_kit_pericia'),
+            Markup.button.callback('🧯 Corda Tática Reforçada', 'cat_add_corda')
+        ],
+        [
+            Markup.button.callback('◀️ Voltar ao Catálogo', 'cris_menu_catalogo')
         ]
     ]);
 }
@@ -2523,7 +2653,27 @@ bot.action(/^curse_show_(.+)$/, async (ctx) => {
 
 bot.action('cris_menu_catalogo', async (ctx) => {
     await ctx.answerCbQuery();
-    await ctx.reply('🔫 *CATÁLOGO DE ARMAS E EQUIPAMENTOS*\n\nEscolha um item para adicionar à sua mochila:', { parse_mode: 'Markdown', ...botoesCatalogoArmas() });
+    await ctx.reply('🔫 *CATÁLOGO DE ARMAS E EQUIPAMENTOS — ORDEM PARANORMAL*\n\nEscolha uma categoria para explorar os itens oficiais do Livro de Regras:', { parse_mode: 'Markdown', ...botoesCatalogoHub() });
+});
+
+bot.action('cat_sec_armas', async (ctx) => {
+    await ctx.answerCbQuery();
+    await ctx.reply('🔫 *ARMAS DE FOGO & COMBATE*\n\nEscolha uma arma para adicionar à sua mochila:', { parse_mode: 'Markdown', ...botoesCatArmas() });
+});
+
+bot.action('cat_sec_protecoes', async (ctx) => {
+    await ctx.answerCbQuery();
+    await ctx.reply('🛡️ *PROTEÇÕES & ARMADURAS*\n\nEscolha a proteção para equipar no Agente:', { parse_mode: 'Markdown', ...botoesCatProtecoes() });
+});
+
+bot.action('cat_sec_consumiveis', async (ctx) => {
+    await ctx.answerCbQuery();
+    await ctx.reply('🩺 *CONSUMÍVEIS & MEDICINA*\n\nEscolha itens médicos ou granadas:', { parse_mode: 'Markdown', ...botoesCatConsumiveis() });
+});
+
+bot.action('cat_sec_utensilios', async (ctx) => {
+    await ctx.answerCbQuery();
+    await ctx.reply('🔦 *UTENSÍLIOS & EQUIPAMENTOS OPERACIONAIS*\n\nEscolha os utensílios para sua missão:', { parse_mode: 'Markdown', ...botoesCatUtensilios() });
 });
 
 bot.action('cris_prompt_additem', async (ctx) => {
@@ -2713,24 +2863,14 @@ bot.action(/^cat_add_(.+)$/, async (ctx) => {
     await ctx.answerCbQuery();
     const itemKey = ctx.match[1];
     const sid = String(ctx.from.id);
-    const pushname = ctx.from.first_name || 'Agente';
+    const pushname = sanitizeMd(ctx.from.first_name) || 'Agente';
     const db = getFichasDB();
     const f = getOuCriarFicha(sid, pushname);
 
-    const catalogItens = {
-        fuzil: { id: `item_fuzil_${Date.now()}`, nome: 'Fuzil de Precisão (2d12)', tipo: 'arma', dano: '2d12', categoria: 'III', peso: 2 },
-        katana: { id: `item_katana_${Date.now()}`, nome: 'Katana Tática (1d10, Crit 19/x3)', tipo: 'arma', dano: '1d10', categoria: 'II', peso: 1 },
-        granada: { id: `item_granada_${Date.now()}`, nome: 'Granada Incendiária (3d6 Fogo)', tipo: 'consumivel', categoria: 'I', peso: 1 },
-        escudo: { id: `item_escudo_${Date.now()}`, nome: 'Escudo Tático (+2 DEF)', tipo: 'protecao', defesaBonus: 2, categoria: 'II', peso: 2 },
-        elixir: { id: `item_elixir_${Date.now()}`, nome: 'Elixir de Sanidade (+10 SAN)', tipo: 'consumivel', curaSAN: 10, categoria: 'I', peso: 1 },
-        medkit: { id: `item_medkit_${Date.now()}`, nome: 'Kit de Medicina (+15 PV)', tipo: 'consumivel', curaPV: 15, categoria: 'I', peso: 1 }
-    };
-
-    let newItem = catalogItens[itemKey];
-    if (!newItem && ITENS_AMALDICOADOS_DATA[itemKey]) {
+    let baseItem = CATALOGO_GERAL_DATA[itemKey];
+    if (!baseItem && ITENS_AMALDICOADOS_DATA[itemKey]) {
         const c = ITENS_AMALDICOADOS_DATA[itemKey];
-        newItem = {
-            id: `item_curse_${itemKey}_${Date.now()}`,
+        baseItem = {
             nome: c.nome,
             tipo: c.tipo,
             dano: c.dano,
@@ -2740,12 +2880,24 @@ bot.action(/^cat_add_(.+)$/, async (ctx) => {
         };
     }
 
-    if (newItem) {
+    if (baseItem) {
+        const newItem = {
+            id: `item_${itemKey}_${Date.now()}`,
+            nome: baseItem.nome,
+            tipo: baseItem.tipo,
+            dano: baseItem.dano,
+            defesaBonus: baseItem.defesaBonus,
+            categoria: baseItem.categoria || 'I',
+            peso: baseItem.peso || 1
+        };
+
         f.inventario.push(newItem);
         if (newItem.defesaBonus) f.defesa += newItem.defesaBonus;
         db[sid] = f;
         saveFichasDB(db);
         await ctx.reply(`✅ *Item Adicionado à Mochila CRIS:*\n\n📦 *${newItem.nome}* (Cat. ${newItem.categoria} | Peso: ${newItem.peso})`, { parse_mode: 'Markdown' });
+    } else {
+        await ctx.reply('❌ Item não encontrado no catálogo.', { parse_mode: 'Markdown' });
     }
 });
 
