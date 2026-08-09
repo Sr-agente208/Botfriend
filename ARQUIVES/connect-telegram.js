@@ -19,6 +19,7 @@ const PORT = process.env.PORT || 3000;
 const PREFIX = '©';
 const LINK_LIVRO_REGRAS = 'https://dl2.bibliotecaelfica.org/dl/eyJwaWQiOjI3OTcxLCJ1aWQiOm51bGwsInBhdGgiOiJcL3ZhclwvYWNlcnZvXC9zdWdlc3RvZXNcLzVkZjEyYzAyLTJiMWQtNGVhMy04MWZkLTk0ZTZjZDZlMGJhZC5wZGYiLCJtb2RlIjoidmlzdWFsaXphciIsInNwZWVkIjo1MTIwMDAsInNpemUiOjQ4MDI1OTc0LCJ0aXRsZSI6Ik91dHJvcyAtIE9yZGVtIFBhcmFub3JtYWwiLCJleHAiOjE3ODYyNzA2MDN9.d54dffd130fe9d90a51f7e76c29358bdce935545e50e0952be26acad7d274657';
 const LINK_BESTIARIO_WIKI = 'https://ordemparanormal.fandom.com/wiki/Besti%C3%A1rio';
+const LINK_ELEMENTOS_WIKI = 'https://ordemparanormal.fandom.com/wiki/Elementos_do_Outro_Lado';
 
 if (!TOKEN_TG) {
     console.error(chalk.red('[ERRO] TELEGRAM_BOT_TOKEN não definido!'));
@@ -506,6 +507,335 @@ function botoesCondicoesCris() {
             Markup.button.callback('✨ Limpar Condições', 'cond_clear')
         ]
     ]);
+}
+
+// ====== ELEMENTOS DO OUTRO LADO — LORE E DADOS ======
+const ELEMENTOS_DATA = {
+    sangue: {
+        nome: "🩸 Sangue",
+        conceito: "Entidade do sentimento, dor, fome, obsessão, paixão, amor e ódio. O Sangue busca a intensidade extrema das emoções humanas.",
+        relacao: "Supera a razão do Conhecimento 👁️ | É contido pela distorção temporal da Morte ⏳",
+        afinidade: "Sentidos ultra-aguçados, veias salientes, dentes e unhas afiadas, personalidade agressiva e passional.",
+        reliquia: "O Diabo (Trono de Sangue)",
+        fraseGuia: "Tudo começa pelo Sangue. O Sangue é o fluxo que banha a eternidade do Outro Lado."
+    },
+    morte: {
+        nome: "⏳ Morte",
+        conceito: "Entidade do tempo, entropia, lodo preto, decomposição e repetição espiral. A Morte busca a energia potencial dos momentos roubados.",
+        relacao: "Arruína a percepção carnal do Sangue 🩸 | É quebrada pelo caos imprevisível da Energia ⚡",
+        afinidade: "Pele acinzentada, olhos totalmente negros, envelhecimento espontâneo, frieza emocional e postura apática.",
+        reliquia: "O Deus da Morte (Espiral do Tempo)",
+        fraseGuia: "Tudo tem um começo e um fim, e o Tempo leva todas as coisas."
+    },
+    conhecimento: {
+        nome: "👁️ Conhecimento",
+        conceito: "Entidade da razão, símbolos, lógica, verdade, memória e revelação. Busca catalogar e entender todos os segredos do universo.",
+        relacao: "Decifra o caos da Energia ⚡ | É sufocado pela dor e sentimento do Sangue 🩸",
+        afinidade: "Marcas e símbolos dourados na pele, sussurros constantes na mente, memória fotográfica e busca obsessiva por respostas.",
+        reliquia: "A Magistrada (Máscara do Desespero)",
+        fraseGuia: "Saber é existir. A verdade liberta a razão, mas consome a mente."
+    },
+    energia: {
+        nome: "⚡ Energia",
+        conceito: "Entidade do caos, transformação, eletricidade, probabilidade, velocidade, calor e teletransporte. Impede a estagnação e cria o imprevisível.",
+        relacao: "Quebra a estagnação da Morte ⏳ | É contida e decifrada pela lógica do Conhecimento 👁️",
+        afinidade: "Cabelos e olhos em tons neon vibrantes, cargas elétricas na pele, imperatividade e variações intensas de humor.",
+        reliquia: "O Anfitrião (Roleta Paranormal)",
+        fraseGuia: "O caos altera o destino. Tudo que se transforma ganha energia."
+    },
+    medo: {
+        nome: "🖤 Medo",
+        conceito: "O elemento impossível. A essência pura do Outro Lado e o alicerce de todos os rituais e mistérios. Não possui elemento opressor nem oprimido.",
+        relacao: "Transcende os 4 elementos principais. É a origem de toda a manifestação paranormal.",
+        afinidade: "Conexão com o inexplicável, manipulação de enigmas e imunidade a condicionamentos mundanos.",
+        reliquia: "O Enigma de Medo Supremo",
+        fraseGuia: "O Medo é a chave de todas as portas do Outro Lado."
+    }
+};
+
+// ====== BANCO DE DADOS DE RITUAIS ======
+const RITUAIS_DATA = {
+    // SANGUE
+    armadura: {
+        nome: "Armadura de Sangue",
+        circulo: "1º Círculo",
+        elemento: "🩸 Sangue",
+        custoPE: 1,
+        efeito: "Sua pele endurece com placas de sangue coagulado! Concede +5 de Defesa."
+    },
+    cicatrizacao: {
+        nome: "Cicatrização",
+        circulo: "1º Círculo",
+        elemento: "🩸 Sangue",
+        custoPE: 1,
+        efeito: "Acelera a regeneração de tecidos vivos! Recupera +3d8+3 PV e estanca sangramentos."
+    },
+    descarnar: {
+        nome: "Descarnar",
+        circulo: "1º Círculo",
+        elemento: "🩸 Sangue",
+        custoPE: 1,
+        efeito: "Desaloca a pele e carne da vítima em agonia brutal! Causa 2d8 Dano de Sangue."
+    },
+    sanguefervente: {
+        nome: "Sangue Fervente",
+        circulo: "2º Círculo",
+        elemento: "🩸 Sangue",
+        custoPE: 3,
+        efeito: "O sangue do alvo fervilha em fúria! Causa 4d8 Dano de Sangue e concede +2 em Testes de Força."
+    },
+    salto: {
+        nome: "Salto Anormal",
+        circulo: "2º Círculo",
+        elemento: "🩸 Sangue",
+        custoPE: 3,
+        efeito: "Impulsiona as pernas com musculatura paranormal! Triplica a distância de salto e deslocamento."
+    },
+    monstruosa: {
+        nome: "Forma Monstruosa",
+        circulo: "3º Círculo",
+        elemento: "🩸 Sangue",
+        custoPE: 6,
+        efeito: "Transforma o Agente em uma aberração bestial! +10 DEF e +3d12 no dano de ataques corpo a corpo."
+    },
+    chuvasangue: {
+        nome: "Chuva de Sangue",
+        circulo: "4º Círculo",
+        elemento: "🩸 Sangue",
+        custoPE: 10,
+        efeito: "O céu se rasga vertendo torrentes de sangue ácido! Causa 8d12 Dano de Sangue em área imensa."
+    },
+
+    // MORTE
+    decadencia: {
+        nome: "Decadência",
+        circulo: "1º Círculo",
+        elemento: "⏳ Morte",
+        custoPE: 1,
+        efeito: "Envelhece e degrada a matéria no ponto de impacto! Causa 2d8 Dano de Morte."
+    },
+    consumirmat: {
+        nome: "Consumir Matéria",
+        circulo: "1º Círculo",
+        elemento: "⏳ Morte",
+        custoPE: 1,
+        efeito: "Aplica lodo entrópico em estrutura inanimada, corroendo e reduzindo sua Resistência."
+    },
+    velocidade: {
+        nome: "Velocidade Mortal",
+        circulo: "2º Círculo",
+        elemento: "⏳ Morte",
+        custoPE: 3,
+        efeito: "Distorce a percepção do tempo! Garante 1 Ação Padrão adicional a cada turno."
+    },
+    poeira: {
+        nome: "Poeira da Morte",
+        circulo: "2º Círculo",
+        elemento: "⏳ Morte",
+        custoPE: 3,
+        efeito: "Sopra cinzas temporais que entram nas vias respiratórias! Causa 4d6 Dano de Morte e atordoa."
+    },
+    ancora: {
+        nome: "Âncora Temporal",
+        circulo: "3º Círculo",
+        elemento: "⏳ Morte",
+        custoPE: 6,
+        efeito: "Congela o fluxo de tempo da área! Impede qualquer movimento dos inimigos por 1 rodada."
+    },
+    fimtempos: {
+        nome: "Fim dos Tempos",
+        circulo: "4º Círculo",
+        elemento: "⏳ Morte",
+        custoPE: 10,
+        efeito: "Libera espiral entrópica absoluta! Causa 10d10 Dano de Morte desintegrando tudo ao redor."
+    },
+
+    // CONHECIMENTO
+    sussurros: {
+        nome: "Sussurros Paranormais",
+        circulo: "1º Círculo",
+        elemento: "👁️ Conhecimento",
+        custoPE: 1,
+        efeito: "Revela segredos e informações ocultas na sala! Concede +5 em Investigação e Percepção."
+    },
+    compreensao: {
+        nome: "Compreensão Paranormal",
+        circulo: "1º Círculo",
+        elemento: "👁️ Conhecimento",
+        custoPE: 1,
+        efeito: "Decodifica imediatamente inscrições, runas ocultas e idiomas desconhecidos."
+    },
+    aprimorarmente: {
+        nome: "Aprimorar Mente",
+        circulo: "2º Círculo",
+        elemento: "👁️ Conhecimento",
+        custoPE: 3,
+        efeito: "Expande a capacidade cognitiva! Aumenta os atributos de Intelecto e Presença em +2."
+    },
+    visao: {
+        nome: "Visão do Oculto",
+        circulo: "2º Círculo",
+        elemento: "👁️ Conhecimento",
+        custoPE: 3,
+        efeito: "Abre o terceiro olho! Permite enxergar criaturas invisíveis e camufladas no ambiente."
+    },
+    invasaomental: {
+        nome: "Invasão Mental",
+        circulo: "3º Círculo",
+        elemento: "👁️ Conhecimento",
+        custoPE: 6,
+        efeito: "Projeta símbolos de perturbação na mente da vítima! Causa 6d8 Dano Mental e apaga lembranças."
+    },
+    anularexistencia: {
+        nome: "Anular a Existência",
+        circulo: "4º Círculo",
+        elemento: "👁️ Conhecimento",
+        custoPE: 10,
+        efeito: "Reescreve o conceito do alvo na história! Apaga o ser da realidade (DT 30 de Vontade)."
+    },
+
+    // ENERGIA
+    eletrocussao: {
+        nome: "Eletrocussão",
+        circulo: "1º Círculo",
+        elemento: "⚡ Energia",
+        custoPE: 1,
+        efeito: "Dispara arcos voltaicos pelos dedos! Causa 2d6 Dano de Energia e chance de atordoamento."
+    },
+    chama: {
+        nome: "Chama do Caos",
+        circulo: "1º Círculo",
+        elemento: "⚡ Energia",
+        custoPE: 1,
+        efeito: "Cria labareda plasmática imprevisível! Causa 1d12 Dano de Fogo/Energia."
+    },
+    coincidencia: {
+        nome: "Coincidência Forçada",
+        circulo: "1º Círculo",
+        elemento: "⚡ Energia",
+        custoPE: 1,
+        efeito: "Manipula probabilidades! Concede +2 de Bônus em todos os testes no próximo turno."
+    },
+    tela: {
+        nome: "Tela de Ruído",
+        circulo: "2º Círculo",
+        elemento: "⚡ Energia",
+        custoPE: 3,
+        efeito: "Cria barreira de estática ao redor do corpo! Absorve danos concedendo +15 a +30 PV Temp."
+    },
+    faiscas: {
+        nome: "Chuva de Faíscas",
+        circulo: "2º Círculo",
+        elemento: "⚡ Energia",
+        custoPE: 3,
+        efeito: "Lança descarga elétrica em cone! Causa 4d6 Dano de Energia a todos os atingidos."
+    },
+    polarizacao: {
+        nome: "Polarização Caótica",
+        circulo: "3º Círculo",
+        elemento: "⚡ Energia",
+        custoPE: 6,
+        efeito: "Inverte campos magnéticos e gravidade! Arremessa ou atrai múltiplos objetos e alvos."
+    },
+    sobrecarga: {
+        nome: "Sobrecarga Total",
+        circulo: "3º Círculo",
+        elemento: "⚡ Energia",
+        custoPE: 6,
+        efeito: "Dispara feixe devastador de energia puríssima! Causa 6d10 Dano de Energia."
+    },
+    singularidade: {
+        nome: "Singularidade",
+        circulo: "4º Círculo",
+        elemento: "⚡ Energia",
+        custoPE: 10,
+        efeito: "Abre um micro buraco negro caótico! Suga e esmaga alvos causando 10d8 Dano de Energia."
+    },
+
+    // MEDO
+    laminamedo: {
+        nome: "Lâmina do Medo",
+        circulo: "4º Círculo",
+        elemento: "🖤 Medo",
+        custoPE: 10,
+        efeito: "Forja lâmina imaterial irrestrita que ignora todas as resistências, defesas e imunidades do alvo!"
+    },
+    presencamedo: {
+        nome: "Presença do Medo",
+        circulo: "4º Círculo",
+        elemento: "🖤 Medo",
+        custoPE: 10,
+        efeito: "Projeta a essência primal do Outro Lado! Força teste de Vontade DT 30 ou o alvo enlouquece."
+    }
+};
+
+function formatarElemento(e) {
+    if (!e) return '🔮 Elemento Paranormal não encontrado.';
+    return `🔮 *${e.nome.toUpperCase()} — ELEMENTO DO OUTRO LADO*\n\n` +
+        `📖 *Conceito:* ${e.conceito}\n\n` +
+        `⚔️ *Relação & Vantagem:* ${e.relacao}\n\n` +
+        `🌀 *Afinidade:* ${e.afinidade}\n\n` +
+        `👑 *Relíquia da Calamidade:* ${e.reliquia}\n\n` +
+        `📜 _"${e.fraseGuia}"_`;
+}
+
+function botoesElementosHub() {
+    return Markup.inlineKeyboard([
+        [
+            Markup.button.callback('🩸 Sangue', 'elem_det_sangue'),
+            Markup.button.callback('⏳ Morte', 'elem_det_morte')
+        ],
+        [
+            Markup.button.callback('👁️ Conhecimento', 'elem_det_conhecimento'),
+            Markup.button.callback('⚡ Energia', 'elem_det_energia')
+        ],
+        [
+            Markup.button.callback('🖤 Medo', 'elem_det_medo')
+        ],
+        [
+            Markup.button.callback('🔮 Rituais por Círculo (1º ao 4º)', 'cris_menu_circulos_rit'),
+            Markup.button.callback('👾 Bestiário Paranormal', 'cris_menu_bestiario')
+        ],
+        [
+            Markup.button.url('🌐 Fandom: Elementos do Outro Lado', LINK_ELEMENTOS_WIKI)
+        ],
+        [
+            Markup.button.callback('◀️ Voltar ao Menu CRIS', 'cris')
+        ]
+    ]);
+}
+
+function botoesCardElemento(elemKey) {
+    return Markup.inlineKeyboard([
+        [
+            Markup.button.callback(`🔮 Rituais de ${elemKey.toUpperCase()}`, `rit_elem_${elemKey}`),
+            Markup.button.callback(`👾 Criaturas de ${elemKey.toUpperCase()}`, `best_cat_${elemKey}`)
+        ],
+        [
+            Markup.button.url('🌐 Wiki Fandom Elementos', LINK_ELEMENTOS_WIKI)
+        ],
+        [
+            Markup.button.callback('◀️ Voltar aos Elementos', 'cris_menu_elementos')
+        ]
+    ]);
+}
+
+function botoesRituaisElemento(elemKey) {
+    const rits = Object.entries(RITUAIS_DATA).filter(([k, r]) => {
+        if (elemKey === 'sangue') return r.elemento.includes('Sangue');
+        if (elemKey === 'morte') return r.elemento.includes('Morte');
+        if (elemKey === 'conhecimento') return r.elemento.includes('Conhecimento');
+        if (elemKey === 'energia') return r.elemento.includes('Energia');
+        if (elemKey === 'medo') return r.elemento.includes('Medo');
+        return false;
+    });
+
+    const btns = rits.map(([k, r]) => [
+        Markup.button.callback(`${r.elemento.split(' ')[0]} ${r.nome} (${r.circulo}, ${r.custoPE} PE)`, `cris_rit_${k}`)
+    ]);
+
+    btns.push([Markup.button.callback('◀️ Voltar aos Elementos', 'cris_menu_elementos')]);
+    return Markup.inlineKeyboard(btns);
 }
 
 // ====== BESTIÁRIO PARANORMAL — BANCO DE DADOS ======
@@ -1476,13 +1806,32 @@ bot.action('rit_circulo_4', async (ctx) => {
 bot.action('cris_menu_elementos', async (ctx) => {
     await ctx.answerCbQuery();
     const txt = `🔮 *ELEMENTOS PARANORMAIS — ORDEM PARANORMAL*\n\n` +
+        `Os Elementos do Outro Lado regem as forças paranormais que vazam para a Realidade. Escolha um elemento para consultar o conceito, afinidades e rituais:\n\n` +
         `🩸 *SANGUE:* Sentimento, dor, fúria, transformação física e vitalidade.\n` +
         `⏳ *MORTE:* Tempo, cinzas, decomposição, controle de sangramento e entropia.\n` +
         `👁️ *CONHECIMENTO:* Razão, símbolos, percepção ampliada, segredos e intuição.\n` +
         `⚡ *ENERGIA:* Caos, eletricidade, velocidade, probabilidade e teletransporte.\n` +
-        `🖤 *MEDO:* O elemento impossível. Origem dos rituais lendários.\n\n` +
-        `🌐 *Site CRIS:* https://cris.site`;
-    await ctx.reply(txt, { parse_mode: 'Markdown', ...botoesCirculosRituais() });
+        `🖤 *MEDO:* O elemento impossível. Origem e essência de todos os rituais.\n\n` +
+        `⚔️ *Ciclo de Vantagem:* Sangue 🩸 → Conhecimento 👁️ → Energia ⚡ → Morte ⏳ → Sangue 🩸`;
+    await ctx.reply(txt, { parse_mode: 'Markdown', ...botoesElementosHub() });
+});
+
+bot.action(/^elem_det_(.+)$/, async (ctx) => {
+    await ctx.answerCbQuery();
+    const key = ctx.match[1];
+    const e = ELEMENTOS_DATA[key];
+    if (e) {
+        await ctx.reply(formatarElemento(e), { parse_mode: 'Markdown', ...botoesCardElemento(key) });
+    } else {
+        await ctx.reply('🔮 Elemento Paranormal não encontrado.', { parse_mode: 'Markdown' });
+    }
+});
+
+bot.action(/^rit_elem_(.+)$/, async (ctx) => {
+    await ctx.answerCbQuery();
+    const key = ctx.match[1];
+    const e = ELEMENTOS_DATA[key];
+    await ctx.reply(`🔮 *RITUAIS DE ${e ? e.nome.toUpperCase() : key.toUpperCase()}*\n\nClique no ritual que deseja conjurar:`, { parse_mode: 'Markdown', ...botoesRituaisElemento(key) });
 });
 
 // ACTIONS DE BESTIÁRIO, CATÁLOGO E CONDIÇÕES CRIS
@@ -2784,15 +3133,43 @@ bot.on(['text', 'photo', 'video', 'audio', 'voice', 'document', 'sticker', 'anim
                 break;
             }
 
-            case 'rituais': case 'elementos': {
-                const txt = `🔮 *ELEMENTOS PARANORMAIS — ORDEM PARANORMAL*\n\n` +
-                    `🩸 *SANGUE:* Sentimento, paixão, dor, carne e fúria. Transforma o corpo e amplifica a força.\n` +
-                    `⏳ *MORTE:* Tempo, cinzas, entropia e decomposição. Acelera ou desacelera a realidade.\n` +
-                    `👁️ *CONHECIMENTO:* Razão, símbolos, verdades e segredos. Altera percepção e revelação.\n` +
-                    `⚡ *ENERGIA:* Caos, eletricidade, transformação e o imprevisível. Muda a matéria instantaneamente.\n` +
-                    `🖤 *MEDO:* O elemento impossível. Origem dos rituais.\n\n` +
-                    `🌐 *Acesse rituais e fichas em:* https://cris.site`;
-                await ctx.reply(txt, { parse_mode: 'Markdown', ...botoesCirculosRituais() });
+            case 'rituais': case 'elementos': case 'elementosop': {
+                if (q) {
+                    const termo = q.toLowerCase();
+                    const ritMatch = Object.entries(RITUAIS_DATA).find(([k, r]) =>
+                        r.nome.toLowerCase().includes(termo) || k.includes(termo)
+                    );
+                    const elemMatch = Object.entries(ELEMENTOS_DATA).find(([k, e]) =>
+                        e.nome.toLowerCase().includes(termo) || k.includes(termo)
+                    );
+
+                    if (ritMatch) {
+                        const r = ritMatch[1];
+                        await ctx.reply(
+                            `🔮 *RITUAL: ${r.nome.toUpperCase()}*\n\n` +
+                            `⭐ *Círculo:* ${r.circulo} | 🔮 *Elemento:* ${r.elemento}\n` +
+                            `⚡ *Custo:* ${r.custoPE} PE\n\n` +
+                            `✨ *Efeito:* ${r.efeito}`,
+                            { parse_mode: 'Markdown', ...Markup.inlineKeyboard([[Markup.button.callback(`🔮 Conjurar ${r.nome}`, `cris_rit_${ritMatch[0]}`)], [Markup.button.callback('◀️ Voltar aos Rituais', 'cris_menu_circulos_rit')]]) }
+                        );
+                        break;
+                    } else if (elemMatch) {
+                        const e = elemMatch[1];
+                        await ctx.reply(formatarElemento(e), { parse_mode: 'Markdown', ...botoesCardElemento(elemMatch[0]) });
+                        break;
+                    }
+                }
+
+                const txt = `🔮 *ELEMENTOS PARANORMAIS E RITUAIS — C.R.I.S.*\n\n` +
+                    `Os Elementos do Outro Lado regem todas as forças e rituais de Ordem Paranormal RPG:\n\n` +
+                    `🩸 *SANGUE:* Sentimento, dor, fúria, transformação e vitalidade.\n` +
+                    `⏳ *MORTE:* Tempo, cinzas, decomposição, entropia e repetição espiral.\n` +
+                    `👁️ *CONHECIMENTO:* Razão, símbolos, lógica, verdade e percepção.\n` +
+                    `⚡ *ENERGIA:* Caos, eletricidade, probabilidade, velocidade e calor.\n` +
+                    `🖤 *MEDO:* O elemento impossível. Essência de todos os rituais.\n\n` +
+                    `⚔️ *Ciclo de Opressão:* Sangue 🩸 → Conhecimento 👁️ → Energia ⚡ → Morte ⏳ → Sangue 🩸\n\n` +
+                    `Escolha abaixo para explorar Elementos ou Rituais por Círculo:`;
+                await ctx.reply(txt, { parse_mode: 'Markdown', ...botoesElementosHub() });
                 break;
             }
 
