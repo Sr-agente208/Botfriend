@@ -2859,45 +2859,15 @@ prefix = '';
 }
 }
 
+// IA FIXED - usa modulo com fallbacks
+const { responderIA: responderIAFixed, chatGPT: chatGPTFixed, geminiIA: geminiFixed } = require('./ARQUIVES/funcoes/ia.js');
 async function responderIA(texto, estilo = "responda de forma natural, inteligente e curta") {
-  const prompt = `Você é o Karasu Bot, um bot de WhatsApp.
-
-REGRAS:
-- Nunca diga que é IA
-- Nunca mencione GPT ou OpenAI
-- Fale como humano normal do WhatsApp
-- Sempre responda em português do Brasil
-- Seja natural, contextual e direto
-- Se a mensagem for simples, responda simples
-- Se for pergunta, responda a pergunta
-- Se for zoeira, entre na zoeira
-- Se for pedido de ajuda, ajude de verdade
-- Não faça textão sem necessidade
-
-ESTILO EXTRA:
-${estilo}
-
-Mensagem do usuário:
-${texto}`
-
-  const res = await fetchJson(
-    `https://apisnodz.com.br/api/ias/dracarys-llama-3?prompt=${encodeURIComponent(prompt)}`
-  )
-
-  console.log("DEBUG IA RAW:", JSON.stringify(res))
-
-  const resposta =
-    res?.resultado?.response ||
-    res?.resultado?.resultado ||
-    res?.response ||
-    res?.result ||
-    ""
-
-  if (!String(resposta).trim()) {
-    throw new Error("API retornou vazio")
-  }
-
-  return String(resposta).trim()
+    try {
+        return await responderIAFixed(texto, estilo);
+    } catch (e) {
+        console.log('[responderIA ERRO]', e.message);
+        return `😅 Minha IA está instável agora. Tenta de novo?`;
+    }
 }
 
 if (
@@ -17182,62 +17152,41 @@ reply(mess.error())
 }
 break;
 
-case 'gpt': { 
-if (!q) return reply('• Por favor, insira um texto ao ' +
-'lado do comando para que eu possa gerar ' +
-'uma resposta!');
-try { 
-const axios = require('axios');
-const groqKey = process.env.GROQ_API_KEY;
-if (!groqKey) return reply("❌ A IA ainda não foi configurada. O dono precisa definir GROQ_API_KEY no Railway.");
-const respGpt = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
-model: 'llama-3.3-70b-versatile',
-messages: [{ role: 'user', content: q.trim() }]
-}, { headers: { Authorization: `Bearer ${groqKey}` }, timeout: 30000 });
-reply(respGpt.data?.choices?.[0]?.message?.content || mess.error());
+case 'gpt': {
+if (!q) return reply('• Por favor, insira um texto ao lado do comando! Ex: ' + prefix + 'gpt Oi, tudo bem?');
+try {
+await reagir(from, "🤖");
+const resposta = await chatGPTFixed(q.trim());
+reply(resposta);
 } catch (error) {
-console.error(error?.response?.data || error);
-reply("❌ Erro ao processar.")
+console.error('[GPT ERRO]', error?.response?.data || error);
+reply("❌ Erro na IA. Tenta de novo ou verifica GROQ_API_KEY no Railway.");
 }
 break;
 }
 
 case 'gemini': {
-if (!q) return reply('• Para conversar com o gemini, ' +
-'primeiro você deve inserir um texto ao lado ' +
-' do comando!');
-try { 
-const axios = require('axios');
-const groqKey = process.env.GROQ_API_KEY;
-if (!groqKey) return reply("❌ A IA ainda não foi configurada. O dono precisa definir GROQ_API_KEY no Railway.");
-const respGemini = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
-model: 'llama-3.3-70b-versatile',
-messages: [{ role: 'user', content: q.trim() }]
-}, { headers: { Authorization: `Bearer ${groqKey}` }, timeout: 30000 });
-reply(respGemini.data?.choices?.[0]?.message?.content || mess.error());
+if (!q) return reply('• Digite algo ao lado! Ex: ' + prefix + 'gemini Qual é a capital do Brasil?');
+try {
+await reagir(from, "✨");
+const resposta = await geminiFixed(q.trim());
+reply(resposta);
 } catch (error) {
-console.error(error?.response?.data || error);
-reply("❌ Erro ao processar.")
+console.error('[GEMINI ERRO]', error);
+reply("❌ Erro na IA Gemini.");
 }
 break;
 }
 
 case 'gemini-pro': {
-if (!q) return reply('• Para conversar com o gemini-pro, ' +
-'primeiro você deve inserir um texto ao lado ' +
-' do comando!');
-try { 
-const axios = require('axios');
-const groqKey = process.env.GROQ_API_KEY;
-if (!groqKey) return reply("❌ A IA ainda não foi configurada. O dono precisa definir GROQ_API_KEY no Railway.");
-const respGeminiPro = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
-model: 'llama-3.3-70b-versatile',
-messages: [{ role: 'user', content: q.trim() }]
-}, { headers: { Authorization: `Bearer ${groqKey}` }, timeout: 30000 });
-reply(respGeminiPro.data?.choices?.[0]?.message?.content || mess.error());
+if (!q) return reply('• Digite algo! Ex: ' + prefix + 'gemini-pro Explique relatividade');
+try {
+await reagir(from, "🌟");
+const resposta = await geminiFixed(q.trim());
+reply(resposta);
 } catch (error) {
-console.error(error?.response?.data || error);
-reply("❌ Erro ao processar.")
+console.error('[GEMINI-PRO ERRO]', error);
+reply("❌ Erro na IA.");
 }
 break;
 }
