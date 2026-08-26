@@ -2454,7 +2454,7 @@ try {
 
 async function sendMenu(from, selo, opt = {}) {
 const {
-reaction = "⚡", caption = mess.error(), isGroupRequired = false, isAdminRequired = false, isOwnerRequired = false, isModoCoinsRequired = false, isModoBnRequired = false, sendAudio = false } = opt;
+reaction = "🪷", caption = mess.error(), isGroupRequired = false, isAdminRequired = false, isOwnerRequired = false, isModoCoinsRequired = false, isModoBnRequired = false, sendAudio = false, useButtons = true } = opt;
 try {
 reagir(from, reaction);
 if (isGroupRequired && !isGroup) return reply(mess.onlyGroup());
@@ -2463,20 +2463,77 @@ if (isOwnerRequired && !SoDono) return reply(mess.onlyOwner());
 if (isModoCoinsRequired && !isModoCoins) return reply(`*ᴇssᴇ ᴄᴏᴍᴀɴᴅᴏ só ᴘᴏᴅᴇ sᴇʀ ᴀᴛɪᴠᴏ ǫᴜᴀɴᴅᴏ ᴏ sɪᴛᴇᴍᴀ ${prefix}ᴍᴏᴅᴏᴄᴏɪɴs ᴇsᴛɪᴠᴇʀ ᴀᴛɪᴠᴏ.*`);
 if (isModoBnRequired && !isModobn) return reply(mess.onlyGroupFun(prefix));
 if (sendAudio && isAudioMenu) await sendAudioMenu(from);
+
 const midia = carregarMidia("fotomenu");
-const msg = { caption, contextInfo: { ...NkChannelKk } };
+const whiteLotusFooter = `🪷 WHITE LOTUS • ${NomeDoBot} 🪷\nO Lótus Branco floresce novamente`;
+
+// Se botoes ativado e useButtons true, usar botões interativos
+if (useButtons && nescessario.botoes) {
+    try {
+        const { sendButton } = require('./ARQUIVES/funcoes/botoes.js');
+        const dados = {};
+        if (midia.type === "video") {
+            dados.video = midia.data;
+            dados.caption = caption;
+            dados.footer = whiteLotusFooter;
+            dados.mentions = [sender];
+        } else if (midia.type === "image") {
+            dados.image = midia.data;
+            dados.caption = caption;
+            dados.footer = whiteLotusFooter;
+            dados.mentions = [sender];
+        } else {
+            dados.text = caption;
+            dados.footer = whiteLotusFooter;
+            dados.mentions = [sender];
+        }
+        
+        // Botões do menu principal White Lotus
+        const botoesMenu = [
+            { type: 'cmd', text: '🪷 Menu Brincadeiras', command: `${prefix}menubn` },
+            { type: 'cmd', text: '💍 Casal / Namoro', command: `${prefix}menucasal` },
+            { type: 'cmd', text: '🎮 Jogos', command: `${prefix}menujogos` },
+            { type: 'cmd', text: '💰 Coins', command: `${prefix}menucoins` },
+            { type: 'list', title: '🪷 Outros Menus', sections: [
+                { title: 'Menus', options: [
+                    { title: 'Menu ADM', description: 'Comandos de admin', command: `${prefix}menuadm` },
+                    { title: 'Menu Dono', description: 'Comandos do dono', command: `${prefix}menudono` },
+                    { title: 'Menu Logos', description: 'Criar logos', command: `${prefix}menulogos` },
+                    { title: 'Menu Downloads', description: 'Baixar vídeos/músicas', command: `${prefix}menudownload` },
+                    { title: 'Menu IA', description: 'ChatGPT, Gemini', command: `${prefix}menuia` }
+                ]}
+            ]}
+        ];
+        
+        // Se for menu principal, usar botoesMenu, senão botoes simples
+        if (caption.includes('𝑶𝑼𝑻𝑹𝑶𝑺 𝑴𝑬𝑵𝑼𝑺') || caption.length > 1000) {
+            await sendButton(from, dados, keisen, sender, botoesMenu, selo);
+        } else {
+            // Para menus menores, só envia com mídia
+            await keisen.sendMessage(from, { ...dados, contextInfo: { ...NkChannelKk, mentionedJid: [sender] } }, { quoted: selo });
+        }
+        return;
+    } catch (e) {
+        console.log('[sendMenu buttons erro]', e.message);
+    }
+}
+
+// Fallback sem botões
+const msg = { caption, contextInfo: { ...NkChannelKk, mentionedJid: [sender] } };
 if (midia.type === "video") {
 msg.video = midia.data;
 msg.gifPlayback = true;
+msg.caption = caption + `\n\n${whiteLotusFooter}`;
 } else if (midia.type === "image") {
 msg.image = midia.data;
+msg.caption = caption + `\n\n${whiteLotusFooter}`;
 } else {
-msg.text = caption;
+msg.text = caption + `\n\n${whiteLotusFooter}`;
 }
 await keisen.sendMessage(from, msg, { quoted: selo });
 } catch (e) {
 console.error(e);
-await keisen.sendMessage(from, { text: caption, contextInfo: { ...NkChannelKk } }, { quoted: selo });
+await keisen.sendMessage(from, { text: caption + `\n\n🪷 WHITE LOTUS • ${NomeDoBot}`, contextInfo: { ...NkChannelKk } }, { quoted: selo });
 }
 }
 
@@ -12022,70 +12079,172 @@ case 'recusarcasamento': {
 }
 
 case 'divorciar':
-case 'terminarcasamento': {
-    if (!isGroup) return reply(mess.onlyGroup());
-
+case 'terminarcasamento':
+case 'separar':
+case 'divorcio': {
+try {
     const fs = require('fs');
     const casamentoPath = './DADOS DO KEISEN/usuarios/casamentos.json';
-    const coinsPath = './DADOS DO KEISEN/usuarios/coins.json';
+    const amantePath = './DADOS DO KEISEN/usuarios/amantes.json';
+    const pedidosPath = './DADOS DO KEISEN/usuarios/pedidos.json';
+    const namoro1Path = './DADOS DO KEISEN/func/namoro1.json';
+    const namoro2Path = './DADOS DO KEISEN/func/namoro2.json';
     
     let casamentosDB = {};
-    let coinsDB = {};
-    if (fs.existsSync(casamentoPath)) casamentosDB = JSON.parse(fs.readFileSync(casamentoPath));
-    if (fs.existsSync(coinsPath)) coinsDB = JSON.parse(fs.readFileSync(coinsPath));
+    let amantesDB = {};
+    let pedidosDB = {};
+    
+    if (fs.existsSync(casamentoPath)) {
+        try { casamentosDB = JSON.parse(fs.readFileSync(casamentoPath)); } catch { casamentosDB = {}; }
+    }
+    if (fs.existsSync(amantePath)) {
+        try { amantesDB = JSON.parse(fs.readFileSync(amantePath)); } catch { amantesDB = {}; }
+    }
+    if (fs.existsSync(pedidosPath)) {
+        try { pedidosDB = JSON.parse(fs.readFileSync(pedidosPath)); } catch { pedidosDB = {}; }
+    }
 
-    let usuario = sender;
+    const usuario = sender;
     const nomeUser = usuario.split('@')[0];
+    const numUser = nomeUser;
 
-    let casamentoEncontrado = null;
+    let casamentoId = null;
     let conjugue = null;
-    let dataCasamento = '';
 
-    for (let id in casamentosDB) {
-        if (casamentosDB[id].pessoa1 === usuario) {
-            casamentoEncontrado = id;
-            conjugue = casamentosDB[id].pessoa2;
-            dataCasamento = casamentosDB[id].data;
-            break;
-        } else if (casamentosDB[id].pessoa2 === usuario) {
-            casamentoEncontrado = id;
-            conjugue = casamentosDB[id].pessoa1;
-            dataCasamento = casamentosDB[id].data;
-            break;
+    // Procura em casamentos.json (pode ser objeto ou array?)
+    if (Array.isArray(casamentosDB)) {
+        // Se for array (legado)
+        const idx = casamentosDB.findIndex(c => c.pessoa1 === usuario || c.pessoa2 === usuario || c.pessoa1 === numUser || c.pessoa2 === numUser);
+        if (idx !== -1) {
+            casamentoId = idx;
+            conjugue = casamentosDB[idx].pessoa1 === usuario ? casamentosDB[idx].pessoa2 : casamentosDB[idx].pessoa1;
+            casamentosDB.splice(idx, 1);
+            fs.writeFileSync(casamentoPath, JSON.stringify(casamentosDB, null, 2));
+        }
+    } else {
+        for (let id in casamentosDB) {
+            const c = casamentosDB[id];
+            if (!c) continue;
+            if (c.pessoa1 === usuario || c.pessoa2 === usuario || c.pessoa1 === numUser || c.pessoa2 === numUser || 
+                (c.pessoa1 && c.pessoa1.includes(numUser)) || (c.pessoa2 && c.pessoa2.includes(numUser))) {
+                casamentoId = id;
+                conjugue = c.pessoa1 === usuario || c.pessoa1 === numUser || (c.pessoa1 && c.pessoa1.includes(numUser)) ? c.pessoa2 : c.pessoa1;
+                break;
+            }
+        }
+        if (casamentoId) {
+            delete casamentosDB[casamentoId];
+            fs.writeFileSync(casamentoPath, JSON.stringify(casamentosDB, null, 2));
         }
     }
 
-    if (!casamentoEncontrado) {
-        return reply(`❌ @${nomeUser}, você não está casado(a).`);
+    // Limpar amantes
+    if (amantesDB[usuario]) delete amantesDB[usuario];
+    if (conjugue && amantesDB[conjugue]) delete amantesDB[conjugue];
+    // Também limpar por número
+    const keysAmante = Object.keys(amantesDB);
+    for (const k of keysAmante) {
+        if (k.includes(numUser) || (amantesDB[k] && amantesDB[k].amante && amantesDB[k].amante.includes(numUser))) {
+            delete amantesDB[k];
+        }
+    }
+    fs.writeFileSync(amantePath, JSON.stringify(amantesDB, null, 2));
+
+    // Limpar pedidos de casamento
+    if (pedidosDB[usuario]) delete pedidosDB[usuario];
+    if (conjugue && pedidosDB[conjugue]) delete pedidosDB[conjugue];
+    // Limpar por número
+    for (const k of Object.keys(pedidosDB)) {
+        if (k.includes(numUser)) delete pedidosDB[k];
+    }
+    fs.writeFileSync(pedidosPath, JSON.stringify(pedidosDB, null, 2));
+
+    // Limpar namoro também (divorcio total)
+    try {
+        let namoro1 = JSON.parse(fs.readFileSync(namoro1Path));
+        const before = namoro1.length;
+        namoro1 = namoro1.filter(entry => {
+            if (!entry) return false;
+            const e1 = entry.usu1 || '';
+            const e2 = entry.usu2 || '';
+            // Se entry contém sender ou conjugue, remove
+            if (e1 === usuario || e2 === numUser || e1 === numUser || e2 === usuario) return false;
+            if (conjugue) {
+                const cNum = conjugue.split('@')[0];
+                if (e1 === conjugue || e2 === cNum || e1 === cNum || e2 === conjugue) return false;
+            }
+            return true;
+        });
+        if (namoro1.length !== before) {
+            fs.writeFileSync(namoro1Path, JSON.stringify(namoro1, null, 2));
+        }
+    } catch {}
+
+    try {
+        let namoro2 = JSON.parse(fs.readFileSync(namoro2Path));
+        namoro2 = namoro2.filter(n => {
+            if (!n) return false;
+            if (n.id === usuario || n.pedido === numUser) return false;
+            if (conjugue) {
+                const cNum = conjugue.split('@')[0];
+                if (n.id === conjugue || n.pedido === cNum) return false;
+            }
+            return true;
+        });
+        fs.writeFileSync(namoro2Path, JSON.stringify(namoro2, null, 2));
+    } catch {}
+
+    if (!casamentoId && !conjugue) {
+        // Se não estava casado, tenta terminar namoro também como fallback
+        return reply(`❌ @${nomeUser}, você não está casado(a) nem namorando!
+Use ${prefix}casar @user ou ${prefix}namorar @user`);
     }
 
-    const nomeConjugue = conjugue.split('@')[0];
+    const nomeConjugue = conjugue ? conjugue.split('@')[0] : 'ex';
+    
+    await reagir(from, "💔");
+    const divorcioMsg = `╭🪷━💔━🪷╮
+*DIVÓRCIO WHITE LOTUS* 💔
+╰🪷━💔━🪷╯
 
-    // Penalidade de divorcio
-    if (coinsDB[usuario]) {
-        const penalidade = Math.floor(coinsDB[usuario].coins * 0.1);
-        coinsDB[usuario].coins -= penalidade;
-        fs.writeFileSync(coinsPath, JSON.stringify(coinsDB, null, 2));
-    }
+😢 *@${nomeUser}* e *@${nomeConjugue}* se divorciaram...
 
-    delete casamentosDB[casamentoEncontrado];
-    fs.writeFileSync(casamentoPath, JSON.stringify(casamentosDB, null, 2));
+📅 *Data:* ${new Date().toLocaleString('pt-BR')}
+📝 *Status:* Solteiros novamente
+🪷 *WHITE LOTUS:* Que o lótus floresça em novos caminhos
 
-    const divorcioMsg = `•┈┈·┈•☾•┈┈┈••✦ ☩ ✦••┈┈┈•☽•┈┈·┈•\n\n` +
-                        `💔 *DIVÓRCIO CONFIRMADO* 💔\n\n` +
-                        `😢 @${nomeUser} e @${nomeConjugue} se divorciaram.\n\n` +
-                        `┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈\n\n` +
-                        `📅 *Casamento durou até:* ${new Date().toLocaleString('pt-BR')}\n` +
-                        `💰 *Penalidade:* -10% dos N-Coins\n\n` +
-                        `📝 *Status:* Solteiro(a) novamente\n` +
-                        `💪 Use \`!casarrpg @user\` para recomeçar\n\n` +
-                        `•┈┈·┈•☾•┈┈┈••✦ ☩ ✦••┈┈┈•☽•┈┈·┈•`;
+💡 *Comandos:*
+• ${prefix}casar @user - novo casamento
+• ${prefix}voltar @${nomeConjugue} - tentar voltar
+• ${prefix}statuscasamento - ver status
+
+> ${NomeDoBot} 🪷`;
 
     await keisen.sendMessage(from, {
         text: divorcioMsg,
-        mentions: [usuario, conjugue]
-    }, { quoted: (typeof selo !== 'undefined' ? selo : null) });
-    break;
+        mentions: conjugue ? [usuario, conjugue] : [usuario]
+    }, { quoted: selo });
+
+    // Notificar ex
+    if (conjugue) {
+        try {
+            const jid = conjugue.includes('@') ? conjugue : conjugue + '@s.whatsapp.net';
+            await keisen.sendMessage(jid, {
+                text: `*💔 @${nomeUser} se divorciou de você...*
+
+No WHITE LOTUS, todo fim é um novo começo 🪷
+
+Use ${prefix}voltar @${nomeUser} se quiser tentar voltar`,
+                mentions: [usuario, jid]
+            });
+        } catch {}
+    }
+
+} catch (e) {
+    console.log('[DIVORCIAR ERRO]', e);
+    reply(mess.error());
+}
+break;
 }
 
 case 'statuscasamento':
@@ -17503,11 +17662,11 @@ isAdminRequired: true
 break;
 
 case 'menucoins':
+case 'coinsmenu':
 await sendMenu(from, selo, {
-reaction: "🎉",
-caption: linguagem.coins(prefix),
+reaction: "💰",
+caption: linguagem.menucoins(prefix),
 isGroupRequired: true,
-isModoCoinsRequired: true,
 sendAudio: true
 });
 break;
@@ -17516,6 +17675,56 @@ case 'menu':
 await sendMenu(from, selo, {
 reaction: "🪷",
 caption: linguagem.menu(prefix),
+sendAudio: true
+});
+break;
+
+case 'menucasal':
+case 'casalmenu':
+case 'amor':
+await sendMenu(from, selo, {
+reaction: "💍",
+caption: linguagem.menucasal(prefix),
+isGroupRequired: true,
+sendAudio: true
+});
+break;
+
+case 'menujogos':
+case 'jogosmenu':
+await sendMenu(from, selo, {
+reaction: "🎮",
+caption: linguagem.menujogos(prefix),
+isGroupRequired: true,
+sendAudio: true
+});
+break;
+
+case 'menudownload':
+case 'downloads':
+case 'menudl':
+await sendMenu(from, selo, {
+reaction: "📥",
+caption: linguagem.menudownload(prefix),
+sendAudio: true
+});
+break;
+
+case 'menuia':
+case 'iamenu':
+await sendMenu(from, selo, {
+reaction: "🤖",
+caption: linguagem.menuia(prefix),
+sendAudio: true
+});
+break;
+
+case 'menulotus':
+case 'lotus':
+case 'whitelotus':
+await sendMenu(from, selo, {
+reaction: "🪷",
+caption: linguagem.menulotus(prefix),
 sendAudio: true
 });
 break;
@@ -17661,71 +17870,172 @@ case 'pedircasamento': {
 
 // ========== DIVORCIAR (FICA SOLTEIRO) ==========
 case 'divorciar':
-case 'separar': {
-    if (!isGroup) return reply(mess.onlyGroup());
-
+case 'terminarcasamento':
+case 'separar':
+case 'divorcio': {
+try {
     const fs = require('fs');
     const casamentoPath = './DADOS DO KEISEN/usuarios/casamentos.json';
     const amantePath = './DADOS DO KEISEN/usuarios/amantes.json';
-    const coinsPath = './DADOS DO KEISEN/usuarios/coins.json';
+    const pedidosPath = './DADOS DO KEISEN/usuarios/pedidos.json';
+    const namoro1Path = './DADOS DO KEISEN/func/namoro1.json';
+    const namoro2Path = './DADOS DO KEISEN/func/namoro2.json';
     
     let casamentosDB = {};
     let amantesDB = {};
-    let coinsDB = {};
+    let pedidosDB = {};
     
-    if (fs.existsSync(casamentoPath)) casamentosDB = JSON.parse(fs.readFileSync(casamentoPath));
-    if (fs.existsSync(amantePath)) amantesDB = JSON.parse(fs.readFileSync(amantePath));
-    if (fs.existsSync(coinsPath)) coinsDB = JSON.parse(fs.readFileSync(coinsPath));
+    if (fs.existsSync(casamentoPath)) {
+        try { casamentosDB = JSON.parse(fs.readFileSync(casamentoPath)); } catch { casamentosDB = {}; }
+    }
+    if (fs.existsSync(amantePath)) {
+        try { amantesDB = JSON.parse(fs.readFileSync(amantePath)); } catch { amantesDB = {}; }
+    }
+    if (fs.existsSync(pedidosPath)) {
+        try { pedidosDB = JSON.parse(fs.readFileSync(pedidosPath)); } catch { pedidosDB = {}; }
+    }
 
     const usuario = sender;
     const nomeUser = usuario.split('@')[0];
+    const numUser = nomeUser;
 
     let casamentoId = null;
     let conjugue = null;
-    for (let id in casamentosDB) {
-        if (casamentosDB[id].pessoa1 === usuario) {
-            casamentoId = id;
-            conjugue = casamentosDB[id].pessoa2;
-            break;
-        } else if (casamentosDB[id].pessoa2 === usuario) {
-            casamentoId = id;
-            conjugue = casamentosDB[id].pessoa1;
-            break;
+
+    // Procura em casamentos.json (pode ser objeto ou array?)
+    if (Array.isArray(casamentosDB)) {
+        // Se for array (legado)
+        const idx = casamentosDB.findIndex(c => c.pessoa1 === usuario || c.pessoa2 === usuario || c.pessoa1 === numUser || c.pessoa2 === numUser);
+        if (idx !== -1) {
+            casamentoId = idx;
+            conjugue = casamentosDB[idx].pessoa1 === usuario ? casamentosDB[idx].pessoa2 : casamentosDB[idx].pessoa1;
+            casamentosDB.splice(idx, 1);
+            fs.writeFileSync(casamentoPath, JSON.stringify(casamentosDB, null, 2));
+        }
+    } else {
+        for (let id in casamentosDB) {
+            const c = casamentosDB[id];
+            if (!c) continue;
+            if (c.pessoa1 === usuario || c.pessoa2 === usuario || c.pessoa1 === numUser || c.pessoa2 === numUser || 
+                (c.pessoa1 && c.pessoa1.includes(numUser)) || (c.pessoa2 && c.pessoa2.includes(numUser))) {
+                casamentoId = id;
+                conjugue = c.pessoa1 === usuario || c.pessoa1 === numUser || (c.pessoa1 && c.pessoa1.includes(numUser)) ? c.pessoa2 : c.pessoa1;
+                break;
+            }
+        }
+        if (casamentoId) {
+            delete casamentosDB[casamentoId];
+            fs.writeFileSync(casamentoPath, JSON.stringify(casamentosDB, null, 2));
         }
     }
 
-    if (!casamentoId) return reply(`❌ @${nomeUser}, você não está casado(a)!`);
-
-    const nomeConjugue = conjugue.split('@')[0];
-    const custoDivorcio = 500;
-
-    if (!coinsDB[usuario]) coinsDB[usuario] = { coins: 500 };
-    if (coinsDB[usuario].coins < custoDivorcio) {
-        return reply(`❌ @${nomeUser}, o divórcio custa ${custoDivorcio} N-Coins. Você tem apenas ${coinsDB[usuario].coins} N-Coins.`);
-    }
-
-    delete casamentosDB[casamentoId];
-    fs.writeFileSync(casamentoPath, JSON.stringify(casamentosDB, null, 2));
-
+    // Limpar amantes
     if (amantesDB[usuario]) delete amantesDB[usuario];
-    if (amantesDB[conjugue]) delete amantesDB[conjugue];
+    if (conjugue && amantesDB[conjugue]) delete amantesDB[conjugue];
+    // Também limpar por número
+    const keysAmante = Object.keys(amantesDB);
+    for (const k of keysAmante) {
+        if (k.includes(numUser) || (amantesDB[k] && amantesDB[k].amante && amantesDB[k].amante.includes(numUser))) {
+            delete amantesDB[k];
+        }
+    }
     fs.writeFileSync(amantePath, JSON.stringify(amantesDB, null, 2));
 
-    coinsDB[usuario].coins -= custoDivorcio;
-    fs.writeFileSync(coinsPath, JSON.stringify(coinsDB, null, 2));
+    // Limpar pedidos de casamento
+    if (pedidosDB[usuario]) delete pedidosDB[usuario];
+    if (conjugue && pedidosDB[conjugue]) delete pedidosDB[conjugue];
+    // Limpar por número
+    for (const k of Object.keys(pedidosDB)) {
+        if (k.includes(numUser)) delete pedidosDB[k];
+    }
+    fs.writeFileSync(pedidosPath, JSON.stringify(pedidosDB, null, 2));
 
-    const divorcioMsg = `•┈┈·┈•☾•┈┈┈••✦ ☩ ✦••┈┈┈•☽•┈┈·┈•\n\n` +
-                        `💔 *DIVÓRCIO CONFIRMADO!* 💔\n\n` +
-                        `😢 @${nomeUser} e @${nomeConjugue} se divorciaram.\n\n` +
-                        `┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈\n\n` +
-                        `💰 *Custo do divórcio:* ${custoDivorcio} N-Coins\n` +
-                        `📅 *Data do divórcio:* ${new Date().toLocaleString('pt-BR')}\n\n` +
-                        `📝 *Status:* Ambos estão SOLTEIROS novamente\n` +
-                        `💪 Use \`!casarrpg @user\` para recomeçar\n\n` +
-                        `•┈┈·┈•☾•┈┈┈••✦ ☩ ✦••┈┈┈•☽•┈┈·┈•`;
+    // Limpar namoro também (divorcio total)
+    try {
+        let namoro1 = JSON.parse(fs.readFileSync(namoro1Path));
+        const before = namoro1.length;
+        namoro1 = namoro1.filter(entry => {
+            if (!entry) return false;
+            const e1 = entry.usu1 || '';
+            const e2 = entry.usu2 || '';
+            // Se entry contém sender ou conjugue, remove
+            if (e1 === usuario || e2 === numUser || e1 === numUser || e2 === usuario) return false;
+            if (conjugue) {
+                const cNum = conjugue.split('@')[0];
+                if (e1 === conjugue || e2 === cNum || e1 === cNum || e2 === conjugue) return false;
+            }
+            return true;
+        });
+        if (namoro1.length !== before) {
+            fs.writeFileSync(namoro1Path, JSON.stringify(namoro1, null, 2));
+        }
+    } catch {}
 
-    await keisen.sendMessage(from, { text: divorcioMsg, mentions: [usuario, conjugue] }, { quoted: (typeof selo !== 'undefined' ? selo : null) });
-    break;
+    try {
+        let namoro2 = JSON.parse(fs.readFileSync(namoro2Path));
+        namoro2 = namoro2.filter(n => {
+            if (!n) return false;
+            if (n.id === usuario || n.pedido === numUser) return false;
+            if (conjugue) {
+                const cNum = conjugue.split('@')[0];
+                if (n.id === conjugue || n.pedido === cNum) return false;
+            }
+            return true;
+        });
+        fs.writeFileSync(namoro2Path, JSON.stringify(namoro2, null, 2));
+    } catch {}
+
+    if (!casamentoId && !conjugue) {
+        // Se não estava casado, tenta terminar namoro também como fallback
+        return reply(`❌ @${nomeUser}, você não está casado(a) nem namorando!
+Use ${prefix}casar @user ou ${prefix}namorar @user`);
+    }
+
+    const nomeConjugue = conjugue ? conjugue.split('@')[0] : 'ex';
+    
+    await reagir(from, "💔");
+    const divorcioMsg = `╭🪷━💔━🪷╮
+*DIVÓRCIO WHITE LOTUS* 💔
+╰🪷━💔━🪷╯
+
+😢 *@${nomeUser}* e *@${nomeConjugue}* se divorciaram...
+
+📅 *Data:* ${new Date().toLocaleString('pt-BR')}
+📝 *Status:* Solteiros novamente
+🪷 *WHITE LOTUS:* Que o lótus floresça em novos caminhos
+
+💡 *Comandos:*
+• ${prefix}casar @user - novo casamento
+• ${prefix}voltar @${nomeConjugue} - tentar voltar
+• ${prefix}statuscasamento - ver status
+
+> ${NomeDoBot} 🪷`;
+
+    await keisen.sendMessage(from, {
+        text: divorcioMsg,
+        mentions: conjugue ? [usuario, conjugue] : [usuario]
+    }, { quoted: selo });
+
+    // Notificar ex
+    if (conjugue) {
+        try {
+            const jid = conjugue.includes('@') ? conjugue : conjugue + '@s.whatsapp.net';
+            await keisen.sendMessage(jid, {
+                text: `*💔 @${nomeUser} se divorciou de você...*
+
+No WHITE LOTUS, todo fim é um novo começo 🪷
+
+Use ${prefix}voltar @${nomeUser} se quiser tentar voltar`,
+                mentions: [usuario, jid]
+            });
+        } catch {}
+    }
+
+} catch (e) {
+    console.log('[DIVORCIAR ERRO]', e);
+    reply(mess.error());
+}
+break;
 }
 
 // ========== ARRUMAR AMANTE ==========
@@ -19847,10 +20157,9 @@ case 'brincadeiras':
 case 'brincadeira':
 case 'menubn':
 await sendMenu(from, selo, {
-reaction: "🎉",
-caption: linguagem.brincadeiras(prefix),
+reaction: "🪷",
+caption: linguagem.menubn(prefix),
 isGroupRequired: true,
-isModoBnRequired: true,
 sendAudio: true
 });
 break;
@@ -22427,25 +22736,189 @@ break;
 }
 
 case 'terminar':
-case 'terminar_namoro': {
-if (!JSON.stringify(namoro1).includes(sender))
-return reply(`*ᴠᴏᴄᴇ ɴᴀᴏ ᴇꜱᴛᴀ ɴᴀᴍᴏʀᴀɴᴅᴏ ᴄᴏᴍ ɴɪɴɢᴜᴇᴍ...🙇‍♂️*`);
-let D1 = namoro1.map(i => i.usu1).indexOf(sender);
-if (D1 === -1) D1 = namoro1.map(i => i.usu2).indexOf(sender);
-if (D1 === -1)
-return reply(`*ɴᴀᴏ ᴇɴᴄᴏɴᴛʀᴇɪ ᴏ ꜱᴇᴜ ʀᴇʟᴀᴄɪᴏɴᴀᴍᴇɴᴛᴏ. ᴛᴇɴᴛᴇ ᴅᴇ ɴᴏᴠᴏ 🤷‍♂️*`);
-const parceiro = namoro1[D1].usu1 === sender ? namoro1[D1].usu2 : namoro1[D1].usu1;
-const jidParceiro = parceiro.includes('@s.whatsapp.net') ? parceiro : `${parceiro}@s.whatsapp.net`;
-const D2 = namoro1.map(a => a.usu1).indexOf(jidParceiro);
-if (D2 !== -1) { namoro1[D2].namorados = false; namoro1.splice(D2, 1);
+case 'terminar_namoro':
+case 'divorcio_namoro': {
+try {
+    const numSender = sender.split('@')[0];
+    // Verifica se está namorando
+    const estaNamorando = namoro1.some(i => i.usu1 === sender || i.usu1 === numSender || i.usu2 === numSender || i.usu2 === sender);
+    if (!estaNamorando) return reply(`*ᴠᴏᴄᴇ ɴᴀᴏ ᴇsᴛᴀ ɴᴀᴍᴏʀᴀɴᴅᴏ ᴄᴏᴍ ɴɪɴɢᴜᴇᴍ...🙇‍♂️*\nUse ${prefix}namorar @user para começar`);
+
+    // Encontrar todas entradas relacionadas ao sender
+    let parceiros = [];
+    let indicesParaRemover = [];
+    
+    for (let i = namoro1.length - 1; i >= 0; i--) {
+        const entry = namoro1[i];
+        const matchSender = entry.usu1 === sender || entry.usu2 === numSender || entry.usu2 === sender || entry.usu1 === numSender;
+        if (matchSender && entry.idgp === from) {
+            // Pegar parceiro
+            let parceiroId = null;
+            if (entry.usu1 === sender || entry.usu1 === numSender) {
+                parceiroId = entry.usu2.includes('@') ? entry.usu2 : entry.usu2 + '@s.whatsapp.net';
+            } else {
+                parceiroId = entry.usu1;
+            }
+            if (parceiroId) parceiros.push(parceiroId);
+            indicesParaRemover.push(i);
+        }
+    }
+
+    // Também remover entradas onde o sender é parceiro do outro
+    for (let i = namoro1.length - 1; i >= 0; i--) {
+        if (indicesParaRemover.includes(i)) continue;
+        const entry = namoro1[i];
+        const parceiroNum = entry.usu1 === sender ? entry.usu2 : entry.usu1;
+        const parceiroJid = parceiroNum.includes('@') ? parceiroNum : parceiroNum + '@s.whatsapp.net';
+        if (parceiroJid === sender && entry.idgp === from) {
+            indicesParaRemover.push(i);
+        }
+        // Verificar se parceiro está na lista de parceiros encontrados
+        for (const p of parceiros) {
+            const pNum = p.split('@')[0];
+            if ((entry.usu1 === p || entry.usu1 === pNum || entry.usu2 === pNum || entry.usu2 === p) && entry.idgp === from) {
+                if (!indicesParaRemover.includes(i)) indicesParaRemover.push(i);
+            }
+        }
+    }
+
+    // Remover duplicatas e ordenar decrescente para não bugar índice
+    indicesParaRemover = [...new Set(indicesParaRemover)].sort((a,b) => b-a);
+    
+    // Remover
+    for (const idx of indicesParaRemover) {
+        namoro1.splice(idx, 1);
+    }
+
+    // Limpar namoro2 pendentes
+    try {
+        let namoro2 = JSON.parse(fs.readFileSync("./DADOS DO KEISEN/func/namoro2.json"));
+        const numSender = sender.split('@')[0];
+        namoro2 = namoro2.filter(n => n.id !== sender && n.pedido !== numSender && n.id !== numSender + '@s.whatsapp.net');
+        // Também remover onde pedido é do parceiro
+        for (const p of parceiros) {
+            const pNum = p.split('@')[0];
+            namoro2 = namoro2.filter(n => n.id !== p && n.pedido !== pNum && n.id !== pNum + '@s.whatsapp.net');
+        }
+        fs.writeFileSync("./DADOS DO KEISEN/func/namoro2.json", JSON.stringify(namoro2, null, 2));
+    } catch {}
+
+    fs.writeFileSync('./DADOS DO KEISEN/func/namoro1.json', JSON.stringify(namoro1, null, 2));
+
+    await reagir(from, "💔");
+    await reply(`*💔 ᴏ ɴᴀᴍᴏʀᴏ ꜰᴏɪ ᴅᴇꜱᴛʀᴜɪ́ᴅᴏ... ᴠᴏᴄᴇ ᴀɢᴏʀᴀ ᴇꜱᴛᴀ ꜱᴏʟᴛᴇɪʀᴏ ᴅᴇ ɴᴏᴠᴏ!🙆‍♂️*\n\nUse ${prefix}namorar @user para um novo amor\nUse ${prefix}voltar @user para tentar voltar`);
+
+    // Notificar ex-parceiros
+    for (const p of parceiros) {
+        try {
+            const jid = p.includes('@') ? p : p + '@s.whatsapp.net';
+            await keisen.sendMessage(jid, { 
+                text: `*💔 Notícia triste... @${sender.split('@')[0]} terminou o namoro com você...😔*\n> Guarde os bons momentos!\n\nUse ${prefix}voltar @${sender.split('@')[0]} se quiser voltar`, 
+                contextInfo: { ...NkChannelKk, mentionedJid: [sender, jid] }
+            });
+        } catch {}
+    }
+
+} catch (e) {
+    console.log('[TERMINAR ERRO]', e);
+    reply(mess.error());
 }
-await reply(`*ᴏ ɴᴀᴍᴏʀᴏ ꜰᴏɪ ᴅᴇꜱᴛʀᴜɪ́ᴅᴏ... ᴠᴏᴄᴇ ᴀɢᴏʀᴀ ᴇꜱᴛᴀ ꜱᴏʟᴛᴇɪʀᴏ ᴅᴇ ɴᴏᴠᴏ!🙆‍♂️*`);
-await keisen.sendMessage(jidParceiro, { text: `*💔 ᴛᴇɴʜᴏ ᴜᴍᴀ ɴᴏᴛɪ́ᴄɪᴀ ᴛʀɪꜱᴛᴇ... ꜱᴇᴜ ᴘᴀʀᴄᴇɪʀᴏ(ᴀ) ᴀᴄᴀʙᴏᴜ ᴅᴇ ᴛᴇʀᴍɪɴᴀʀ ᴏ ɴᴀᴍᴏʀᴏ...😔*\n> *ɢᴜᴀʀᴅᴇ ᴏꜱ ʙᴏɴꜱ ᴍᴏᴍᴇɴᴛᴏꜱ, ᴍᴇꜱᴍᴏ ǫᴜᴇ ᴅᴏᴀ...🙇‍♂️*`, contextInfo: { ...NkChannelKk, mentionedJid: [sender, jidParceiro] }}, { quoted: selo });
-namoro1.splice(D1, 1);
-fs.writeFileSync('./DADOS DO KEISEN/func/namoro1.json', JSON.stringify(namoro1));
 break;
 }
 
+case 'voltar':
+case 'reconciliar':
+case 'reatar':
+case 'voltarcomex': {
+try {
+    if (!isGroup) return reply(mess.onlyGroup());
+    if (!isModobn) return reply(mess.onlyGroupFun(prefix));
+    
+    let alvo = menc_os2 || sender_ou_n;
+    if (!alvo || alvo === sender) return reply(`*💔 Para voltar com alguém, marque a pessoa!*\nEx: ${prefix}voltar @user\nOu responda a mensagem dela`);
+    
+    const numSender = sender.split('@')[0];
+    const numAlvo = alvo.split('@')[0];
+    
+    if (alvo === sender) return reply("❌ Você não pode voltar consigo mesmo!");
+    
+    // Verifica se já está namorando/casado
+    const jaNamora = namoro1.some(i => (i.usu1 === sender || i.usu2 === numSender) && i.namorados === true && i.idgp === from);
+    if (jaNamora) return reply(`❌ Você já está namorando! Termine primeiro com ${prefix}terminar`);
+    
+    // Verifica casamentos
+    try {
+        const fs = require('fs');
+        const casamentoPath = './DADOS DO KEISEN/usuarios/casamentos.json';
+        if (fs.existsSync(casamentoPath)) {
+            const casamentos = JSON.parse(fs.readFileSync(casamentoPath));
+            let jaCasado = false;
+            if (Array.isArray(casamentos)) {
+                jaCasado = casamentos.some(c => c.pessoa1 === sender || c.pessoa2 === sender);
+            } else {
+                for (let id in casamentos) {
+                    if (casamentos[id].pessoa1 === sender || casamentos[id].pessoa2 === sender) { jaCasado = true; break; }
+                }
+            }
+            if (jaCasado) return reply(`❌ Você já está casado(a)! Use ${prefix}divorciar primeiro`);
+        }
+    } catch {}
+
+    // Verifica se alvo já está ocupado
+    const alvoOcupado = namoro1.some(i => (i.usu1 === alvo || i.usu2 === numAlvo) && i.namorados === true);
+    if (alvoOcupado) return reply(`*💔 @${numAlvo} já está namorando com outra pessoa...*`);
+
+    // Criar pedido de volta
+    await reagir(from, "🪷");
+    
+    namoro1.push({
+        usu1: sender, 
+        usu2: numAlvo, 
+        namorados: false, 
+        idgp: from, 
+        hora: hourofc, 
+        data: dattofc,
+        reconciliacao: true,
+        dataVolta: Date.now()
+    });
+    fs.writeFileSync("./DADOS DO KEISEN/func/namoro1.json", JSON.stringify(namoro1, null, 2));
+    
+    let namoro2 = [];
+    try { namoro2 = JSON.parse(fs.readFileSync("./DADOS DO KEISEN/func/namoro2.json")); } catch { namoro2 = []; }
+    namoro2.push({id: alvo, pedido: numSender, idgp: from, reconciliacao: true});
+    fs.writeFileSync("./DADOS DO KEISEN/func/namoro2.json", JSON.stringify(namoro2, null, 2));
+
+    const textoVolta = `╭🪷━💔━🪷╮
+*PEDIDO DE VOLTA - WHITE LOTUS* 🪷
+╰🪷━💔━🪷╯
+
+🥺 *@${numSender}* quer voltar com *@${numAlvo}*!
+
+💌 *"No WHITE LOTUS, todo fim pode ser um novo começo... O lótus floresce novamente quando o coração permite"*
+
+💖 *Para ACEITAR e voltar:*
+Digite *sim* ou *${prefix}sim*
+
+💔 *Para RECUSAR:*
+Digite *não* ou *${prefix}não*
+
+⏰ Pedido feito: ${new Date().toLocaleString('pt-BR')}
+
+> ${NomeDoBot} 🪷 - Segunda chance`;
+
+    await keisen.sendMessage(from, {
+        image: { url: namorar },
+        caption: textoVolta,
+        mentions: [sender, alvo],
+        contextInfo: { ...NkChannelKk, mentionedJid: [sender, alvo] }
+    }, { quoted: selo });
+
+} catch (e) {
+    console.log('[VOLTAR ERRO]', e);
+    reply(mess.error());
+}
+break;
+}
 
 case 'minhadupla':
 case 'dupla': {

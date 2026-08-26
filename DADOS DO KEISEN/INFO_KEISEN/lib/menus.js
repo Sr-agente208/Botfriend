@@ -1,133 +1,80 @@
 exports.menu = (prefix) => {
-return  `‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏‎‏
-╭🪷━𐙚━🌴━✨₊˚ʚ 🤍 ɞ˚₊✨━🌴━𐙚━🪷╮
-▏˚💎₊· ͟͟͞͞🍹 𝑶𝑼𝑻𝑹𝑶𝑺 𝑴𝑬𝑵𝑼𝑺
-⋆｡𖦹°⭒˚｡⋆⋆｡𖦹°⭒˚｡⋆⋆｡𖦹°⭒˚｡⋆⋆｡𖦹°⭒˚｡⋆
-▏|˚𝆺𝅥₊· ͟͟͞͞🌴 ${prefix}MenuLogo
-▏|˚𝆺𝅥₊· ͟͟͞͞🌴 ${prefix}MenuAdm
-▏|˚𝆺𝅥₊· ͟͟͞͞🌴 ${prefix}MenuBn
-▏|˚𝆺𝅥₊· ͟͟͞͞🌴 ${prefix}Efeitoimg
-▏|˚𝆺𝅥₊· ͟͟͞͞🌴 ${prefix}NoPrefix
-▏|˚𝆺𝅥₊· ͟͟͞͞🌴 ${prefix}MenuDono
-⋆｡𖦹°⭒˚｡⋆⋆｡𖦹°⭒˚｡⋆⋆｡𖦹°⭒˚｡⋆⋆｡𖦹°⭒˚｡⋆
-╰🪷━𐙚━🌴━✨₊˚ʚ 🤍 ɞ˚₊✨━🌴━𐙚━🪷╯
+return `
+╭🪷━━━━━━━━━━━━━━━━━🪷╮
+*WHITE LOTUS* 🪷
+O Lótus Branco floresce novamente
+╰🪷━━━━━━━━━━━━━━━━━🪷╯
 
-╭🪷━𐙚━🌴━✨₊˚ʚ 🤍 ɞ˚₊✨━🌴━𐙚━🪷╮
-▏˚💎₊· ͟͟͞͞🕊️ 𝑰𝑵𝑭𝑶𝑺 / 𝑪𝑯𝑬𝑪𝑲𝑺
-⋆｡𖦹°⭒˚｡⋆⋆｡𖦹°⭒˚｡⋆⋆｡𖦹°⭒˚｡⋆⋆｡𖦹°⭒˚｡⋆
-▏|˚𝆺𝅥₊· ͟͟͞͞🦋 ${prefix}ping
-▏|˚𝆺𝅥₊· ͟͟͞͞🦋 ${prefix}Atividade
-▏|˚𝆺𝅥₊· ͟͟͞͞🦋 ${prefix}Rankativo
-▏|˚𝆺𝅥₊· ͟͟͞͞🦋 ${prefix}Infodono
-▏|˚𝆺𝅥₊· ͟͟͞͞🦋 ${prefix}avaliar
-▏|˚𝆺𝅥₊· ͟͟͞͞🦋 ${prefix}me
-▏|˚𝆺𝅥₊· ͟͟͞͞🦋 ${prefix}alugar
-▏|˚𝆺𝅥₊· ͟͟͞͞🦋 ${prefix}Checkativo
-⋆｡𖦹°⭒˚｡⋆⋆｡𖦹°⭒˚｡⋆⋆｡𖦹°⭒˚｡⋆⋆｡𖦹°⭒˚｡⋆
-╰🪷━𐙚━🌴━✨₊˚ʚ 🤍 ɞ˚₊✨━🌴━𐙚━🪷╯
+👋 Olá, sou o *WHITE LOTUS*
+🪷 Bot feito para diversão e proteção
 
-╭🪷━𐙚━🌴━✨₊˚ʚ 🤍 ɞ˚₊✨━🌴━𐙚━🪷╮
-▏˚💎₊· ͟͟͞͞📥 𝑫𝑶𝑾𝑵𝑳𝑶𝑨𝑫𝑺
-⋆｡𖦹°⭒˚｡⋆⋆｡𖦹°⭒˚｡⋆⋆｡𖦹°⭒˚｡⋆⋆｡𖦹°⭒˚｡⋆
-▏|˚𝆺𝅥₊· ͟͟͞͞🛥️ ${prefix}Play
-▏|˚𝆺𝅥₊· ͟͟͞͞🛥️ ${prefix}Playvid
-▏|˚𝆺𝅥₊· ͟͟͞͞🛥️ ${prefix}playdoc
-▏|˚𝆺𝅥₊· ͟͟͞͞🛥️ ${prefix}shazam
-▏|˚𝆺𝅥₊· ͟͟͞͞🛥️ ${prefix}Tiktok
-▏|˚𝆺𝅥₊· ͟͟͞͞🛥️ ${prefix}Tiktok_audio
-▏|˚𝆺𝅥₊· ͟͟͞͞🛥️ ${prefix}Instagram
-▏|˚𝆺𝅥₊· ͟͟͞͞🛥️ ${prefix}Insta_audio
-▏|˚𝆺𝅥₊· ͟͟͞͞🛥️ ${prefix}Mediafire
-▏|˚𝆺𝅥₊· ͟͟͞͞🛥️ ${prefix}Gerarlink
-▏|˚𝆺𝅥₊· ͟͟͞͞🛥️ ${prefix}insta_audio2
-▏|˚𝆺𝅥₊· ͟͟͞͞🛥️ ${prefix}insta_video2
-▏|˚𝆺𝅥₊· ͟͟͞͞🛥️ ${prefix}instagram2
-▏|˚𝆺𝅥₊· ͟͟͞͞🛥️ ${prefix}tiktok_video2
-▏|˚𝆺𝅥₊· ͟͟͞͞🛥️ ${prefix}tiktok2
-▏|˚𝆺𝅥₊· ͟͟͞͞🛥️ ${prefix}tiktok_audio2
-⋆｡𖦹°⭒˚｡⋆⋆｡𖦹°⭒˚｡⋆⋆｡𖦹°⭒˚｡⋆⋆｡𖦹°⭒˚｡⋆
-╰🪷━𐙚━🌴━✨₊˚ʚ 🤍 ɞ˚₊✨━🌴━𐙚━🪷╯
+╭🪷━💎━🪷╮
+*✨ MENU PRINCIPAL - BOTÕES* ✨
+▏Use os botões abaixo 👇
+╰🪷━💎━🪷╯
 
-╭🪷━𐙚━🌴━✨₊˚ʚ 🤍 ɞ˚₊✨━🌴━𐙚━🪷╮
-▏˚💎₊· ͟͟͞͞🐚 𝑷𝑬𝑺𝑸𝑼𝑰𝑺𝑨𝑺
-⋆｡𖦹°⭒˚｡⋆⋆｡𖦹°⭒˚｡⋆⋆｡𖦹°⭒˚｡⋆⋆｡𖦹°⭒˚｡⋆
-▏|˚𝆺𝅥₊· ͟͟͞͞🌺 ${prefix}Clima
-▏|˚𝆺𝅥₊· ͟͟͞͞🌺 ${prefix}Book
-▏|˚𝆺𝅥₊· ͟͟͞͞🌺 ${prefix}Movie
-▏|˚𝆺𝅥₊· ͟͟͞͞🌺 ${prefix}Serie
-▏|˚𝆺𝅥₊· ͟͟͞͞🌺 ${prefix}Aptoide
-▏|˚𝆺𝅥₊· ͟͟͞͞🌺 ${prefix}Signo
-▏|˚𝆺𝅥₊· ͟͟͞͞🌺 ${prefix}Amazon
-▏|˚𝆺𝅥₊· ͟͟͞͞🌺 ${prefix}Wikipedia
-▏|˚𝆺𝅥₊· ͟͟͞͞🌺 ${prefix}Pinterest
-▏|˚𝆺𝅥₊· ͟͟͞͞🌺 ${prefix}Getnoticias
-⋆｡𖦹°⭒˚｡⋆⋆｡𖦹°⭒˚｡⋆⋆｡𖦹°⭒˚｡⋆⋆｡𖦹°⭒˚｡⋆
-╰🪷━𐙚━🌴━✨₊˚ʚ 🤍 ɞ˚₊✨━🌴━𐙚━🪷╯
-╭🪷━𐙚━🌴━✨₊˚ʚ 🤍 ɞ˚₊✨━🌴━𐙚━🪷╮
-▏˚💎₊· ͟͟͞͞🪷 𝑰𝑵𝑻𝑬𝑳𝑰𝑮𝑬̂𝑵𝑪𝑰𝑨𝑺
-⋆｡𖦹°⭒˚｡⋆⋆｡𖦹°⭒˚｡⋆⋆｡𖦹°⭒˚｡⋆⋆｡𖦹°⭒˚｡⋆
-▏|˚𝆺𝅥₊· ͟͟͞͞🪷 ${prefix}Gpt
-▏|˚𝆺𝅥₊· ͟͟͞͞🪷 ${prefix}Imagine
-⋆｡𖦹°⭒˚｡⋆⋆｡𖦹°⭒˚｡⋆⋆｡𖦹°⭒˚｡⋆⋆｡𖦹°⭒˚｡⋆
-╰🪷━𐙚━🌴━✨₊˚ʚ 🤍 ɞ˚₊✨━🌴━𐙚━🪷╯
+╭🪷━🎮━🪷╮
+🎮 *DIVERSÃO*
+${prefix}menubn - brincadeiras (+18 interativas)
+${prefix}menujogos - jogos (ppt, forca, etc)
+${prefix}chance <texto> - chance de algo
+╰🪷━🎮━🪷╯
 
-╭🪷━𐙚━🌴━✨₊˚ʚ 🤍 ɞ˚₊✨━🌴━𐙚━🪷╮
-▏˚💎₊· ͟͟͞͞🎨 𝑭𝑰𝑮𝑼𝑹𝑰𝑵𝑯𝑨𝑺
-⋆｡𖦹°⭒˚｡⋆⋆｡𖦹°⭒˚｡⋆⋆｡𖦹°⭒˚｡⋆⋆｡𖦹°⭒˚｡⋆
-▏|˚𝆺𝅥₊· ͟͟͞͞🐚 ${prefix}Fsticker
-▏|˚𝆺𝅥₊· ͟͟͞͞🐚 ${prefix}Sticker
-▏|˚𝆺𝅥₊· ͟͟͞͞🐚 ${prefix}Toimg
-▏|˚𝆺𝅥₊· ͟͟͞͞🐚 ${prefix}Attp
-▏|˚𝆺𝅥₊· ͟͟͞͞🐚 ${prefix}Roubar
-▏|˚𝆺𝅥₊· ͟͟͞͞🐚 ${prefix}Take
-▏|˚𝆺𝅥₊· ͟͟͞͞🐚 ${prefix}Qc
-⋆｡𖦹°⭒˚｡⋆⋆｡𖦹°⭒˚｡⋆⋆｡𖦹°⭒˚｡⋆⋆｡𖦹°⭒˚｡⋆
-╰🪷━𐙚━🌴━✨₊˚ʚ 🤍 ɞ˚₊✨━🌴━𐙚━🪷╯
+╭🪷━💍━🪷╮
+💍 *AMOR & CASAL - NOVO!*
+${prefix}menucasal - menu casal completo
+${prefix}namorar @user - pedir em namoro
+${prefix}terminar - terminar namoro (FIXED)
+${prefix}voltar @user - voltar com ex (NOVO 🆕)
+${prefix}casar @user - casar
+${prefix}divorciar - divorciar (FIXED, grátis)
+${prefix}dupla - ver sua dupla
+╰🪷━💍━🪷╯
 
-╭🪷━𐙚━🌴━✨₊˚ʚ 🤍 ɞ˚₊✨━🌴━𐙚━🪷╮
-▏˚💎₊· ͟͟͞͞☀️ 𝑹𝑨𝑵𝑫𝑶𝑴 / 𝑼𝑻𝑰𝑳𝑺
-⋆｡𖦹°⭒˚｡⋆⋆｡𖦹°⭒˚｡⋆⋆｡𖦹°⭒˚｡⋆⋆｡𖦹°⭒˚｡⋆
-▏|˚𝆺𝅥₊· ͟͟͞͞🌺 ${prefix}totext
-▏|˚𝆺𝅥₊· ͟͟͞͞🌺 ${prefix}Gtts
-▏|˚𝆺𝅥₊· ͟͟͞͞🌺 ${prefix}Tagme
-▏|˚𝆺𝅥₊· ͟͟͞͞🌺 ${prefix}Emoji
-▏|˚𝆺𝅥₊· ͟͟͞͞🌺 ${prefix}Tabela
-▏|˚𝆺𝅥₊· ͟͟͞͞🌺 ${prefix}mytag
-▏|˚𝆺𝅥₊· ͟͟͞͞🌺 ${prefix}Conselhobiblico
-▏|˚𝆺𝅥₊· ͟͟͞͞🌺 ${prefix}Cantadas
-▏|˚𝆺𝅥₊· ͟͟͞͞🌺 ${prefix}Conselhos
-▏|˚𝆺𝅥₊· ͟͟͞͞🌺 ${prefix}Perfil
-▏|˚𝆺𝅥₊· ͟͟͞͞🌺 ${prefix}Calcular
-▏|˚𝆺𝅥₊· ͟͟͞͞🌺 ${prefix}Morechat
-▏|˚𝆺𝅥₊· ͟͟͞͞🌺 ${prefix}Obesidade
-▏|˚𝆺𝅥₊· ͟͟͞͞🌺 ${prefix}Contardias
-▏|˚𝆺𝅥₊· ͟͟͞͞🌺 ${prefix}Ptvmsg
-▏|˚𝆺𝅥₊· ͟͟͞͞🌺 ${prefix}Listaddd
-▏|˚𝆺𝅥₊· ͟͟͞͞🌺 ${prefix}Listaddi
-▏|˚𝆺𝅥₊· ͟͟͞͞🌺 ${prefix}Destrava
-▏|˚𝆺𝅥₊· ͟͟͞͞🌺 ${prefix}Gerarcpf
-▏|˚𝆺𝅥₊· ͟͟͞͞🌺 ${prefix}Qrcode
-▏|˚𝆺𝅥₊· ͟͟͞͞🌺 ${prefix}getperfil
-▏|˚𝆺𝅥₊· ͟͟͞͞🌺 ${prefix}getbio
-▏|˚𝆺𝅥₊· ͟͟͞͞🌺 ${prefix}lermais
-▏|˚𝆺𝅥₊· ͟͟͞͞🌺 ${prefix}spoiler
-▏|˚𝆺𝅥₊· ͟͟͞͞🌺 ${prefix}idade
+╭🪷━📥━🪷╮
+📥 *DOWNLOADS*
+${prefix}menudownload
+${prefix}play, ${prefix}playvid, ${prefix}tiktok, ${prefix}instagram
+╰🪷━📥━🪷╯
 
-╭🪷━𐙚━🌴━✨₊˚ʚ 🤍 ɞ˚₊✨━🌴━𐙚━🪷╮
-▏˚💎₊· ͟͟͞͞🪷 𝑵𝑶𝑽𝑰𝑫𝑨𝑫𝑬𝑺
-⋆｡𖦹°⭒˚｡⋆⋆｡𖦹°⭒˚｡⋆⋆｡𖦹°⭒˚｡⋆⋆｡𖦹°⭒˚｡⋆
-▏|˚𝆺𝅥₊· ͟͟͞͞🪷 ${prefix}opajuda » RPG de Ordem Paranormal
-▏|˚𝆺𝅥₊· ͟͟͞͞🪷 ${prefix}petadotar » adote um pet
-▏|˚𝆺𝅥₊· ͟͟͞͞🪷 ${prefix}vidente » receba uma previsão
-▏|˚𝆺𝅥₊· ͟͟͞͞🪷 ${prefix}ativar » liga/desliga proteções no clique
-▏|˚𝆺𝅥₊· ͟͟͞͞🪷 ${prefix}addai (dono) » adiciona a Meta AI no grupo
-▏|˚𝆺𝅥₊· ͟͟͞͞🪷 ${prefix}testapis (dono) » diagnóstico das apis
-⋆｡𖦹°⭒˚｡⋆⋆｡𖦹°⭒˚｡⋆⋆｡𖦹°⭒˚｡⋆⋆｡𖦹°⭒˚｡⋆
-╰🪷━𐙚━🌴━✨₊˚ʚ 🤍 ɞ˚₊✨━🌴━𐙚━🪷╯
-⋆｡𖦹°⭒˚｡⋆⋆｡𖦹°⭒˚｡⋆⋆｡𖦹°⭒˚｡⋆⋆｡𖦹°⭒˚｡⋆
-╰🪷━𐙚━🌴━✨₊˚ʚ 🤍 ɞ˚₊✨━🌴━𐙚━🪷╯
-- © 𝒀𝒖𝒏𝒂-𝑩𝒐𝒕𝑴𝑫
-- `;
+╭🪷━🤖━🪷╮
+🤖 *INTELIGÊNCIA (FIXED)*
+${prefix}menuia
+${prefix}gpt <pergunta> - ChatGPT com fallbacks
+${prefix}gemini <pergunta>
+╰🪷━🤖━🪷╯
+
+╭🪷━🛡️━🪷╮
+🛡️ *ADMIN & PROTEÇÃO*
+${prefix}menuadm - menu admin
+${prefix}ativar - ativar/desativar recursos (botões)
+${prefix}status - ver status do grupo
+${prefix}ping - velocidade
+╰🪷━🛡️━🪷╯
+
+╭🪷━💰━🪷╮
+💰 *ECONOMIA*
+${prefix}menucoins - N-Coins, minerar, cassino
+${prefix}coins, ${prefix}minerar, ${prefix}cassino
+╰🪷━💰━🪷╯
+
+╭🪷━🎨━🪷╮
+🎨 *OUTROS*
+${prefix}menulogos - criar logos
+${prefix}efeitoimg - efeitos em imagem
+${prefix}sticker / ${prefix}toimg - figurinhas
+${prefix}menudono - info dono
+╰🪷━🎨━🪷╯
+
+✨ *NOVIDADES FIXED:*
+• Divórcio agora funciona e é grátis
+• Terminar namoro corrigido (não buga índice)
+• Comando voltar para reconciliar
+• Menu com botões interativos 🪷
+
+> 🪷 WHITE LOTUS • Sr-agente208
+> Railway Ready • ${prefix}menulotus para menu estilizado
+`;
 };
 
 exports.adms = (prefix) => {
@@ -883,4 +830,202 @@ return `
 ⋆｡𖦹°⭒˚｡⋆⋆｡𖦹°⭒˚｡⋆⋆｡𖦹°⭒˚｡⋆⋆｡𖦹°⭒˚｡⋆
 ╰🪷━𐙚━🌴━✨₊˚ʚ 🤍 ɞ˚₊✨━🌴━𐙚━🪷╯
 - © 𝑾𝒉𝒊𝒕𝒆 𝑳𝒐𝒕𝒖𝒔 `
+};
+exports.menubn = (prefix) => {
+return `
+╭🪷━𐙚━🌴━✨₊˚ʚ 🤍 ɞ˚₊✨━🌴━𐙚━🪷╮
+▏˚❁₊· ͟͟͞͞🪷 *WHITE LOTUS - BRINCADEIRAS* 🪷
+▏˚💎₊· ͟͟͞͞ O Lótus Branco floresce na diversão
+⋆｡𖦹°⭒˚｡⋆⋆｡𖦹°⭒˚｡⋆⋆｡𖦹°⭒˚｡⋆⋆｡𖦹°⭒˚｡⋆
+▏|˚𝆺𝅥₊· ͟͟͞͞🍃 ${prefix}comer @user
+▏|˚𝆺𝅥₊· ͟͟͞͞🍃 ${prefix}capinarlote @user
+▏|˚𝆺𝅥₊· ͟͟͞͞🍃 ${prefix}pgpeito @user
+▏|˚𝆺𝅥₊· ͟͟͞͞🍃 ${prefix}pgbunda @user
+▏|˚𝆺𝅥₊· ͟͟͞͞🍃 ${prefix}pgpau @user
+▏|˚𝆺𝅥₊· ͟͟͞͞🍃 ${prefix}morder @user
+▏|˚𝆺𝅥₊· ͟͟͞͞🍃 ${prefix}sentar @user
+▏|˚𝆺𝅥₊· ͟͟͞͞🍃 ${prefix}tirarft @user
+▏|˚𝆺𝅥₊· ͟͟͞͞🍃 ${prefix}beijo @user
+▏|˚𝆺𝅥₊· ͟͟͞͞🍃 ${prefix}abraco @user
+▏|˚𝆺𝅥₊· ͟͟͞͞🍃 ${prefix}carinho @user
+▏|˚𝆺𝅥₊· ͟͟͞͞🍃 ${prefix}matar @user
+▏|˚𝆺𝅥₊· ͟͟͞͞🍃 ${prefix}tapa @user
+▏|˚𝆺𝅥₊· ͟͟͞͞🍃 ${prefix}soco @user
+▏|˚𝆺𝅥₊· ͟͟͞͞🍃 ${prefix}chute @user
+▏|˚𝆺𝅥₊· ͟͟͞͞🍃 ${prefix}boquete @user
+▏|˚𝆺𝅥₊· ͟͟͞͞🍃 ${prefix}cagar @user
+▏|˚𝆺𝅥₊· ͟͟͞͞🍃 ${prefix}leitada @user
+▏|˚𝆺𝅥₊· ͟͟͞͞🍃 ${prefix}transar @user
+▏|˚𝆺𝅥₊· ͟͟͞͞🍃 ${prefix}fuder @user
+▏|˚𝆺𝅥₊· ͟͟͞͞🍃 ${prefix}gozar @user
+⋆｡𖦹°⭒˚｡⋆⋆｡𖦹°⭒˚｡⋆⋆｡𖦹°⭒˚｡⋆⋆｡𖦹°⭒˚｡⋆
+╰🪷━𐙚━🌴━✨₊˚ʚ 🤍 ɞ˚₊✨━🌴━𐙚━🪷╯
+💡 Dica: Responda a mensagem da pessoa com o comando!
+🪷 WHITE LOTUS • Segunda chance com ${prefix}voltar
+`;
+};
+
+exports.menucasal = (prefix) => {
+return `
+╭🪷━💍━🪷╮
+*WHITE LOTUS - AMOR & CASAL* 💍
+╰🪷━💍━🪷╯
+
+🪷 *O amor floresce como o Lótus Branco*
+
+╭🪷━💖━🪷╮
+💍 *NAMORO*
+▏${prefix}namorar @user - pedir em namoro
+▏${prefix}terminar - terminar namoro (FIXED)
+▏${prefix}dupla / ${prefix}minhadupla - ver seu casal
+▏${prefix}voltar @user - reconciliar, voltar com ex 🆕
+╰🪷━💖━🪷╯
+
+╭🪷━💒━🪷╮
+💒 *CASAMENTO RPG*
+▏${prefix}casar @user - pedir em casamento
+▏${prefix}aceitar / ${prefix}recusar - responder pedido
+▏${prefix}divorciar - divorciar (FIXED, agora grátis) 💔
+▏${prefix}statuscasamento - ver seu casamento
+▏${prefix}voltar @user - pedir pra voltar após divórcio 🆕
+╰🪷━💒━🪷╯
+
+╭🪷━😈━🪷╮
+💋 *AMANTES & DRAMA*
+▏${prefix}amante @user - arrumar amante
+▏${prefix}descobriramante - investigar cônjuge
+▏${prefix}terminaramante - terminar com amante
+╰🪷━😈━🪷╯
+
+✨ *"No WHITE LOTUS, todo fim pode ser um novo começo"*
+🪷 Use botões abaixo para navegar
+`;
+};
+
+exports.menujogos = (prefix) => {
+return `
+╭🪷━🎮━🪷╮
+*WHITE LOTUS - JOGOS* 🎮
+╰🪷━🎮━🪷╯
+
+🪷 *Diversão que floresce*
+
+🎲 ${prefix}ppt pedra/papel/tesoura
+🎭 ${prefix}vab - você prefere?
+❓ ${prefix}eununca - eu nunca
+🪓 ${prefix}forca - jogo da forca
+🎯 ${prefix}jogodavelha @user
+
+🪷 *RPG*
+${prefix}opcriar <classe> - criar ficha Ordem Paranormal
+${prefix}opficha - ver ficha
+${prefix}opcombate iniciar/entrar
+
+🐾 *PETS*
+${prefix}petadotar <nome> - adote um pet
+${prefix}pet - ver seu pet
+
+🪷 WHITE LOTUS • Jogue com moderação
+`;
+};
+
+exports.menucoins = (prefix) => {
+return `
+╭🪷━💰━🪷╮
+*WHITE LOTUS - N-COINS* 💰
+╰🪷━💰━🪷╯
+
+💎 *Economia do Lótus*
+
+💰 ${prefix}coins - ver saldo
+⛏️ ${prefix}minerar - minerar coins (6x/dia)
+🎰 ${prefix}cassino / ${prefix}slot - cassino (5x/dia)
+🎲 ${prefix}dadoapostado 3/100 - apostar no dado
+🏆 ${prefix}rankcoins - top ricos
+
+🎓 *QUIZ & GANHE COINS*
+${prefix}anagrama - decifre anagrama
+${prefix}quizanimais - quiz animais
+${prefix}gartic - adivinhe desenho
+${prefix}enigma - resolva enigma
+${prefix}whatmusic - que música é?
+${prefix}quizfutebol - quiz futebol
+
+🪷 WHITE LOTUS • Acumule e seja o mais rico!
+`;
+};
+
+exports.menudownload = (prefix) => {
+return `
+╭🪷━📥━🪷╮
+*WHITE LOTUS - DOWNLOADS* 📥
+╰🪷━📥━🪷╯
+
+🛥️ ${prefix}play <nome> - baixar música
+🎥 ${prefix}playvid <nome> - baixar vídeo
+🎵 ${prefix}shazam - identificar música
+📱 ${prefix}tiktok <link> - baixar tiktok
+📸 ${prefix}instagram <link> - baixar insta
+🔗 ${prefix}mediafire <link>
+🔗 ${prefix}gerarlink - gerar link da mídia
+
+🪷 *AUTO DOWNLOAD*
+Ative com ${prefix}autodl no grupo
+Envie link do tiktok/insta/youtube e baixa auto!
+
+🪷 WHITE LOTUS • Baixe com facilidade
+`;
+};
+
+exports.menuia = (prefix) => {
+return `
+╭🪷━🤖━🪷╮
+*WHITE LOTUS - INTELIGÊNCIA* 🤖
+╰🪷━🤖━🪷╯
+
+🪷 *IA que floresce*
+
+🤖 ${prefix}gpt <pergunta> - ChatGPT (FIXED, com fallbacks)
+✨ ${prefix}gemini <pergunta> - Gemini
+🌟 ${prefix}gemini-pro <pergunta> - Gemini Pro
+🧠 ${prefix}autorepo - auto resposta IA no grupo
+
+💡 *Dica Railway:*
+Configure GROQ_API_KEY em Variables para melhor qualidade
+Pegue grátis em: console.groq.com/keys
+
+🪷 WHITE LOTUS • Inteligência natural
+`;
+};
+
+exports.menulotus = (prefix) => {
+return `
+╭🪷━━━━━━━━━━━━━━━🪷╮
+*WHITE LOTUS* 🪷
+O Lótus Branco floresce novamente
+╰🪷━━━━━━━━━━━━━━━🪷╯
+
+👋 Olá! Eu sou o WHITE LOTUS
+
+🪷 *MENU PRINCIPAL*
+Use os botões abaixo ou digite:
+
+🪷 ${prefix}menu - menu completo
+🎮 ${prefix}menubn - brincadeiras
+💍 ${prefix}menucasal - amor/casal (NOVO: voltar)
+🎮 ${prefix}menujogos - jogos
+💰 ${prefix}menucoins - coins & economia
+📥 ${prefix}menudownload - downloads
+🤖 ${prefix}menuia - IA (GPT/Gemini FIXED)
+🛡️ ${prefix}menuadm - administração
+👑 ${prefix}menudono - dono
+
+💔 *NOVIDADES FIXED:*
+• ${prefix}divorciar - agora funciona e é grátis!
+• ${prefix}terminar - divorcio de namoro corrigido
+• ${prefix}voltar @user - reconciliar após término 🆕
+
+🪷 *WHITE LOTUS SYSTEM*
+Sr-agente208 • Railway Ready
+`;
 };
