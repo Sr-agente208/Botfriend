@@ -20207,21 +20207,80 @@ sendAudio: true
 });
 break;
 
-case 'donos': {
-await reagir(from, "🎉")
+case 'donos':
+case 'listadonos':
+case 'donolist':
+case 'owners': {
 try {
-const thumbnail = await getBuffer(donos);
-if (!thumbnail) throw new Error("Thumbnail não carregado");
+    await reagir(from, "🪷");
+    const donosSet = new Set();
+    const donosList = [];
+    if (setting.ownerNumber) {
+        const num = setting.ownerNumber.replace(/\D/g, "");
+        if (num && !donosSet.has(num)) { donosSet.add(num); donosList.push(num); }
+    }
+    const numerosDono = [numero_dono1, numero_dono2, numero_dono3, numero_dono4, numero_dono5, numero_dono6].filter(Boolean);
+    for (const n of numerosDono) {
+        const clean = String(n).replace(/\D/g, "");
+        if (clean && !donosSet.has(clean)) { donosSet.add(clean); donosList.push(clean); }
+    }
+    const donosUnicos = [...new Set(donosList)];
+    let caption = `╭🪷━━━━━━━━━━━━━━━🪷╮
+*WHITE LOTUS - DONOS* 👑
+╰🪷━━━━━━━━━━━━━━━🪷╯
 
-await keisen.sendMessage(from, {
-video: thumbnail,
-caption: linguagem.consultas(prefix, numero_dono1, numero_dono2, numero_dono3, numero_dono4, numero_dono5, numero_dono6, NomeDoBot, ownerName),
-gifPlayback: true,
-contextInfo: NkChannelKk            
-}, { quoted: selo });
+🪷 *Bot:* ${NomeDoBot}
+👑 *Dono Principal:* ${ownerName}
+📱 *Número Principal:* wa.me/${setting.ownerNumber}
+
+╭🪷━👑━🪷╮
+*LISTA DE DONOS* 👑
+`;
+    for (let i = 0; i < donosUnicos.length; i++) {
+        const num = donosUnicos[i];
+        caption += `▏ ${i+1}º • wa.me/${num} ${i===0 ? '👑 Principal' : '💎 Dono'}\n`;
+    }
+    caption += `╰🪷━👑━🪷╯
+
+✨ *Como falar com dono?*
+• Clique no link wa.me/ ou
+• Use ${prefix}dono para info completa
+
+🪷 *WHITE LOTUS SYSTEM*
+> ${NomeDoBot} 🪷`;
+
+    try {
+        const { sendButton } = require('./ARQUIVES/funcoes/botoes.js');
+        const thumb = await getBuffer(donos).catch(() => null) || await getBuffer(thumbnail).catch(() => null);
+        const dados = thumb ? {
+            video: thumb,
+            caption: caption,
+            footer: `🪷 WHITE LOTUS • ${NomeDoBot} 🪷`,
+            mentions: [sender]
+        } : {
+            text: caption,
+            footer: `🪷 WHITE LOTUS • ${NomeDoBot}`,
+            mentions: [sender]
+        };
+        const botoesDonos = [];
+        for (let i = 0; i < Math.min(donosUnicos.length, 3); i++) {
+            const num = donosUnicos[i];
+            botoesDonos.push({ type: 'copy_url', text: `${i===0 ? '👑' : '💎'} Dono ${i+1} - ${num.slice(-4)}`, url: `https://wa.me/${num}` });
+        }
+        botoesDonos.push({ type: 'cmd', text: '🪷 Menu Lotus', command: `${prefix}menulotus` });
+        await sendButton(from, dados, keisen, sender, botoesDonos, selo);
+    } catch (e) {
+        console.log('[DONOS BTN ERRO]', e.message);
+        try {
+            const thumb = await getBuffer(donos);
+            await keisen.sendMessage(from, { video: thumb, caption: caption, gifPlayback: true, contextInfo: { ...NkChannelKk, mentionedJid: [sender] } }, { quoted: selo });
+        } catch {
+            await keisen.sendMessage(from, { text: caption, contextInfo: { ...NkChannelKk, mentionedJid: [sender] } }, { quoted: selo });
+        }
+    }
 } catch (e) {
-console.error("Erro ao executar o comando:", e);
-await keisen.sendMessage(from, { text: linguagem.consultas(prefix, numero_dono1, numero_dono2, numero_dono3, numero_dono4, numero_dono5, numero_dono6, NomeDoBot, ownerName) }, { quoted: selo });
+    console.log('[DONOS ERRO]', e);
+    reply(mess.error());
 }
 break;
 }

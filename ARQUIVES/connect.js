@@ -12,6 +12,7 @@ const pino = require("pino");
 const express = require("express");
 const qrcode = require("qrcode");
 const chalk = require("chalk");
+const { restoreSession, backupSession, getSessionStatus } = require("./sessionManager");
 
 // ================== CONFIGURAÇÕES RAILWAY ==================
 const app = express();
@@ -51,6 +52,11 @@ function ensureDirectories() {
     }
 }
 ensureDirectories();
+
+// Restaurar sessão de variável de ambiente se existir (evita reconectar toda vez)
+restoreSession(sessionDir);
+const sessStatus = getSessionStatus(sessionDir);
+console.log(chalk.magenta(`[SESSION STATUS] Existe: ${sessStatus.exists}, Válida: ${sessStatus.valid}, Tamanho: ${sessStatus.size} bytes`));
 
 // ================== SERVIDOR WEB ==================
 app.use(express.json());
@@ -358,13 +364,18 @@ async function startConnect() {
                 } else {
                     connectionStatus = "Deslogado - Delete a sessão e escaneie novamente";
                     console.log(chalk.red(`[LOGOUT] Sessão expirada. Delete ${sessionDir} e reinicie`));
-                    // Não reconectar automaticamente se foi logout
-                    // Mas no Railway, mantemos web vivo para usuário deletar sessão
+                    // Backup antes de limpar, caso usuário queira recuperar
+                    try { backupSession(sessionDir); } catch {}
                     if (statusCode === DisconnectReason.loggedOut) {
                         try {
-                            fs.emptyDirSync(sessionDir);
-                            console.log(chalk.yellow(`[SESSION] Diretório limpo, reconectando em 5s...`));
-                            setTimeout(startConnect, 5000);
+                            // Só limpa se NÃO tiver SESSION_DATA configurado (para não apagar volume)
+                            if (!process.env.SESSION_DATA && !process.env.CREDS_DATA) {
+                                fs.emptyDirSync(sessionDir);
+                                console.log(chalk.yellow(`[SESSION] Diretório limpo, reconectando em 5s...`));
+                                setTimeout(startConnect, 5000);
+                            } else {
+                                console.log(chalk.yellow(`[SESSION] Mantendo sessão pois SESSION_DATA está configurado, mas creds inválidos. Remova SESSION_DATA se quiser novo QR`));
+                            }
                         } catch (e) {}
                     }
                 }
@@ -411,7 +422,15 @@ async function startConnect() {
             console.log(chalk.yellow(`[INFO] Escaneie o QR em / ou defina PHONE_NUMBER e USE_PAIRING=true para pairing code`));
         }
 
-        socket.ev.on("creds.update", saveCreds);
+        socket.ev.on("creds.update", async () => {
+            try {
+                await saveCreds();
+                // Backup automático para Railway persistência
+                backupSession(sessionDir);
+            } catch (e) {
+                console.log(chalk.red(`[CREDS ERRO] ${e.message}`));
+            }
+        });
 
         socket.ev.on("messages.upsert", async (upsert) => {
             try {

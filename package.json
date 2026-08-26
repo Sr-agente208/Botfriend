@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node ./ARQUIVES/connect.js",
     "dev": "node ./ARQUIVES/connect.js",
+    "gerar-sessao": "node ./gerar_sessao.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "engines": {
