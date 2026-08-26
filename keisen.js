@@ -42,8 +42,6 @@ const keisenBot = "COMPRE SUA KEY DA BRONXYS NA URL ACIMA!!"
 const API_KEY_keisen = "Doom77"
 const URL_keisen = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiIsImtpZCI6IjI4YTMxOGY3LTAwMDAtYTFlYi03ZmExLTJjNzQzM2M2Y2NhNSJ9.eyJpc3MiOiJzdXBlcmNlbGwiLCJhdWQiOiJzdXBlcmNlbGw6Z2FtZWFwaSIsImp0aSI6IjU2OTFlYzY4LTU5MjQtNDQwYi05NjFkLWNhYTUxMmJmNDJmMiIsImlhdCI6MTc2OTkzNDc0OCwic3ViIjoiZGV2ZWxvcGVyL2MwZGVhYzY2LTUyNjQt MjAwZC0xM2QxLTM0NTc1NzQ1YzgwNiIsInNjb3BlcyI6WyJjbGFzaCJdLCJsaW1pdHMiOlt7InRpZXIiOiJkZXZlbG9wZXIvc2lsdmVyIiwidHlwZSI6InRocm90dGxpbmcifSx7ImNpZHJzIjpbIjE4Ny42OC4xNzIuNzUiXSwidHlwZSI6ImNsaWVudCJ9XX0.Zh93RANuLyfVml_wIIacka5Hv1OcMxFEAGsTCUf29rx7l7Bo-kdWgofxEuNxuv9moPvXJKVnHU3-UjyzzJZ1Wg"
 
-async function startkeisen() {
-
 module.exports = keisen = async(upsert, keisen, qrcode) => {
 async function startFunctionNaga() {
 
@@ -2275,8 +2273,7 @@ salvarHorarios();
 
 let ultimaExecucao = {};
 
-if (global.intervalHorarios) clearInterval(global.intervalHorarios);
-
+if (!global.intervalHorarios) {
 global.intervalHorarios = setInterval(async () => {
 const time2 = moment().tz('America/Sao_Paulo').format('HH:mm:ss');
 
@@ -2318,6 +2315,7 @@ try {
 }
 }
 }, 1000);
+}
 
 async function sendMenu(from, selo, opt = {}) {
 const {
@@ -23330,13 +23328,5 @@ return console.log('O servidor-geral caiu ou não foi possivel executar esta aç
 }
 })
 }
-}
 
-fs.watchFile(require.resolve(__filename), () => {
-fs.unwatchFile(require.resolve(__filename));
-console.log(colors.blue(`Alterações salvas, aguarde que estou carregando :) - '${__filename}'`));
-delete require.cache[require.resolve(__filename)]
-require(require.resolve(__filename))
-})
-
-module.exports = startkeisen;
+module.exports = keisen;
