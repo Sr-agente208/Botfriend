@@ -82,7 +82,7 @@ return '*ᴇᴜ ᴘʀᴇᴄɪsᴏ sᴇʀ ᴀᴅᴍ ᴅᴏ ɢʀᴜᴘᴏ sᴇɴʜ
 }
 
 exports.onlyGroupFun = (prefixo) => {
-return `*ᴏ ᴍᴏᴅᴏʙʀɪɴᴄᴀᴅᴇɪʀᴀ ᴘʀᴇᴄɪsᴀ ᴇsᴛᴀʀ ᴀᴛɪᴠᴏ 🙇‍♂️*.`
+return `*ᴏ ᴍᴏᴅᴏ ʙʀɪɴᴄᴀᴅᴇɪʀᴀ ᴇsᴛᴀ́ ᴅᴇsᴀᴛɪᴠᴀᴅᴏ ɴᴇssᴇ ɢʀᴜᴘᴏ 🙅‍♂️*\nAtive com: ${prefixo}modobn\nOu use: ${prefixo}modobrincadeiras`
 }
 
 exports.onlyPrivate = () => {
