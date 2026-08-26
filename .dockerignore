@@ -1,0 +1,14 @@
+node_modules
+npm-debug.log
+.git
+.gitignore
+README.md
+.env
+.env.local
+DADOS DO KEISEN/qr-code/*
+!DADOS DO KEISEN/qr-code/.gitkeep
+*.log
+*.bak
+*.crdownload
+coverage
+.nyc_output

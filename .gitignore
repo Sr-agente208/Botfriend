@@ -1,6 +1,23 @@
 node_modules
+npm-debug.log
 .env
-DADOS\ DO\ KEISEN/qr-code/creds.json
+.env.local
+DADOS DO KEISEN/qr-code/
+!DADOS DO KEISEN/qr-code/.gitkeep
+DADOS DO KEISEN/grupos/ATIVAÇÕES-keisen/*.json
+!DADOS DO KEISEN/grupos/ATIVAÇÕES-keisen/.gitkeep
+ARQUIVES/tictactoe/db/*.json
+!ARQUIVES/tictactoe/db/.gitkeep
+ARQUIVES/tictactoe/grupo.json
+DADOS DO KEISEN/grupos/games/*/*.json
+!DADOS DO KEISEN/grupos/games/*/.gitkeep
+database/
 *.bak
 *.crdownload
+*.log
+*.tmp
+sticker*.webp
+sticker*.png
+*.mp3
+!DADOS DO KEISEN/data/media/audios/*.mp3
 /home/ubuntu/Botfriend_repo/ARQUIVES/funcoes/pix.js

@@ -249,12 +249,29 @@ function getGroupAdmins(participants) {
             }
 
 function getMembros(participants) {
+                if (!participants || !Array.isArray(participants)) return [];
+                return participants
+                    .map(p => {
+                        try {
+                            const raw = typeof p === 'string' ? p : (p.jid || p.id || p.participantPn || p.participant || '');
+                            if (!raw) return null;
+                            const jidReal = raw.includes('@') ? raw.split(':')[0] + (raw.includes('@lid') ? '@lid' : '@s.whatsapp.net').replace('@s.whatsapp.net','@s.whatsapp.net') : raw + '@s.whatsapp.net';
+                            // Use normalizeJid para garantir formato correto
+                            return normalizeJid(raw.includes('@') ? raw : jidReal);
+                        } catch { return null; }
+                    })
+                    .filter(Boolean);
+            }
+
+function getMembrosNoAdmin(participants) {
+                if (!participants || !Array.isArray(participants)) return [];
                 return participants
                     .filter(p => !p.admin)
                     .map(p => {
-                        const jidReal = p.jid || p.participantPn || (p.participant.includes('@') ? p.participant.split(':')[0] + '@s.whatsapp.net' : p.participant + '@s.whatsapp.net');
+                        const jidReal = p.jid || p.id || p.participantPn || (p.participant && p.participant.includes('@') ? p.participant.split(':')[0] + '@s.whatsapp.net' : p.participant + '@s.whatsapp.net');
                         return normalizeJid(jidReal);
-                    });
+                    })
+                    .filter(Boolean);
             }
 
 const getRandom = (ext) => {
@@ -330,4 +347,4 @@ const addFilter = (from) => {
 usedCommandRecently.add(from)
 setTimeout(() => usedCommandRecently.delete(from), 5000)}
 
-module.exports = { getBuffer, fetchJson, fetchText, generateMessageID, getGroupAdmins, normalizeJid, getMembros, getRandom, banner2, temporizador, color, recognize, bgcolor, isFiltered, addFilter, banner3, chyt, getExtension, convertSticker, upload, nit, getpc, supre, pegarCases, carregarMidia }
+module.exports = { getBuffer, fetchJson, fetchText, generateMessageID, getGroupAdmins, normalizeJid, getMembros, getMembrosNoAdmin, getRandom, banner2, temporizador, color, recognize, bgcolor, isFiltered, addFilter, banner3, chyt, getExtension, convertSticker, upload, nit, getpc, supre, pegarCases, carregarMidia }

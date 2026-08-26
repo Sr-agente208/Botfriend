@@ -1,1 +1,1 @@
-web: node ./ARQUIVES/connect.js
+web: npm start

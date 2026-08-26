@@ -1,0 +1,11 @@
+[phases.setup]
+nixPkgs = ["nodejs_20", "ffmpeg", "python3", "git"]
+
+[phases.install]
+cmds = ["npm install --legacy-peer-deps"]
+
+[phases.build]
+cmds = ["echo 'Build OK - White Lotus'"]
+
+[start]
+cmd = "npm start"
