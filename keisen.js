@@ -28,7 +28,7 @@ const palavras = JSON.parse(fs.readFileSync('./DADOS DO KEISEN/data/media/forca/
 const forca = require('./DADOS DO KEISEN/data/media/forca/index.js');
 const frames = JSON.parse(fs.readFileSync('./DADOS DO KEISEN/data/media/forca/frames.json'));
 const { sendButton, sendListB } = require(`./ARQUIVES/funcoes/botoes.js`)
-const { fundolevel, fundo2, fundo1, linklogos, imgnazista, imggay, imgcorno, imggostosa, imggostoso, imgfeio, imggado, imgvesgo, imgbebado, tapacmd, matarcmd, beijocmd, chutecmd, cmdmenu, deathcmd, rnkgay, rnkgado, rnkcorno, rnkgostoso, rnkgostosa, rnknazista, rnkotaku, errocmd, rnkpau, suruba, minado_bomb, thumbnail, imgsigma, imgbeta, imgbaiano, imgbaiana, imgcarioca, imglouco, imglouca, imgsafada, imgsafado, imgmacaco, imgmacaca, imgputa, rnksigma, rnkbeta, rnkbaiano, rnkbaiana, rnkcarioca, rnklouco, rnklouca, rnksafada, rnksafado, rnkmacaco, rnkmacaca, rnkputa, img1, img2, img3, rankbct, rankcu, rankfalido, rankcasal, casal, Gozar, imgperfil, enigma, rvenigma, semimg, comer, capinarlote, pgpeito, pgbunda, morder, sentar, tirarft, carinho, soco, namorar, getcase, criador, fundo, idade, Pix, status, donos, infodono, boquete, cagar, cu, abraco, lavarlouca, matar, leitada, lindacmd, lindocmd, fielcmd, pgpau } = require("./DADOS DO KEISEN/INFO_KEISEN/LOGOS/links_img.json");
+const { fundolevel, fundo2, fundo1, linklogos, imgnazista, imggay, imgcorno, imggostosa, imggostoso, imgfeio, imggado, imgvesgo, imgbebado, tapacmd, matarcmd, beijocmd, chutecmd, cmdmenu, deathcmd, rnkgay, rnkgado, rnkcorno, rnkgostoso, rnkgostosa, rnknazista, rnkotaku, errocmd, rnkpau, suruba, minado_bomb, thumbnail, imgsigma, imgbeta, imgbaiano, imgbaiana, imgcarioca, imglouco, imglouca, imgsafada, imgsafado, imgmacaco, imgmacaca, imgputa, rnksigma, rnkbeta, rnkbaiano, rnkbaiana, rnkcarioca, rnklouco, rnklouca, rnksafada, rnksafado, rnkmacaco, rnkmacaca, rnkputa, img1, img2, img3, rankbct, rankcu, rankfalido, rankcasal, casal, Gozar, imgperfil, enigma, rvenigma, semimg, comer, capinarlote, pgpeito, pgbunda, morder, sentar, tirarft, carinho, soco, namorar, getcase, criador, fundo, idade, Pix, status, donos, infodono, boquete, cagar, cu, abraco, lavarlouca, matar, leitada, lindacmd, lindocmd, fielcmd, pgpau, chance_gif, gay_gif, feio_gif, lindo_gif, linda_gif, corno_gif, nazista_gif, vesgo_gif, bebado_gif, gado_gif, carioca_gif, louco_gif, louca_gif, safada_gif, safado_gif, macaco_gif, macaca_gif, puta_gif, gostoso_gif, gostosa_gif, sigma_gif, beta_gif, baiano_gif, baiana_gif, cu_gif, fiel_gif, infiel_gif, rankgay_gif, rankgado_gif, suruba_gif, casal_gif } = require("./DADOS DO KEISEN/INFO_KEISEN/LOGOS/links_img.json");
 
 process.on('uncaughtException', function (err) {
 console.error((new Date).toUTCString() + ' uncaughtException:', err.message);
@@ -650,18 +650,53 @@ async function safeSendBrincadeira(targetId, mediaUrl, caption, isVideo = true) 
 async function safeSendPorcentagem(targetId, mediaUrl, caption) {
     const mentionList = targetId ? [targetId] : [];
     try {
-        await keisen.sendMessage(from, {
-            image: { url: mediaUrl },
-            caption: caption,
-            contextInfo: { ...NkChannelKk, mentionedJid: mentionList }
-        }, { quoted: selo });
+        const isVideo = mediaUrl && (mediaUrl.endsWith('.mp4') || mediaUrl.includes('.mp4') || mediaUrl.includes('catbox'));
+        if (isVideo) {
+            await keisen.sendMessage(from, {
+                video: { url: mediaUrl },
+                gifPlayback: true,
+                caption: caption,
+                contextInfo: { ...NkChannelKk, mentionedJid: mentionList }
+            }, { quoted: selo });
+        } else {
+            await keisen.sendMessage(from, {
+                image: { url: mediaUrl },
+                caption: caption,
+                contextInfo: { ...NkChannelKk, mentionedJid: mentionList }
+            }, { quoted: selo });
+        }
     } catch (e) {
-        console.log(`[PORCENTAGEM] Falha: ${e.message}`);
+        console.log(`[PORCENTAGEM] Falha mídia ${mediaUrl}: ${e.message} - fallback texto`);
+        try {
+            await keisen.sendMessage(from, {
+                text: caption,
+                contextInfo: { ...NkChannelKk, mentionedJid: mentionList }
+            }, { quoted: selo });
+        } catch {
+            await reply(caption);
+        }
+    }
+}
+
+async function sendPorcentagemComGif(targetId, searchGif, resultGif, searchCaption, resultCaption) {
+    // Envia gif de pesquisa
+    try {
         await keisen.sendMessage(from, {
-            text: caption,
-            contextInfo: { ...NkChannelKk, mentionedJid: mentionList }
+            video: { url: searchGif },
+            gifPlayback: true,
+            caption: searchCaption,
+            contextInfo: { ...NkChannelKk, mentionedJid: [targetId] }
+        }, { quoted: selo });
+    } catch {
+        await keisen.sendMessage(from, {
+            text: searchCaption,
+            contextInfo: { ...NkChannelKk, mentionedJid: [targetId] }
         }, { quoted: selo });
     }
+    // Após delay, envia resultado com gif
+    setTimeout(async () => {
+        await safeSendPorcentagem(targetId, resultGif, resultCaption);
+    }, 7000);
 }
 
 ////////////////////////////////////////////
@@ -20953,13 +20988,22 @@ break
 case 'cu':
 if (!isGroup) return reply(mess.onlyGroup())
 if (!isModobn) return reply(mess.onlyGroupFun(prefix))
-await keisen.sendMessage(from, {
-text: `Pesquisando quantos cm de profundidade tem seu bozo @${sender_ou_n.split("@")[0]}, aguarde...`,
-contextInfo: {...NkChannelKk, mentionedJid: [sender_ou_n]}
-}, {quoted: selo})
+try {
+    await keisen.sendMessage(from, {
+        video: { url: cu_gif },
+        gifPlayback: true,
+        caption: `Pesquisando quantos cm de profundidade tem seu bozo @${sender_ou_n.split("@")[0]}, aguarde...`,
+        contextInfo: {...NkChannelKk, mentionedJid: [sender_ou_n]}
+    }, {quoted: selo});
+} catch {
+    await keisen.sendMessage(from, {
+        text: `Pesquisando quantos cm de profundidade tem seu bozo @${sender_ou_n.split("@")[0]}, aguarde...`,
+        contextInfo: {...NkChannelKk, mentionedJid: [sender_ou_n]}
+    }, {quoted: selo});
+}
 setTimeout(async () => {
 const random = `${Math.floor(Math.random() * 110)}`
-await safeSendPorcentagem(sender_ou_n, cu, `Quantos cm o(a) *@${sender_ou_n.split("@")[0]}* tem no bozo ?\n• A chance é de *${random}cm* 😳`)
+await safeSendPorcentagem(sender_ou_n, cu_gif, `Quantos cm o(a) *@${sender_ou_n.split("@")[0]}* tem no bozo ?\n• A chance é de *${random}cm* 😳`)
 }, 7000)
 break
 
@@ -21002,104 +21046,176 @@ break
 case 'carioca':
 if(!isGroup) return reply(mess.onlyGroup())
 if(!isModobn) return reply(mess.onlyGroupFun(prefix))
-await keisen.sendMessage(from, {
-text:`Pesquisando a sua ficha de carioca @${sender_ou_n.split("@")[0]} aguarde...`,
-contextInfo: {...NkChannelKk, mentionedJid: [sender_ou_n]}
-}, {quoted: selo})
+try {
+    await keisen.sendMessage(from, {
+        video: { url: carioca_gif },
+        gifPlayback: true,
+        caption: `Pesquisando a sua ficha de carioca @${sender_ou_n.split("@")[0]} aguarde...`,
+        contextInfo: {...NkChannelKk, mentionedJid: [sender_ou_n]}
+    }, {quoted: selo});
+} catch {
+    await keisen.sendMessage(from, {
+        text: `Pesquisando a sua ficha de carioca @${sender_ou_n.split("@")[0]} aguarde...`,
+        contextInfo: {...NkChannelKk, mentionedJid: [sender_ou_n]}
+    }, {quoted: selo});
+}
 setTimeout(async () => {
 const random = `${Math.floor(Math.random() * 110)}`
-await safeSendPorcentagem(sender_ou_n, imgcarioca, `O quanto *@${sender_ou_n.split("@")[0]}* pode ser uma pessoa carioca?\n• A porcentagem de chance é *${random}%*`)
+await safeSendPorcentagem(sender_ou_n, carioca_gif, `O quanto *@${sender_ou_n.split("@")[0]}* pode ser uma pessoa carioca?\n• A porcentagem de chance é *${random}%*`)
 }, 7000)
 break
 
 case 'louco':
 if(!isGroup) return reply(mess.onlyGroup())
 if(!isModobn) return reply(mess.onlyGroupFun(prefix))
-await keisen.sendMessage(from, {
-text:`Pesquisando a sua ficha de louco @${sender_ou_n.split("@")[0]} aguarde...`,
-contextInfo: {...NkChannelKk, mentionedJid: [sender_ou_n]}
-}, {quoted: selo})
+try {
+    await keisen.sendMessage(from, {
+        video: { url: louco_gif },
+        gifPlayback: true,
+        caption: `Pesquisando a sua ficha de louco @${sender_ou_n.split("@")[0]} aguarde...`,
+        contextInfo: {...NkChannelKk, mentionedJid: [sender_ou_n]}
+    }, {quoted: selo});
+} catch {
+    await keisen.sendMessage(from, {
+        text: `Pesquisando a sua ficha de louco @${sender_ou_n.split("@")[0]} aguarde...`,
+        contextInfo: {...NkChannelKk, mentionedJid: [sender_ou_n]}
+    }, {quoted: selo});
+}
 setTimeout(async () => {
 const random = `${Math.floor(Math.random() * 110)}`
-await safeSendPorcentagem(sender_ou_n, imglouco, `O quanto *@${sender_ou_n.split("@")[0]}* pode ser uma pessoa louca?\n• A porcentagem de chance é *${random}%*`)
+await safeSendPorcentagem(sender_ou_n, louco_gif, `O quanto *@${sender_ou_n.split("@")[0]}* pode ser uma pessoa louca?\n• A porcentagem de chance é *${random}%*`)
 }, 7000)
 break
 
 case 'louca':
 if(!isGroup) return reply(mess.onlyGroup())
 if(!isModobn) return reply(mess.onlyGroupFun(prefix))
-await keisen.sendMessage(from, {
-text:`Pesquisando a sua ficha de louca @${sender_ou_n.split("@")[0]} aguarde...`,
-contextInfo: {...NkChannelKk, mentionedJid: [sender_ou_n]}
-}, {quoted: selo})
+try {
+    await keisen.sendMessage(from, {
+        video: { url: louca_gif },
+        gifPlayback: true,
+        caption: `Pesquisando a sua ficha de louca @${sender_ou_n.split("@")[0]} aguarde...`,
+        contextInfo: {...NkChannelKk, mentionedJid: [sender_ou_n]}
+    }, {quoted: selo});
+} catch {
+    await keisen.sendMessage(from, {
+        text: `Pesquisando a sua ficha de louca @${sender_ou_n.split("@")[0]} aguarde...`,
+        contextInfo: {...NkChannelKk, mentionedJid: [sender_ou_n]}
+    }, {quoted: selo});
+}
 setTimeout(async () => {
 const random = `${Math.floor(Math.random() * 110)}`
-await safeSendPorcentagem(sender_ou_n, imglouca, `O quanto *@${sender_ou_n.split("@")[0]}* pode ser uma pessoa louca?\n• A porcentagem de chance é *${random}%*`)
+await safeSendPorcentagem(sender_ou_n, louca_gif, `O quanto *@${sender_ou_n.split("@")[0]}* pode ser uma pessoa louca?\n• A porcentagem de chance é *${random}%*`)
 }, 7000)
 break
 
 case 'safada':
 if(!isGroup) return reply(mess.onlyGroup())
 if(!isModobn) return reply(mess.onlyGroupFun(prefix))
-await keisen.sendMessage(from, {
-text:`Pesquisando a sua ficha de safada @${sender_ou_n.split("@")[0]} aguarde...`,
-contextInfo: {...NkChannelKk, mentionedJid: [sender_ou_n]}
-}, {quoted: selo})
+try {
+    await keisen.sendMessage(from, {
+        video: { url: safada_gif },
+        gifPlayback: true,
+        caption: `Pesquisando a sua ficha de safada @${sender_ou_n.split("@")[0]} aguarde...`,
+        contextInfo: {...NkChannelKk, mentionedJid: [sender_ou_n]}
+    }, {quoted: selo});
+} catch {
+    await keisen.sendMessage(from, {
+        text: `Pesquisando a sua ficha de safada @${sender_ou_n.split("@")[0]} aguarde...`,
+        contextInfo: {...NkChannelKk, mentionedJid: [sender_ou_n]}
+    }, {quoted: selo});
+}
 setTimeout(async () => {
 const random = `${Math.floor(Math.random() * 110)}`
-await safeSendPorcentagem(sender_ou_n, imgsafada, `O quanto *@${sender_ou_n.split("@")[0]}* pode ser uma pessoa safada?\n• A porcentagem de chance é *${random}%*`)
+await safeSendPorcentagem(sender_ou_n, safada_gif, `O quanto *@${sender_ou_n.split("@")[0]}* pode ser uma pessoa safada?\n• A porcentagem de chance é *${random}%*`)
 }, 7000)
 break
 
 case 'safado':
 if(!isGroup) return reply(mess.onlyGroup())
 if(!isModobn) return reply(mess.onlyGroupFun(prefix))
-await keisen.sendMessage(from, {
-text:`Pesquisando a sua ficha de safado @${sender_ou_n.split("@")[0]} aguarde...`,
-contextInfo: {...NkChannelKk, mentionedJid: [sender_ou_n]}
-}, {quoted: selo})
+try {
+    await keisen.sendMessage(from, {
+        video: { url: safado_gif },
+        gifPlayback: true,
+        caption: `Pesquisando a sua ficha de safado @${sender_ou_n.split("@")[0]} aguarde...`,
+        contextInfo: {...NkChannelKk, mentionedJid: [sender_ou_n]}
+    }, {quoted: selo});
+} catch {
+    await keisen.sendMessage(from, {
+        text: `Pesquisando a sua ficha de safado @${sender_ou_n.split("@")[0]} aguarde...`,
+        contextInfo: {...NkChannelKk, mentionedJid: [sender_ou_n]}
+    }, {quoted: selo});
+}
 setTimeout(async () => {
 const random = `${Math.floor(Math.random() * 110)}`
-await safeSendPorcentagem(sender_ou_n, imgsafado, `O quanto *@${sender_ou_n.split("@")[0]}* pode ser uma pessoa safada?\n• A porcentagem de chance é *${random}%*`)
+await safeSendPorcentagem(sender_ou_n, safado_gif, `O quanto *@${sender_ou_n.split("@")[0]}* pode ser uma pessoa safada?\n• A porcentagem de chance é *${random}%*`)
 }, 7000)
 break
 
 case 'macaco':
 if(!isGroup) return reply(mess.onlyGroup())
 if(!isModobn) return reply(mess.onlyGroupFun(prefix))
-await keisen.sendMessage(from, {
-text:`Pesquisando a sua ficha de macaco @${sender_ou_n.split("@")[0]} aguarde...`,
-contextInfo: {...NkChannelKk, mentionedJid: [sender_ou_n]}
-}, {quoted: selo})
+try {
+    await keisen.sendMessage(from, {
+        video: { url: macaco_gif },
+        gifPlayback: true,
+        caption: `Pesquisando a sua ficha de macaco @${sender_ou_n.split("@")[0]} aguarde...`,
+        contextInfo: {...NkChannelKk, mentionedJid: [sender_ou_n]}
+    }, {quoted: selo});
+} catch {
+    await keisen.sendMessage(from, {
+        text: `Pesquisando a sua ficha de macaco @${sender_ou_n.split("@")[0]} aguarde...`,
+        contextInfo: {...NkChannelKk, mentionedJid: [sender_ou_n]}
+    }, {quoted: selo});
+}
 setTimeout(async () => {
 const random = `${Math.floor(Math.random() * 110)}`
-await safeSendPorcentagem(sender_ou_n, imgmacaco, `O quanto *@${sender_ou_n.split("@")[0]}* pode ser um macaco?\n• A porcentagem de chance é *${random}%*`)
+await safeSendPorcentagem(sender_ou_n, macaco_gif, `O quanto *@${sender_ou_n.split("@")[0]}* pode ser um macaco?\n• A porcentagem de chance é *${random}%*`)
 }, 7000)
 break
 
 case 'macaca':
 if(!isGroup) return reply(mess.onlyGroup())
 if(!isModobn) return reply(mess.onlyGroupFun(prefix))
-await keisen.sendMessage(from, {
-text:`Pesquisando a sua ficha de macaca @${sender_ou_n.split("@")[0]} aguarde...`,
-contextInfo: {...NkChannelKk, mentionedJid: [sender_ou_n]}
-}, {quoted: selo})
+try {
+    await keisen.sendMessage(from, {
+        video: { url: macaca_gif },
+        gifPlayback: true,
+        caption: `Pesquisando a sua ficha de macaca @${sender_ou_n.split("@")[0]} aguarde...`,
+        contextInfo: {...NkChannelKk, mentionedJid: [sender_ou_n]}
+    }, {quoted: selo});
+} catch {
+    await keisen.sendMessage(from, {
+        text: `Pesquisando a sua ficha de macaca @${sender_ou_n.split("@")[0]} aguarde...`,
+        contextInfo: {...NkChannelKk, mentionedJid: [sender_ou_n]}
+    }, {quoted: selo});
+}
 setTimeout(async () => {
 const random = `${Math.floor(Math.random() * 110)}`
-await safeSendPorcentagem(sender_ou_n, imgmacaca, `O quanto *@${sender_ou_n.split("@")[0]}* pode ser uma macaca?\n• A porcentagem de chance é *${random}%*`)
+await safeSendPorcentagem(sender_ou_n, macaca_gif, `O quanto *@${sender_ou_n.split("@")[0]}* pode ser uma macaca?\n• A porcentagem de chance é *${random}%*`)
 }, 7000)
 break
 
 case 'puta':
 if(!isGroup) return reply(mess.onlyGroup())
 if(!isModobn) return reply(mess.onlyGroupFun(prefix))
-await keisen.sendMessage(from, {
-text:`Pesquisando a sua ficha de puta @${sender_ou_n.split("@")[0]} aguarde...`,
-contextInfo: {...NkChannelKk, mentionedJid: [sender_ou_n]}
-}, {quoted: selo})
+try {
+    await keisen.sendMessage(from, {
+        video: { url: puta_gif },
+        gifPlayback: true,
+        caption: `Pesquisando a sua ficha de puta @${sender_ou_n.split("@")[0]} aguarde...`,
+        contextInfo: {...NkChannelKk, mentionedJid: [sender_ou_n]}
+    }, {quoted: selo});
+} catch {
+    await keisen.sendMessage(from, {
+        text: `Pesquisando a sua ficha de puta @${sender_ou_n.split("@")[0]} aguarde...`,
+        contextInfo: {...NkChannelKk, mentionedJid: [sender_ou_n]}
+    }, {quoted: selo});
+}
 setTimeout(async () => {
 const random = `${Math.floor(Math.random() * 110)}`
-await safeSendPorcentagem(sender_ou_n, imgputa, `O quanto *@${sender_ou_n.split("@")[0]}* pode ser uma puta?\n• A porcentagem de chance é *${random}%*`)
+await safeSendPorcentagem(sender_ou_n, puta_gif, `O quanto *@${sender_ou_n.split("@")[0]}* pode ser uma puta?\n• A porcentagem de chance é *${random}%*`)
 }, 7000)
 break
 
@@ -21143,65 +21259,110 @@ break
 case 'nazista':
 if(!isGroup) return reply(mess.onlyGroup())
 if(!isModobn) return reply(mess.onlyGroupFun(prefix))
-await keisen.sendMessage(from, {
-text: `Pesquisando a sua ficha de nazista: *@${sender_ou_n.split("@")[0]}* aguarde...`,
-contextInfo: {...NkChannelKk, mentionedJid: [sender_ou_n]}
-}, {quoted: selo})
+try {
+    await keisen.sendMessage(from, {
+        video: { url: nazista_gif },
+        gifPlayback: true,
+        caption: `Pesquisando a sua ficha de nazista: *@${sender_ou_n.split("@")[0]}* aguarde...`,
+        contextInfo: {...NkChannelKk, mentionedJid: [sender_ou_n]}
+    }, {quoted: selo});
+} catch {
+    await keisen.sendMessage(from, {
+        text: `Pesquisando a sua ficha de nazista: *@${sender_ou_n.split("@")[0]}* aguarde...`,
+        contextInfo: {...NkChannelKk, mentionedJid: [sender_ou_n]}
+    }, {quoted: selo});
+}
 setTimeout(async() => {
 const random = `${Math.floor(Math.random() * 110)}`
-await safeSendPorcentagem(sender_ou_n, imgnazista, `O quanto *@${sender_ou_n.split("@")[0]}* pode ser uma pessoa nazista?\n• Porcentagem de chance de ser uma pessoa nazista: *${random}%*`)
+await safeSendPorcentagem(sender_ou_n, nazista_gif, `O quanto *@${sender_ou_n.split("@")[0]}* pode ser uma pessoa nazista?\n• Porcentagem de chance de ser uma pessoa nazista: *${random}%*`)
 }, 7000)
 break
 
 case 'corno':
 if(!isGroup) return reply(mess.onlyGroup())
 if(!isModobn) return reply(mess.onlyGroupFun(prefix))
-await keisen.sendMessage(from, {
-text:`Pesquisando a ficha de corno @${sender_ou_n.split("@")[0]}, aguarde...`,
-contextInfo: {...NkChannelKk, mentionedJid: [sender_ou_n]}
-}, {quoted: selo})
+try {
+    await keisen.sendMessage(from, {
+        video: { url: corno_gif },
+        gifPlayback: true,
+        caption: `Pesquisando a ficha de corno @${sender_ou_n.split("@")[0]}, aguarde...`,
+        contextInfo: {...NkChannelKk, mentionedJid: [sender_ou_n]}
+    }, {quoted: selo});
+} catch {
+    await keisen.sendMessage(from, {
+        text: `Pesquisando a ficha de corno @${sender_ou_n.split("@")[0]}, aguarde...`,
+        contextInfo: {...NkChannelKk, mentionedJid: [sender_ou_n]}
+    }, {quoted: selo});
+}
 setTimeout(async() => {
 const random = `${Math.floor(Math.random() * 110)}`
-await safeSendPorcentagem(sender_ou_n, imgcorno, `O quanto *@${sender_ou_n.split("@")[0]}* pode ser uma pessoa chifruda?\n• A porcentagem de chance é *${random}%*`)
+await safeSendPorcentagem(sender_ou_n, corno_gif, `O quanto *@${sender_ou_n.split("@")[0]}* pode ser uma pessoa chifruda?\n• A porcentagem de chance é *${random}%*`)
 }, 7000)
 break
 
 case 'vesgo':
 if(!isGroup) return reply(mess.onlyGroup())
 if(!isModobn) return reply(mess.onlyGroupFun(prefix))
-await keisen.sendMessage(from, {
-text:`Pesquisando a ficha de vesgo @${sender_ou_n.split("@")[0]}, aguarde...`,
-contextInfo: {...NkChannelKk, mentionedJid: [sender_ou_n]}
-}, {quoted: selo})
+try {
+    await keisen.sendMessage(from, {
+        video: { url: vesgo_gif },
+        gifPlayback: true,
+        caption: `Pesquisando a ficha de vesgo @${sender_ou_n.split("@")[0]}, aguarde...`,
+        contextInfo: {...NkChannelKk, mentionedJid: [sender_ou_n]}
+    }, {quoted: selo});
+} catch {
+    await keisen.sendMessage(from, {
+        text: `Pesquisando a ficha de vesgo @${sender_ou_n.split("@")[0]}, aguarde...`,
+        contextInfo: {...NkChannelKk, mentionedJid: [sender_ou_n]}
+    }, {quoted: selo});
+}
 setTimeout(async() => {
 const random = `${Math.floor(Math.random() * 110)}`
-await safeSendPorcentagem(sender_ou_n, imgvesgo, `O quanto *@${sender_ou_n.split("@")[0]}* pode ser uma pessoa vesga?\n• A porcentagem de chance é *${random}%*`)
+await safeSendPorcentagem(sender_ou_n, vesgo_gif, `O quanto *@${sender_ou_n.split("@")[0]}* pode ser uma pessoa vesga?\n• A porcentagem de chance é *${random}%*`)
 }, 7000)
 break
 
 case 'bebado':
 if(!isGroup) return reply(mess.onlyGroup())
 if(!isModobn) return reply(mess.onlyGroupFun(prefix))
-await keisen.sendMessage(from, {
-text:`Pesquisando a ficha de bebado(a) @${sender_ou_n.split("@")[0]}, aguarde...`,
-contextInfo: {...NkChannelKk, mentionedJid: [sender_ou_n]}
-}, {quoted: selo})
+try {
+    await keisen.sendMessage(from, {
+        video: { url: bebado_gif },
+        gifPlayback: true,
+        caption: `Pesquisando a ficha de bebado(a) @${sender_ou_n.split("@")[0]}, aguarde...`,
+        contextInfo: {...NkChannelKk, mentionedJid: [sender_ou_n]}
+    }, {quoted: selo});
+} catch {
+    await keisen.sendMessage(from, {
+        text: `Pesquisando a ficha de bebado(a) @${sender_ou_n.split("@")[0]}, aguarde...`,
+        contextInfo: {...NkChannelKk, mentionedJid: [sender_ou_n]}
+    }, {quoted: selo});
+}
 setTimeout(async() => {
 const random = `${Math.floor(Math.random() * 110)}`
-await safeSendPorcentagem(sender_ou_n, imgbebado, `O quanto *@${sender_ou_n.split("@")[0]}* pode ser uma pessoa bêbada?\n• A porcentagem de chance é *${random}%*`)
+await safeSendPorcentagem(sender_ou_n, bebado_gif, `O quanto *@${sender_ou_n.split("@")[0]}* pode ser uma pessoa bêbada?\n• A porcentagem de chance é *${random}%*`)
 }, 7000)
 break
 
 case 'gado':
 if(!isGroup) return reply(mess.onlyGroup())
 if(!isModobn) return reply(mess.onlyGroupFun(prefix))
-await keisen.sendMessage(from, {
-text:`Pesquisando a ficha de gado @${sender_ou_n.split("@")[0]}, aguarde...`,
-contextInfo: {...NkChannelKk, mentionedJid: [sender_ou_n]}
-}, {quoted: selo})
+try {
+    await keisen.sendMessage(from, {
+        video: { url: gado_gif },
+        gifPlayback: true,
+        caption: `Pesquisando a ficha de gado @${sender_ou_n.split("@")[0]}, aguarde...`,
+        contextInfo: {...NkChannelKk, mentionedJid: [sender_ou_n]}
+    }, {quoted: selo});
+} catch {
+    await keisen.sendMessage(from, {
+        text: `Pesquisando a ficha de gado @${sender_ou_n.split("@")[0]}, aguarde...`,
+        contextInfo: {...NkChannelKk, mentionedJid: [sender_ou_n]}
+    }, {quoted: selo});
+}
 setTimeout(async() => {
 const random = `${Math.floor(Math.random() * 110)}`
-await safeSendPorcentagem(sender_ou_n, imggado, `O quanto *@${sender_ou_n.split("@")[0]}* pode ser um gado?\n• A porcentagem de chance é *${random}%*`)
+await safeSendPorcentagem(sender_ou_n, gado_gif, `O quanto *@${sender_ou_n.split("@")[0]}* pode ser um gado?\n• A porcentagem de chance é *${random}%*`)
 }, 7000)
 break
 
@@ -21257,13 +21418,22 @@ case "fiel":
 case 'lindo':
 if(!isGroup) return reply(mess.onlyGroup())
 if(!isModobn) return reply(mess.onlyGroupFun(prefix))
-await keisen.sendMessage(from, {
-text:`Pesquisando a ficha de lindo @${sender_ou_n.split("@")[0]}, aguarde...`,
-contextInfo: {...NkChannelKk, mentionedJid: [sender_ou_n]}
-}, {quoted: selo})
+try {
+    await keisen.sendMessage(from, {
+        video: { url: lindo_gif },
+        gifPlayback: true,
+        caption: `Pesquisando a ficha de lindo @${sender_ou_n.split("@")[0]}, aguarde...`,
+        contextInfo: {...NkChannelKk, mentionedJid: [sender_ou_n]}
+    }, {quoted: selo});
+} catch {
+    await keisen.sendMessage(from, {
+        text: `Pesquisando a ficha de lindo @${sender_ou_n.split("@")[0]}, aguarde...`,
+        contextInfo: {...NkChannelKk, mentionedJid: [sender_ou_n]}
+    }, {quoted: selo});
+}
 setTimeout(async() => {
 const random = `${Math.floor(Math.random() * 110)}`
-await safeSendPorcentagem(sender_ou_n, lindocmd, `O quanto *@${sender_ou_n.split("@")[0]}* pode ser lindo?\n• A porcentagem de chance é *${random}%*`)
+await safeSendPorcentagem(sender_ou_n, lindo_gif, `O quanto *@${sender_ou_n.split("@")[0]}* pode ser lindo?\n• A porcentagem de chance é *${random}%*`)
 }, 7000)
 break
 
@@ -21321,21 +21491,49 @@ if (!isModobn) return reply(mess.onlyGroupFun(prefix));
 case 'linda':
 if(!isGroup) return reply(mess.onlyGroup())
 if(!isModobn) return reply(mess.onlyGroupFun(prefix))
-await keisen.sendMessage(from, {
-text:`Pesquisando a ficha de linda @${sender_ou_n.split("@")[0]}, aguarde...`,
-contextInfo: {...NkChannelKk, mentionedJid: [sender_ou_n]}
-}, {quoted: selo})
+try {
+    await keisen.sendMessage(from, {
+        video: { url: linda_gif },
+        gifPlayback: true,
+        caption: `Pesquisando a ficha de linda @${sender_ou_n.split("@")[0]}, aguarde...`,
+        contextInfo: {...NkChannelKk, mentionedJid: [sender_ou_n]}
+    }, {quoted: selo});
+} catch {
+    await keisen.sendMessage(from, {
+        text: `Pesquisando a ficha de linda @${sender_ou_n.split("@")[0]}, aguarde...`,
+        contextInfo: {...NkChannelKk, mentionedJid: [sender_ou_n]}
+    }, {quoted: selo});
+}
 setTimeout(async() => {
 const random = `${Math.floor(Math.random() * 110)}`
-await safeSendPorcentagem(sender_ou_n, lindacmd, `O quanto *@${sender_ou_n.split("@")[0]}* pode ser linda?\n• A porcentagem de chance é *${random}%*`)
+await safeSendPorcentagem(sender_ou_n, linda_gif, `O quanto *@${sender_ou_n.split("@")[0]}* pode ser linda?\n• A porcentagem de chance é *${random}%*`)
 }, 7000)
 break
 
 case 'punheteiro':
 const aletl = `${Math.floor(Math.random() * 105)}`
-reply('Aguarde, confiscando sua porcentagem...')
+await reagir(from, "🔍");
+try {
+    await keisen.sendMessage(from, {
+        video: { url: "https://files.catbox.moe/2buys6.mp4" },
+        gifPlayback: true,
+        caption: `🔍 Calculando sua porcentagem @${sender_ou_n.split("@")[0]}... 🪷`,
+        contextInfo: {...NkChannelKk, mentionedJid: [sender_ou_n]}
+    }, {quoted: selo});
+} catch {
+    reply('Aguarde, confiscando sua porcentagem...');
+}
 await delay(5000)
-reply(`${pushname} Sua Porcentagem De punheteiro(a) é De : ${aletl}%`)
+try {
+    await keisen.sendMessage(from, {
+        video: { url: puta_gif || "https://files.catbox.moe/u7zwfq.mp4" },
+        gifPlayback: true,
+        caption: `💦 ${pushname} Sua Porcentagem De punheteiro(a) é De : *${aletl}%* 🪷`,
+        contextInfo: {...NkChannelKk, mentionedJid: [sender]}
+    }, {quoted: selo});
+} catch {
+    reply(`${pushname} Sua Porcentagem De punheteiro(a) é De : ${aletl}%`);
+}
 break
 
 
@@ -21418,10 +21616,19 @@ break
 case 'gostoso':
 if(!isGroup) return reply(mess.onlyGroup())
 if(!isModobn) return reply(mess.onlyGroupFun(prefix))
-await keisen.sendMessage(from, {
-text:`Pesquisando a sua ficha de gostoso @${sender_ou_n.split("@")[0]} aguarde...`,
-contextInfo: {...NkChannelKk, mentionedJid: [sender_ou_n]}
-}, {quoted: selo})
+try {
+    await keisen.sendMessage(from, {
+        video: { url: gostoso_gif },
+        gifPlayback: true,
+        caption: `Pesquisando a sua ficha de gostoso @${sender_ou_n.split("@")[0]} aguarde...`,
+        contextInfo: {...NkChannelKk, mentionedJid: [sender_ou_n]}
+    }, {quoted: selo});
+} catch {
+    await keisen.sendMessage(from, {
+        text: `Pesquisando a sua ficha de gostoso @${sender_ou_n.split("@")[0]} aguarde...`,
+        contextInfo: {...NkChannelKk, mentionedJid: [sender_ou_n]}
+    }, {quoted: selo});
+}
 setTimeout(async() => {
 const random = `${Math.floor(Math.random() * 110)}`
 await keisen.sendMessage(from, {
@@ -21436,10 +21643,19 @@ break
 case 'gostosa':
 if(!isGroup) return reply(mess.onlyGroup())
 if(!isModobn) return reply(mess.onlyGroupFun(prefix))
-await keisen.sendMessage(from, {
-text:`Pesquisando a sua ficha de gostosa @${sender_ou_n.split("@")[0]} aguarde...`,
-contextInfo: {...NkChannelKk, mentionedJid: [sender_ou_n]}
-}, {quoted: selo})
+try {
+    await keisen.sendMessage(from, {
+        video: { url: gostosa_gif },
+        gifPlayback: true,
+        caption: `Pesquisando a sua ficha de gostosa @${sender_ou_n.split("@")[0]} aguarde...`,
+        contextInfo: {...NkChannelKk, mentionedJid: [sender_ou_n]}
+    }, {quoted: selo});
+} catch {
+    await keisen.sendMessage(from, {
+        text: `Pesquisando a sua ficha de gostosa @${sender_ou_n.split("@")[0]} aguarde...`,
+        contextInfo: {...NkChannelKk, mentionedJid: [sender_ou_n]}
+    }, {quoted: selo});
+}
 setTimeout(async() => {
 const random = `${Math.floor(Math.random() * 110)}`
 await keisen.sendMessage(from, {
@@ -21454,52 +21670,88 @@ break
 case 'sigma':
 if(!isGroup) return reply(mess.onlyGroup())
 if(!isModobn) return reply(mess.onlyGroupFun(prefix))
-await keisen.sendMessage(from, {
-text:`Pesquisando a sua ficha de sigma @${sender_ou_n.split("@")[0]} aguarde...`,
-contextInfo: {...NkChannelKk, mentionedJid: [sender_ou_n]}
-}, {quoted: selo})
+try {
+    await keisen.sendMessage(from, {
+        video: { url: sigma_gif },
+        gifPlayback: true,
+        caption: `Pesquisando a sua ficha de sigma @${sender_ou_n.split("@")[0]} aguarde...`,
+        contextInfo: {...NkChannelKk, mentionedJid: [sender_ou_n]}
+    }, {quoted: selo});
+} catch {
+    await keisen.sendMessage(from, {
+        text: `Pesquisando a sua ficha de sigma @${sender_ou_n.split("@")[0]} aguarde...`,
+        contextInfo: {...NkChannelKk, mentionedJid: [sender_ou_n]}
+    }, {quoted: selo});
+}
 setTimeout(async() => {
 const random = `${Math.floor(Math.random() * 110)}`
-await safeSendPorcentagem(sender_ou_n, imgsigma, `O quanto *@${sender_ou_n.split("@")[0]}* pode ser uma pessoa sigma?\n• A porcentagem de chance é *${random}%*`)
+await safeSendPorcentagem(sender_ou_n, sigma_gif, `O quanto *@${sender_ou_n.split("@")[0]}* pode ser uma pessoa sigma?\n• A porcentagem de chance é *${random}%*`)
 }, 7000)
 break
 
 case 'beta':
 if(!isGroup) return reply(mess.onlyGroup())
 if(!isModobn) return reply(mess.onlyGroupFun(prefix))
-await keisen.sendMessage(from, {
-text:`Pesquisando a sua ficha de beta @${sender_ou_n.split("@")[0]} aguarde...`,
-contextInfo: {...NkChannelKk, mentionedJid: [sender_ou_n]}
-}, {quoted: selo})
+try {
+    await keisen.sendMessage(from, {
+        video: { url: beta_gif },
+        gifPlayback: true,
+        caption: `Pesquisando a sua ficha de beta @${sender_ou_n.split("@")[0]} aguarde...`,
+        contextInfo: {...NkChannelKk, mentionedJid: [sender_ou_n]}
+    }, {quoted: selo});
+} catch {
+    await keisen.sendMessage(from, {
+        text: `Pesquisando a sua ficha de beta @${sender_ou_n.split("@")[0]} aguarde...`,
+        contextInfo: {...NkChannelKk, mentionedJid: [sender_ou_n]}
+    }, {quoted: selo});
+}
 setTimeout(async() => {
 const random = `${Math.floor(Math.random() * 110)}`
-await safeSendPorcentagem(sender_ou_n, imgbeta, `O quanto *@${sender_ou_n.split("@")[0]}* pode ser um beta?\n• A porcentagem de chance é *${random}%*`)
+await safeSendPorcentagem(sender_ou_n, beta_gif, `O quanto *@${sender_ou_n.split("@")[0]}* pode ser um beta?\n• A porcentagem de chance é *${random}%*`)
 }, 7000)
 break
 
 case 'baiano':
 if(!isGroup) return reply(mess.onlyGroup())
 if(!isModobn) return reply(mess.onlyGroupFun(prefix))
-await keisen.sendMessage(from, {
-text:`Pesquisando a sua ficha de baiano @${sender_ou_n.split("@")[0]} aguarde...`,
-contextInfo: {...NkChannelKk, mentionedJid: [sender_ou_n]}
-}, {quoted: selo})
+try {
+    await keisen.sendMessage(from, {
+        video: { url: baiano_gif },
+        gifPlayback: true,
+        caption: `Pesquisando a sua ficha de baiano @${sender_ou_n.split("@")[0]} aguarde...`,
+        contextInfo: {...NkChannelKk, mentionedJid: [sender_ou_n]}
+    }, {quoted: selo});
+} catch {
+    await keisen.sendMessage(from, {
+        text: `Pesquisando a sua ficha de baiano @${sender_ou_n.split("@")[0]} aguarde...`,
+        contextInfo: {...NkChannelKk, mentionedJid: [sender_ou_n]}
+    }, {quoted: selo});
+}
 setTimeout(async() => {
 const random = `${Math.floor(Math.random() * 110)}`
-await safeSendPorcentagem(sender_ou_n, imgbaiano, `O quanto *@${sender_ou_n.split("@")[0]}* pode ser uma pessoa baiana?\n• A porcentagem de chance é *${random}%*`)
+await safeSendPorcentagem(sender_ou_n, baiano_gif, `O quanto *@${sender_ou_n.split("@")[0]}* pode ser uma pessoa baiana?\n• A porcentagem de chance é *${random}%*`)
 }, 7000)
 break
 
 case 'baiana':
 if(!isGroup) return reply(mess.onlyGroup())
 if(!isModobn) return reply(mess.onlyGroupFun(prefix))
-await keisen.sendMessage(from, {
-text:`Pesquisando a sua ficha de baiana @${sender_ou_n.split("@")[0]} aguarde...`,
-contextInfo: {...NkChannelKk, mentionedJid: [sender_ou_n]}
-}, {quoted: selo})
+try {
+    await keisen.sendMessage(from, {
+        video: { url: baiana_gif },
+        gifPlayback: true,
+        caption: `Pesquisando a sua ficha de baiana @${sender_ou_n.split("@")[0]} aguarde...`,
+        contextInfo: {...NkChannelKk, mentionedJid: [sender_ou_n]}
+    }, {quoted: selo});
+} catch {
+    await keisen.sendMessage(from, {
+        text: `Pesquisando a sua ficha de baiana @${sender_ou_n.split("@")[0]} aguarde...`,
+        contextInfo: {...NkChannelKk, mentionedJid: [sender_ou_n]}
+    }, {quoted: selo});
+}
 setTimeout(async() => {
 const random = `${Math.floor(Math.random() * 110)}`
-await safeSendPorcentagem(sender_ou_n, imgbaiana, `O quanto *@${sender_ou_n.split("@")[0]}* pode ser uma pessoa baiana?\n• A porcentagem de chance é *${random}%*`)
+await safeSendPorcentagem(sender_ou_n, baiana_gif, `O quanto *@${sender_ou_n.split("@")[0]}* pode ser uma pessoa baiana?\n• A porcentagem de chance é *${random}%*`)
 }, 7000)
 break
 
@@ -21507,10 +21759,19 @@ case 'gay':
 if(!isGroup) return reply(mess.onlyGroup())
 if(!isModobn) return reply(mess.onlyGroupFun(prefix))
 
-await keisen.sendMessage(from, {
-text: `Pesquisando a sua ficha de gay: @${sender_ou_n.split("@")[0]} aguarde...`,
-contextInfo: {...NkChannelKk, mentionedJid: [sender_ou_n]}
-}, {quoted: selo})
+try {
+    await keisen.sendMessage(from, {
+        video: { url: gay_gif },
+        gifPlayback: true,
+        caption: `Pesquisando a sua ficha de gay: @${sender_ou_n.split("@")[0]} aguarde...`,
+        contextInfo: {...NkChannelKk, mentionedJid: [sender_ou_n]}
+    }, {quoted: selo});
+} catch {
+    await keisen.sendMessage(from, {
+        text: `Pesquisando a sua ficha de gay: @${sender_ou_n.split("@")[0]} aguarde...`,
+        contextInfo: {...NkChannelKk, mentionedJid: [sender_ou_n]}
+    }, {quoted: selo});
+}
 
 setTimeout(async () => {
 let percent = Math.floor(Math.random() * 110)
@@ -21521,7 +21782,7 @@ else if(percent <= 50) status = '+/- boiola'
 else if(percent <= 80) status = 'tenho minha desconfiança...'
 else status = 'você é gay...'
 
-await safeSendPorcentagem(sender_ou_n, imggay, `Qual é a porcentagem de chance do(a) *@${sender_ou_n.split("@")[0]}* ser gay?\n• *${percent}% homossexual*, ${status}`)
+await safeSendPorcentagem(sender_ou_n, gay_gif, `Qual é a porcentagem de chance do(a) *@${sender_ou_n.split("@")[0]}* ser gay?\n• *${percent}% homossexual*, ${status}`)
 }, 7000)
 break
 
@@ -21529,10 +21790,19 @@ case 'feio':
 if(!isGroup) return reply(mess.onlyGroup())
 if(!isModobn) return reply(mess.onlyGroupFun(prefix))
 
-await keisen.sendMessage(from, {
-text: `Pesquisando a sua ficha de feio: *@${sender_ou_n.split("@")[0]}* aguarde...`,
-contextInfo: {...NkChannelKk, mentionedJid: [sender_ou_n]}
-}, {quoted: selo})
+try {
+    await keisen.sendMessage(from, {
+        video: { url: feio_gif },
+        gifPlayback: true,
+        caption: `Pesquisando a sua ficha de feio: *@${sender_ou_n.split("@")[0]}* aguarde...`,
+        contextInfo: {...NkChannelKk, mentionedJid: [sender_ou_n]}
+    }, {quoted: selo});
+} catch {
+    await keisen.sendMessage(from, {
+        text: `Pesquisando a sua ficha de feio: *@${sender_ou_n.split("@")[0]}* aguarde...`,
+        contextInfo: {...NkChannelKk, mentionedJid: [sender_ou_n]}
+    }, {quoted: selo});
+}
 
 setTimeout(async () => {
 let percent = Math.floor(Math.random() * 110)
@@ -21543,7 +21813,7 @@ else if(percent <= 50) status = 'Meio feio'
 else if(percent <= 80) status = 'Feio moderado'
 else status = 'Feio demais'
 
-await safeSendPorcentagem(sender_ou_n, imgfeio, `O quanto *@${sender_ou_n.split("@")[0]}* pode ser uma pessoa feia?\n• A porcentagem de chance é *${percent}%*, ${status}`)
+await safeSendPorcentagem(sender_ou_n, feio_gif, `O quanto *@${sender_ou_n.split("@")[0]}* pode ser uma pessoa feia?\n• A porcentagem de chance é *${percent}%*, ${status}`)
 }, 7000)
 break
 
@@ -21601,38 +21871,73 @@ case 'dogolpe':
 if(!isGroup) return reply(mess.onlyGroup())
 if(!isModobn) return reply(mess.onlyGroupFun(prefix))
 if(!menc_os2 || menc_jid2[1]) return reply("*🌟 ᴍᴇɴᴄɪᴏɴᴇ ᴀ ᴍᴇɴsᴀɢᴇᴍ ᴏᴜ ᴍᴀʀǫᴜᴇ ᴜᴍ ᴜsᴜᴀʀɪᴏ ᴄᴏᴍ ᴏ @ ᴅᴇʟᴇ*")
-
+await reagir(from, "🥊");
 const golpes = ["𝐄𝐌 𝐈𝐋𝐔𝐃𝐈𝐑 𝐏𝐄𝐒𝐒𝐎𝐀𝐒", "𝐄𝐌 𝐅𝐄𝐑𝐈𝐑 𝐎𝐒 𝐒𝐄𝐍𝐓𝐈𝐌𝐄𝐍𝐓𝐎𝐒", "𝐄𝐌 𝐃𝐀𝐑 𝐂𝐇𝐈𝐅𝐑𝐄"]
 const golpeEscolhido = golpes[Math.floor(Math.random() * golpes.length)]
-
-await keisen.sendMessage(from, {
-text: `𝐎(𝐀) *@${menc_os2.split("@")[0]}* 𝐄 𝐄𝐒𝐏𝐄𝐂𝐈𝐀𝐋𝐈𝐒𝐓𝐀: ${golpeEscolhido}.`,
-contextInfo: {...NkChannelKk, mentionedJid: [menc_os2]}
-}, {quoted: selo})
+try {
+    await keisen.sendMessage(from, {
+        video: { url: "https://files.catbox.moe/z60rt6.mp4" },
+        gifPlayback: true,
+        caption: `🥊 𝐎(𝐀) *@${menc_os2.split("@")[0]}* 𝐄 𝐄𝐒𝐏𝐄𝐂𝐈𝐀𝐋𝐈𝐒𝐓𝐀: ${golpeEscolhido}. 🪷`,
+        contextInfo: {...NkChannelKk, mentionedJid: [menc_os2]}
+    }, {quoted: selo});
+} catch {
+    await keisen.sendMessage(from, {
+        text: `𝐎(𝐀) *@${menc_os2.split("@")[0]}* 𝐄 𝐄𝐒𝐏𝐄𝐂𝐈𝐀𝐋𝐈𝐒𝐓𝐀: ${golpeEscolhido}.`,
+        contextInfo: {...NkChannelKk, mentionedJid: [menc_os2]}
+    }, {quoted: selo});
+}
 break
 
 case 'shipo':
 if(!isGroup) return reply(mess.onlyGroup())
 if(!isModobn) return reply(mess.onlyGroupFun(prefix))
 if(!menc_os2) return reply('Marque uma pessoa do grupo para encontrar o par dela.')
-
+await reagir(from, "💘");
 const parceiro = (() => { try { const gm = Array.isArray(groupMembers) ? groupMembers : []; if (gm.length==0) return sender; const p = gm[Math.floor(Math.random()*gm.length)]; return p.id || p.jid || sender; } catch { return sender; } })()
 const porcentagem = Math.floor(Math.random() * 100)
-
-await keisen.sendMessage(from, {
-text: `💘 𝐄𝐔 𝐒𝐇𝐈𝐏𝐎:\n@${parceiro.split('@')[0]}\n\n@${menc_os2.split("@")[0]}\n\n𝐂𝐎𝐌 𝐔𝐌𝐀 𝐏𝐎𝐑𝐂𝐄𝐍𝐓𝐀𝐆𝐄𝐌 𝐃𝐄: *${porcentagem}%*`,
-contextInfo: {...NkChannelKk, mentionedJid: [parceiro, menc_os2]}
-}, {quoted: selo})
+try {
+    await keisen.sendMessage(from, {
+        video: { url: casal || "https://files.catbox.moe/gosmx9.jpg" },
+        gifPlayback: true,
+        caption: `💘 *WHITE LOTUS - SHIPO* 🪷\n\n@${parceiro.split('@')[0]}\n💖\n@${menc_os2.split("@")[0]}\n\n𝐂𝐎𝐌𝐏𝐀𝐓𝐈𝐁𝐈𝐋𝐈𝐃𝐀𝐃𝐄: *${porcentagem}%* 🪷`,
+        contextInfo: {...NkChannelKk, mentionedJid: [parceiro, menc_os2]}
+    }, {quoted: selo});
+} catch {
+    await keisen.sendMessage(from, {
+        text: `💘 𝐄𝐔 𝐒𝐇𝐈𝐏𝐎:\n@${parceiro.split('@')[0]}\n\n@${menc_os2.split("@")[0]}\n\n𝐂𝐎𝐌 𝐔𝐌𝐀 𝐏𝐎𝐑𝐂𝐄𝐍𝐓𝐀𝐆𝐄𝐌 𝐃𝐄: *${porcentagem}%*`,
+        contextInfo: {...NkChannelKk, mentionedJid: [parceiro, menc_os2]}
+    }, {quoted: selo});
+}
 break
 
 case 'casal':
 if(!isGroup) return reply(mess.onlyGroup())
 if(!isModobn) return reply(mess.onlyGroupFun(prefix))
 await reagir(from, "💘");
-let m1 = groupMembers[Math.floor(Math.random() * groupMembers.length)].id
-let m2 = groupMembers[Math.floor(Math.random() * groupMembers.length)].id
+let m1 = (() => { try { const gm = Array.isArray(groupMembers) ? groupMembers : []; if (gm.length==0) return sender; const p = gm[Math.floor(Math.random()*gm.length)]; return p.id || p.jid || sender; } catch { return sender; } })()
+let m2 = (() => { try { const gm = Array.isArray(groupMembers) ? groupMembers : []; if (gm.length<2) return sender; const p = gm[Math.floor(Math.random()*gm.length)]; return p.id || p.jid || sender; } catch { return sender; } })()
 let random = Math.floor(Math.random() * 100)
-await safeSendPorcentagem(sender_ou_n, casal, `👩🏼‍❤️‍💋‍👨🏻𝐒𝐈𝐍𝐓𝐎 𝐐𝐔𝐄 𝐄𝐒𝐒𝐄𝐒 𝐃𝐎𝐈𝐒 𝐅𝐎𝐑𝐌𝐀𝐑𝐈𝐀 𝐔𝐌 𝐎𝐓𝐈𝐌𝐎 𝐂𝐀𝐒𝐀𝐋:\n\n- @${m1.split("@")[0]}\n\n- @${m2.split("@")[0]}\n\n𝐂𝐎𝐌 𝐔𝐌𝐀 𝐄𝐒𝐏𝐄𝐂𝐓𝐀𝐓𝐈𝐕𝐀 𝐃𝐄:*${random}%*`).catch(() => {reply(mess.error())})
+try {
+    await keisen.sendMessage(from, {
+        video: { url: "https://files.catbox.moe/ecw188.mp4" },
+        gifPlayback: true,
+        caption: `👩🏼‍❤️‍💋‍👨🏻 *WHITE LOTUS - CASAL* 🪷
+
+💘 @${m1.split("@")[0]} + @${m2.split("@")[0]}
+
+𝐂𝐎𝐌𝐏𝐀𝐓𝐈𝐁𝐈𝐋𝐈𝐃𝐀𝐃𝐄: *${random}%* 🪷`,
+        contextInfo: {...NkChannelKk, mentionedJid: [m1, m2]}
+    }, {quoted: selo});
+} catch {
+    await keisen.sendMessage(from, {
+        text: `👩🏼‍❤️‍💋‍👨🏻𝐒𝐈𝐍𝐓𝐎 𝐐𝐔𝐄 𝐄𝐒𝐒𝐄𝐒 𝐃𝐎𝐈𝐒 𝐅𝐎𝐑𝐌𝐀𝐑𝐈𝐀 𝐔𝐌 𝐎𝐓𝐈𝐌𝐎 𝐂𝐀𝐒𝐀𝐋:
+- @${m1.split("@")[0]}
+- @${m2.split("@")[0]}
+𝐂𝐎𝐌 𝐔𝐌𝐀 𝐄𝐒𝐏𝐄𝐂𝐓𝐀𝐓𝐈𝐕𝐀 𝐃𝐄:*${random}%*`,
+        contextInfo: {...NkChannelKk, mentionedJid: [m1, m2]}
+    }, {quoted: selo});
+}
 break
 
 case 'leveling':
@@ -21974,7 +22279,8 @@ mentionsGay.push(membro)
 rankGay += `• ${i+1}° ${Math.floor(Math.random()*100)}% - @${membro.split('@')[0]}\n\n`
 }
 try {
-await keisen.sendMessage(from, {image: {url: rnkgay}, caption: rankGay, contextInfo:{...NkChannelKk, mentionedJid: mentionsGay}}, {quoted: selo})
+await keisen.sendMessage(from, {video: {url: rankgay_gif},
+                gifPlayback: true, caption: rankGay, contextInfo:{...NkChannelKk, mentionedJid: mentionsGay}}, {quoted: selo})
 } catch (e) {
 await keisen.sendMessage(from, {text: rankGay, contextInfo:{...NkChannelKk, mentionedJid: mentionsGay}}, {quoted: selo})
 }
@@ -21994,7 +22300,8 @@ const porcent = Math.floor(Math.random()*101);
 rankCasal += `• ${i+1}° ${porcent}% - @${m1.split('@')[0]} e @${m2.split('@')[0]}\n\n`;
 }
 try {
-await keisen.sendMessage(from, {image: {url: rankcasal}, caption: rankCasal, contextInfo:{...NkChannelKk, mentionedJid: mentionsCasal}}, {quoted: selo})
+await keisen.sendMessage(from, {video: {url: suruba_gif},
+                gifPlayback: true, caption: rankCasal, contextInfo:{...NkChannelKk, mentionedJid: mentionsCasal}}, {quoted: selo})
 } catch (e) {
 await keisen.sendMessage(from, {text: rankCasal, contextInfo:{...NkChannelKk, mentionedJid: mentionsCasal}}, {quoted: selo})
 }
@@ -22011,7 +22318,8 @@ mentionsFalido.push(membro);
 rankFalido += `• ${i+1}° ${Math.floor(Math.random()*100)}% - @${membro.split('@')[0]}\n\n`;
 }
 try {
-await keisen.sendMessage(from, {image: {url: rankfalido}, caption: rankFalido, contextInfo:{...NkChannelKk, mentionedJid: mentionsFalido}}, {quoted: selo})
+await keisen.sendMessage(from, {video: {url: suruba_gif},
+                gifPlayback: true, caption: rankFalido, contextInfo:{...NkChannelKk, mentionedJid: mentionsFalido}}, {quoted: selo})
 } catch (e) {
 await keisen.sendMessage(from, {text: rankFalido, contextInfo:{...NkChannelKk, mentionedJid: mentionsFalido}}, {quoted: selo})
 }
@@ -22028,7 +22336,8 @@ mentionsCu.push(membro);
 rankCu += `• ${i+1}° ${Math.floor(Math.random()*100)}% - @${membro.split('@')[0]}\n\n`;
 }
 try {
-await keisen.sendMessage(from, {image: {url: rankcu}, caption: rankCu, contextInfo:{...NkChannelKk, mentionedJid: mentionsCu}}, {quoted: selo})
+await keisen.sendMessage(from, {video: {url: suruba_gif},
+                gifPlayback: true, caption: rankCu, contextInfo:{...NkChannelKk, mentionedJid: mentionsCu}}, {quoted: selo})
 } catch (e) {
 await keisen.sendMessage(from, {text: rankCu, contextInfo:{...NkChannelKk, mentionedJid: mentionsCu}}, {quoted: selo})
 }
@@ -22045,7 +22354,8 @@ mentionsBCT.push(membro);
 rankBCT += `• ${i+1}° ${Math.floor(Math.random()*100)}% - @${membro.split('@')[0]}\n\n`;
 }
 try {
-await keisen.sendMessage(from, {image: {url: rankbct}, caption: rankBCT, contextInfo:{...NkChannelKk, mentionedJid: mentionsBCT}}, {quoted: selo})
+await keisen.sendMessage(from, {video: {url: suruba_gif},
+                gifPlayback: true, caption: rankBCT, contextInfo:{...NkChannelKk, mentionedJid: mentionsBCT}}, {quoted: selo})
 } catch (e) {
 await keisen.sendMessage(from, {text: rankBCT, contextInfo:{...NkChannelKk, mentionedJid: mentionsBCT}}, {quoted: selo})
 }
@@ -22062,7 +22372,8 @@ mentionsGado.push(membro)
 rankGado += `• ${i+1}° ${Math.floor(Math.random()*100)}% - @${membro.split('@')[0]}\n\n`
 }
 try {
-await keisen.sendMessage(from, {image: {url: rnkgado}, caption: rankGado, contextInfo:{...NkChannelKk, mentionedJid: mentionsGado}}, {quoted: selo})
+await keisen.sendMessage(from, {video: {url: rankgado_gif},
+                gifPlayback: true, caption: rankGado, contextInfo:{...NkChannelKk, mentionedJid: mentionsGado}}, {quoted: selo})
 } catch (e) {
 await keisen.sendMessage(from, {text: rankGado, contextInfo:{...NkChannelKk, mentionedJid: mentionsGado}}, {quoted: selo})
 }
@@ -22079,7 +22390,8 @@ mentionsCorno.push(membro);
 rankCorno += `• ${i+1}° ${Math.floor(Math.random()*100)}% - @${membro.split('@')[0]}\n\n`;
 }
 try {
-await keisen.sendMessage(from, {image: {url: rnkcorno}, caption: rankCorno, contextInfo:{...NkChannelKk, mentionedJid: mentionsCorno}}, {quoted: selo})
+await keisen.sendMessage(from, {video: {url: rankgay_gif},
+                gifPlayback: true, caption: rankCorno, contextInfo:{...NkChannelKk, mentionedJid: mentionsCorno}}, {quoted: selo})
 } catch (e) {
 await keisen.sendMessage(from, {text: rankCorno, contextInfo:{...NkChannelKk, mentionedJid: mentionsCorno}}, {quoted: selo})
 }
@@ -22118,7 +22430,8 @@ mentionsGostoso.push(membro)
 rankGostoso += `• ${i+1}° ${Math.floor(Math.random()*100)}% - @${membro.split('@')[0]}\n\n`
 }
 try {
-await keisen.sendMessage(from, {image: {url: rnkgostoso}, caption: rankGostoso, contextInfo:{...NkChannelKk, mentionedJid: mentionsGostoso}}, {quoted: selo})
+await keisen.sendMessage(from, {video: {url: rankgay_gif},
+                gifPlayback: true, caption: rankGostoso, contextInfo:{...NkChannelKk, mentionedJid: mentionsGostoso}}, {quoted: selo})
 } catch (e) {
 await keisen.sendMessage(from, {text: rankGostoso, contextInfo:{...NkChannelKk, mentionedJid: mentionsGostoso}}, {quoted: selo})
 }
@@ -22135,7 +22448,8 @@ mentionsGostosa.push(membro)
 rankGostosa += `• ${i+1}° ${Math.floor(Math.random()*100)}% - @${membro.split('@')[0]}\n\n`
 }
 try {
-await keisen.sendMessage(from, {image: {url: rnkgostosa}, caption: rankGostosa, contextInfo:{...NkChannelKk, mentionedJid: mentionsGostosa}}, {quoted: selo})
+await keisen.sendMessage(from, {video: {url: rankgay_gif},
+                gifPlayback: true, caption: rankGostosa, contextInfo:{...NkChannelKk, mentionedJid: mentionsGostosa}}, {quoted: selo})
 } catch (e) {
 await keisen.sendMessage(from, {text: rankGostosa, contextInfo:{...NkChannelKk, mentionedJid: mentionsGostosa}}, {quoted: selo})
 }
@@ -22152,7 +22466,8 @@ mentionsNazista.push(membro)
 rankNazista += `• ${i+1}° ${Math.floor(Math.random()*100)}% - @${membro.split('@')[0]}\n\n`
 }
 try {
-await keisen.sendMessage(from, {image: {url: rnknazista}, caption: rankNazista, contextInfo:{...NkChannelKk, mentionedJid: mentionsNazista}}, {quoted: selo})
+await keisen.sendMessage(from, {video: {url: rankgay_gif},
+                gifPlayback: true, caption: rankNazista, contextInfo:{...NkChannelKk, mentionedJid: mentionsNazista}}, {quoted: selo})
 } catch (e) {
 await keisen.sendMessage(from, {text: rankNazista, contextInfo:{...NkChannelKk, mentionedJid: mentionsNazista}}, {quoted: selo})
 }
@@ -22169,7 +22484,8 @@ mentionsOtaku.push(membro)
 rankOtaku += `• ${i+1}° ${Math.floor(Math.random()*100)}% - @${membro.split('@')[0]}\n\n`
 }
 try {
-await keisen.sendMessage(from, {image: {url: rnkotaku}, caption: rankOtaku, contextInfo:{...NkChannelKk, mentionedJid: mentionsOtaku}}, {quoted: selo})
+await keisen.sendMessage(from, {video: {url: rankgay_gif},
+                gifPlayback: true, caption: rankOtaku, contextInfo:{...NkChannelKk, mentionedJid: mentionsOtaku}}, {quoted: selo})
 } catch (e) {
 await keisen.sendMessage(from, {text: rankOtaku, contextInfo:{...NkChannelKk, mentionedJid: mentionsOtaku}}, {quoted: selo})
 }
@@ -22186,7 +22502,8 @@ mentionsSigma.push(membro)
 rankSigma += `• ${i+1}° ${Math.floor(Math.random()*100)}% - @${membro.split('@')[0]}\n\n`
 }
 try {
-await keisen.sendMessage(from, {image: {url: rnksigma}, caption: rankSigma, contextInfo:{...NkChannelKk, mentionedJid: mentionsSigma}}, {quoted: selo})
+await keisen.sendMessage(from, {video: {url: rankgay_gif},
+                gifPlayback: true, caption: rankSigma, contextInfo:{...NkChannelKk, mentionedJid: mentionsSigma}}, {quoted: selo})
 } catch (e) {
 await keisen.sendMessage(from, {text: rankSigma, contextInfo:{...NkChannelKk, mentionedJid: mentionsSigma}}, {quoted: selo})
 }
@@ -22203,7 +22520,8 @@ mentionsBeta.push(membro)
 rankBeta += `• ${i+1}° ${Math.floor(Math.random()*100)}% - @${membro.split('@')[0]}\n\n`
 }
 try {
-await keisen.sendMessage(from, {image: {url: rnkbeta}, caption: rankBeta, contextInfo:{...NkChannelKk, mentionedJid: mentionsBeta}}, {quoted: selo})
+await keisen.sendMessage(from, {video: {url: rankgay_gif},
+                gifPlayback: true, caption: rankBeta, contextInfo:{...NkChannelKk, mentionedJid: mentionsBeta}}, {quoted: selo})
 } catch (e) {
 await keisen.sendMessage(from, {text: rankBeta, contextInfo:{...NkChannelKk, mentionedJid: mentionsBeta}}, {quoted: selo})
 }
@@ -22220,7 +22538,8 @@ mentionsBaiano.push(membro)
 rankBaiano += `• ${i+1}° ${Math.floor(Math.random()*100)}% - @${membro.split('@')[0]}\n\n`
 }
 try {
-await keisen.sendMessage(from, {image: {url: rnkbaiano}, caption: rankBaiano, contextInfo:{...NkChannelKk, mentionedJid: mentionsBaiano}}, {quoted: selo})
+await keisen.sendMessage(from, {video: {url: rankgay_gif},
+                gifPlayback: true, caption: rankBaiano, contextInfo:{...NkChannelKk, mentionedJid: mentionsBaiano}}, {quoted: selo})
 } catch (e) {
 await keisen.sendMessage(from, {text: rankBaiano, contextInfo:{...NkChannelKk, mentionedJid: mentionsBaiano}}, {quoted: selo})
 }
@@ -22237,7 +22556,8 @@ mentionsBaiana.push(membro)
 rankBaiana += `• ${i+1}° ${Math.floor(Math.random()*100)}% - @${membro.split('@')[0]}\n\n`
 }
 try {
-await keisen.sendMessage(from, {image: {url: rnkbaiana}, caption: rankBaiana, contextInfo:{...NkChannelKk, mentionedJid: mentionsBaiana}}, {quoted: selo})
+await keisen.sendMessage(from, {video: {url: rankgay_gif},
+                gifPlayback: true, caption: rankBaiana, contextInfo:{...NkChannelKk, mentionedJid: mentionsBaiana}}, {quoted: selo})
 } catch (e) {
 await keisen.sendMessage(from, {text: rankBaiana, contextInfo:{...NkChannelKk, mentionedJid: mentionsBaiana}}, {quoted: selo})
 }
@@ -22254,7 +22574,8 @@ mentionsCarioca.push(membro)
 rankCarioca += `• ${i+1}° ${Math.floor(Math.random()*100)}% - @${membro.split('@')[0]}\n\n`
 }
 try {
-await keisen.sendMessage(from, {image: {url: rnkcarioca}, caption: rankCarioca, contextInfo:{...NkChannelKk, mentionedJid: mentionsCarioca}}, {quoted: selo})
+await keisen.sendMessage(from, {video: {url: rankgay_gif},
+                gifPlayback: true, caption: rankCarioca, contextInfo:{...NkChannelKk, mentionedJid: mentionsCarioca}}, {quoted: selo})
 } catch (e) {
 await keisen.sendMessage(from, {text: rankCarioca, contextInfo:{...NkChannelKk, mentionedJid: mentionsCarioca}}, {quoted: selo})
 }
@@ -22271,7 +22592,8 @@ mentionsLouco.push(membro)
 rankLouco += `• ${i+1}° ${Math.floor(Math.random()*100)}% - @${membro.split('@')[0]}\n\n`
 }
 try {
-await keisen.sendMessage(from, {image: {url: rnklouco}, caption: rankLouco, contextInfo:{...NkChannelKk, mentionedJid: mentionsLouco}}, {quoted: selo})
+await keisen.sendMessage(from, {video: {url: rankgay_gif},
+                gifPlayback: true, caption: rankLouco, contextInfo:{...NkChannelKk, mentionedJid: mentionsLouco}}, {quoted: selo})
 } catch (e) {
 await keisen.sendMessage(from, {text: rankLouco, contextInfo:{...NkChannelKk, mentionedJid: mentionsLouco}}, {quoted: selo})
 }
@@ -22288,7 +22610,8 @@ mentionsLouca.push(membro)
 rankLouca += `• ${i+1}° ${Math.floor(Math.random()*100)}% - @${membro.split('@')[0]}\n\n`
 }
 try {
-await keisen.sendMessage(from, {image: {url: rnklouca}, caption: rankLouca, contextInfo:{...NkChannelKk, mentionedJid: mentionsLouca}}, {quoted: selo})
+await keisen.sendMessage(from, {video: {url: rankgay_gif},
+                gifPlayback: true, caption: rankLouca, contextInfo:{...NkChannelKk, mentionedJid: mentionsLouca}}, {quoted: selo})
 } catch (e) {
 await keisen.sendMessage(from, {text: rankLouca, contextInfo:{...NkChannelKk, mentionedJid: mentionsLouca}}, {quoted: selo})
 }
@@ -22305,7 +22628,8 @@ mentionsSafada.push(membro)
 rankSafada += `• ${i+1}° ${Math.floor(Math.random()*100)}% - @${membro.split('@')[0]}\n\n`
 }
 try {
-await keisen.sendMessage(from, {image: {url: rnksafada}, caption: rankSafada, contextInfo:{...NkChannelKk, mentionedJid: mentionsSafada}}, {quoted: selo})
+await keisen.sendMessage(from, {video: {url: rankgay_gif},
+                gifPlayback: true, caption: rankSafada, contextInfo:{...NkChannelKk, mentionedJid: mentionsSafada}}, {quoted: selo})
 } catch (e) {
 await keisen.sendMessage(from, {text: rankSafada, contextInfo:{...NkChannelKk, mentionedJid: mentionsSafada}}, {quoted: selo})
 }
@@ -22322,7 +22646,8 @@ mentionsSafado.push(membro)
 rankSafado += `• ${i+1}° ${Math.floor(Math.random()*100)}% - @${membro.split('@')[0]}\n\n`
 }
 try {
-await keisen.sendMessage(from, {image: {url: rnksafado}, caption: rankSafado, contextInfo:{...NkChannelKk, mentionedJid: mentionsSafado}}, {quoted: selo})
+await keisen.sendMessage(from, {video: {url: rankgay_gif},
+                gifPlayback: true, caption: rankSafado, contextInfo:{...NkChannelKk, mentionedJid: mentionsSafado}}, {quoted: selo})
 } catch (e) {
 await keisen.sendMessage(from, {text: rankSafado, contextInfo:{...NkChannelKk, mentionedJid: mentionsSafado}}, {quoted: selo})
 }
@@ -22339,7 +22664,8 @@ mentionsMacaco.push(membro)
 rankMacaco += `• ${i+1}° ${Math.floor(Math.random()*100)}% - @${membro.split('@')[0]}\n\n`
 }
 try {
-await keisen.sendMessage(from, {image: {url: rnkmacaco}, caption: rankMacaco, contextInfo:{...NkChannelKk, mentionedJid: mentionsMacaco}}, {quoted: selo})
+await keisen.sendMessage(from, {video: {url: rankgay_gif},
+                gifPlayback: true, caption: rankMacaco, contextInfo:{...NkChannelKk, mentionedJid: mentionsMacaco}}, {quoted: selo})
 } catch (e) {
 await keisen.sendMessage(from, {text: rankMacaco, contextInfo:{...NkChannelKk, mentionedJid: mentionsMacaco}}, {quoted: selo})
 }
@@ -22356,7 +22682,8 @@ mentionsMacaca.push(membro)
 rankMacaca += `• ${i+1}° ${Math.floor(Math.random()*100)}% - @${membro.split('@')[0]}\n\n`
 }
 try {
-await keisen.sendMessage(from, {image: {url: rnkmacaca}, caption: rankMacaca, contextInfo:{...NkChannelKk, mentionedJid: mentionsMacaca}}, {quoted: selo})
+await keisen.sendMessage(from, {video: {url: rankgay_gif},
+                gifPlayback: true, caption: rankMacaca, contextInfo:{...NkChannelKk, mentionedJid: mentionsMacaca}}, {quoted: selo})
 } catch (e) {
 await keisen.sendMessage(from, {text: rankMacaca, contextInfo:{...NkChannelKk, mentionedJid: mentionsMacaca}}, {quoted: selo})
 }
@@ -22373,7 +22700,8 @@ mentionsPuta.push(membro)
 rankPuta += `• ${i+1}° ${Math.floor(Math.random()*100)}% - @${membro.split('@')[0]}\n\n`
 }
 try {
-await keisen.sendMessage(from, {image: {url: rnkputa}, caption: rankPuta, contextInfo:{...NkChannelKk, mentionedJid: mentionsPuta}}, {quoted: selo})
+await keisen.sendMessage(from, {video: {url: rankgay_gif},
+                gifPlayback: true, caption: rankPuta, contextInfo:{...NkChannelKk, mentionedJid: mentionsPuta}}, {quoted: selo})
 } catch (e) {
 await keisen.sendMessage(from, {text: rankPuta, contextInfo:{...NkChannelKk, mentionedJid: mentionsPuta}}, {quoted: selo})
 }
@@ -22390,7 +22718,8 @@ mentionsPau.push(membro)
 rankPau += `• ${i+1}° ${Math.floor(Math.random()*100)}cm - @${membro.split('@')[0]}\n\n`
 }
 try {
-await keisen.sendMessage(from, {image: {url: rnkpau}, caption: rankPau, contextInfo:{...NkChannelKk, mentionedJid: mentionsPau}}, {quoted: selo})
+await keisen.sendMessage(from, {video: {url: rankgay_gif},
+                gifPlayback: true, caption: rankPau, contextInfo:{...NkChannelKk, mentionedJid: mentionsPau}}, {quoted: selo})
 } catch (e) {
 await keisen.sendMessage(from, {text: rankPau, contextInfo:{...NkChannelKk, mentionedJid: mentionsPau}}, {quoted: selo})
 }
