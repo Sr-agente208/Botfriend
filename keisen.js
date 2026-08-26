@@ -2489,7 +2489,7 @@ try {
 
 async function sendMenu(from, selo, opt = {}) {
 const {
-reaction = "🪷", caption = mess.error(), isGroupRequired = false, isAdminRequired = false, isOwnerRequired = false, isModoCoinsRequired = false, isModoBnRequired = false, sendAudio = false, useButtons = true } = opt;
+reaction = "🪷", caption = mess.error(), isGroupRequired = false, isAdminRequired = false, isOwnerRequired = false, isModoCoinsRequired = false, isModoBnRequired = false, sendAudio = false, useButtons = false } = opt;
 try {
 reagir(from, reaction);
 if (isGroupRequired && !isGroup) return reply(mess.onlyGroup());
@@ -17710,19 +17710,27 @@ case 'menu':
 await sendMenu(from, selo, {
 reaction: "🪷",
 caption: linguagem.menu(prefix),
-sendAudio: true
+sendAudio: true,
+useButtons: false
 });
 break;
 
 case 'menucasal':
 case 'casalmenu':
 case 'amor':
-await sendMenu(from, selo, {
-reaction: "💍",
-caption: linguagem.menucasal(prefix),
-isGroupRequired: true,
-sendAudio: true
-});
+try {
+    const { sendCasalButtons } = require('./ARQUIVES/funcoes/menuBotoes.js');
+    const ok = await sendCasalButtons(keisen, from, prefix, NomeDoBot, sender, selo, linguagem, NkChannelKk, namorar);
+    if (!ok) throw new Error('fallback');
+} catch {
+    await sendMenu(from, selo, {
+        reaction: "💍",
+        caption: linguagem.menucasal(prefix),
+        isGroupRequired: true,
+        sendAudio: true,
+        useButtons: false
+    });
+}
 break;
 
 case 'menujogos':
@@ -17757,11 +17765,19 @@ break;
 case 'menulotus':
 case 'lotus':
 case 'whitelotus':
-await sendMenu(from, selo, {
-reaction: "🪷",
-caption: linguagem.menulotus(prefix),
-sendAudio: true
-});
+case 'menubotoes':
+try {
+    const { sendWhiteLotusMenu } = require('./ARQUIVES/funcoes/menuBotoes.js');
+    const ok = await sendWhiteLotusMenu(keisen, from, prefix, NomeDoBot, sender, selo, linguagem, carregarMidia, NkChannelKk);
+    if (!ok) throw new Error('fallback');
+} catch {
+    await sendMenu(from, selo, {
+        reaction: "🪷",
+        caption: linguagem.menulotus(prefix),
+        sendAudio: true,
+        useButtons: false
+    });
+}
 break;
 
 case 'menuzz':
@@ -20138,14 +20154,6 @@ mentions:[sender]
 };
 await keisen.sendMessage(from,buttonMessage,{quoted:selo});
 }
-break;
-
-case 'menu':
-await sendMenu(from, selo, {
-reaction: "🎉",
-caption: linguagem.menu(prefix),
-sendAudio: true
-});
 break;
 
 case 'menu18':
