@@ -27,46 +27,14 @@ if [ -d "$PERSIST" ] || mkdir -p "$PERSIST" 2>/dev/null; then
 fi
 
 # ---------- Prioridade 2: backup no Supabase (grátis) ----------
-tem_supabase() { [ -n "$SUPABASE_URL" ] && [ -n "$SUPABASE_KEY" ] && command -v curl >/dev/null 2>&1; }
-BUCKET="${SUPABASE_BUCKET:-botfriend-backup}"
-STG_URL="$SUPABASE_URL/storage/v1/object/$BUCKET/dados.tar.gz"
-
-fazer_backup() {
-  tem_supabase || return 0
-  [ -d "$DADOS_SRC" ] || return 0
-  tar -czf "$BACKUP_FILE" --exclude="$DADOS_SRC/data/media" --exclude="$DADOS_SRC/INFO_KEISEN/LOGOS" -C "$(pwd)" "DADOS DO KEISEN" 2>/dev/null || return 0
-  NOVO_HASH=$(md5sum "$BACKUP_FILE" | cut -d' ' -f1)
-  [ "$NOVO_HASH" = "$(cat "$HASH_FILE" 2>/dev/null)" ] && return 0
-  if curl -fsSL -X POST "$STG_URL" -H "Authorization: Bearer $SUPABASE_KEY" -H "x-upsert: true" -H "Content-Type: application/octet-stream" --data-binary @"$BACKUP_FILE" >/dev/null 2>&1; then
-    echo "$NOVO_HASH" > "$HASH_FILE"
-    echo "[backup] sessão/dados salvos no Supabase ✔"
-  else
-    echo "[backup] falha ao enviar backup (verifique SUPABASE_URL/KEY/bucket)"
-  fi
-}
-
-restaurar_backup() {
-  tem_supabase || return 0
-  if curl -fsSL "$STG_URL" -H "Authorization: Bearer $SUPABASE_KEY" -o "$BACKUP_FILE" 2>/dev/null; then
-    tar -xzf "$BACKUP_FILE" -C "$(pwd)" 2>/dev/null && echo "[backup] sessão/dados restaurados do Supabase ✔ (QR não será pedido)"
-  fi
-}
-
+# (gerenciado por ARQUIVES/persistencia.js — Supabase OU GitHub, cifrado com BACKUP_PASS)
 UPLOADER_PID=""
 NODE_PID=""
 
-encerrar() {
-  trap - TERM INT
-  [ -n "$NODE_PID" ] && kill "$NODE_PID" 2>/dev/null
-  [ -n "$UPLOADER_PID" ] && kill "$UPLOADER_PID" 2>/dev/null
-  fazer_backup
-  exit 0
-}
-
-if tem_supabase && [ ! -L "$DADOS_SRC" ]; then
-  restaurar_backup
-  trap encerrar TERM INT
-  ( while : ; do sleep "$INTERVALO"; fazer_backup; done ) & UPLOADER_PID=$!
+if [ ! -L "$DADOS_SRC" ] && command -v node >/dev/null 2>&1; then
+  node ./ARQUIVES/persistencia.js restore
+  trap 'kill $UPLOADER_PID $NODE_PID 2>/dev/null; node ./ARQUIVES/persistencia.js backup; exit 0' TERM INT
+  node ./ARQUIVES/persistencia.js loop & UPLOADER_PID=$!
 fi
 
 # ==================== INICIALIZAÇÃO ====================
