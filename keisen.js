@@ -378,7 +378,6 @@ const isBanned = ban.includes(sender)
 
 const isVisualizar = nescessario.visualizarmsg
 
-const isModoAluguel = nescessario.aluguel
 
 const isVerificado = nescessario.verificado
 
@@ -1861,7 +1860,7 @@ return false
 return true
 }
 
-if (isModoAluguel && !SoDono && !isGrupoAutorizado(from)) {
+if (nescessario.aluguel && !SoDono && !isGrupoAutorizado(from)) {
  return
 }
 
@@ -3094,7 +3093,7 @@ break;
 case 'removeraluguel':
 case 'removealuguel':
 case 'rm_aluguel': {
-if (!isModoAluguel) return reply(`*ᴏ ᴍᴏᴅᴏ ᴀʟᴜɢᴜᴇʟ ᴇsᴛᴀ́ ᴅᴇsᴀᴛɪᴠᴀᴅᴏ.* 🙅‍♂️`)
+if (!nescessario.aluguel) return reply(`*ᴏ ᴍᴏᴅᴏ ᴀʟᴜɢᴜᴇʟ ᴇsᴛᴀ́ ᴅᴇsᴀᴛɪᴠᴀᴅᴏ.* 🙅‍♂️`)
 if (!SoDono) return reply(mess.onlyOwner())
 if (args[0]) {
 const index = parseInt(args[0]) - 1
@@ -3114,7 +3113,7 @@ reply(`*✅ ᴀʟᴜɢᴜᴇʟ ʀᴇᴍᴏᴠɪᴅᴏ ᴅᴇsᴛᴇ ɢʀᴜᴘ�
 break
 
 case 'lista_aluguel': {
-if (!isModoAluguel) return reply(`*ᴏ ᴍᴏᴅᴏ ᴀʟᴜɢᴜᴇʟ ᴇsᴛᴀ́ ᴅᴇsᴀᴛɪᴠᴀᴅᴏ.* 🙅‍♂️`)
+if (!nescessario.aluguel) return reply(`*ᴏ ᴍᴏᴅᴏ ᴀʟᴜɢᴜᴇʟ ᴇsᴛᴀ́ ᴅᴇsᴀᴛɪᴠᴀᴅᴏ.* 🙅‍♂️`)
 if (gruposAutorizados.length === 0) return reply(`*ɴᴇɴʜᴜᴍ ɢʀᴜᴘᴏ ᴇsᴛᴀ́ ᴀʟᴜɢᴀᴅᴏ ɴᴏ ᴍᴏᴍᴇɴᴛᴏ.* 🙇‍♂️`)
 let texto = `╭─❉ *𝐆𝐑𝐔𝐏𝐎𝐒 𝐂𝐎𝐌 𝐀𝐋𝐔𝐆𝐔𝐄𝐋 𝐀𝐓𝐈𝐕𝐎*\n\n`
 for (let i = 0; i < gruposAutorizados.length; i++) {
@@ -3151,7 +3150,7 @@ break
 case 'veraluguel':
 case 'ver_aluguel': {
 if (!isGroup) return reply(mess.onlyGroup())
-if (!isModoAluguel) return reply(`*ᴏ ᴍᴏᴅᴏ ᴀʟᴜɢᴜᴇʟ ᴇsᴛᴀ́ ᴅᴇsᴀᴛɪᴠᴀᴅᴏ.* 🙅‍♂️`)
+if (!nescessario.aluguel) return reply(`*ᴏ ᴍᴏᴅᴏ ᴀʟᴜɢᴜᴇʟ ᴇsᴛᴀ́ ᴅᴇsᴀᴛɪᴠᴀᴅᴏ.* 🙅‍♂️`)
 const grupo = gruposAutorizados.find(g => g.id === from)
 if (!grupo) return reply('*ᴇsᴛᴇ ɢʀᴜᴘᴏ ɴᴀ̃ᴏ ᴘᴏssᴜɪ ᴀʟᴜɢᴜᴇʟ ᴀᴛɪᴠᴏ. 🤷‍♂️*')
 if (grupo.permanente || !grupo.expiraEm) return reply('*♾️ ᴇsᴛᴇ ᴄʜᴀᴛ ᴇꜱᴛᴀ́ ʟɪʙᴇʀᴀᴅᴏ ᴘᴇʀᴍᴀɴᴇɴᴛᴇᴍᴇɴᴛᴇ, ꜱᴇᴍ ᴘʀᴀᴢᴏ ᴅᴇ ᴇxᴘɪʀᴀçᴀᴏ. 🙇‍♂️*')
@@ -3173,7 +3172,7 @@ break
 
 case 'rg_aluguel':
 case 'aluguel': {
-if (!isModoAluguel) return reply(`*ᴏ ᴍᴏᴅᴏ ᴀʟᴜɢᴜᴇʟ ᴇsᴛᴀ́ ᴅᴇsᴀᴛɪᴠᴀᴅᴏ.* 🙅‍♂️`)
+if (!nescessario.aluguel) return reply(`*ᴏ ᴍᴏᴅᴏ ᴀʟᴜɢᴜᴇʟ ᴇsᴛᴀ́ ᴅᴇsᴀᴛɪᴠᴀᴅᴏ.* 🙅‍♂️`)
 if (!isGroup) return reply(mess.onlyGroup())
 if (!SoDono) return reply(mess.onlyOwner())
 if (!args[0]) return reply(`*ᴅɪɢɪᴛᴇ ᴏ ᴛᴇᴍᴘᴏ ᴅᴇ ᴀʟᴜɢᴜᴇʟ ᴇᴍ ᴅɪᴀs. ᴇx: ${prefix}ᴀʟᴜɢᴜᴇʟ 2 4 (2 ᴅɪᴀs ᴇ 4 ʜᴏʀᴀs)* ⚠️🙆‍♂️`)
@@ -3193,7 +3192,7 @@ case 'liberaraqui': {
 if (!SoDono) return reply(mess.onlyOwner())
 ativarAluguelGrupo(from)
 const lugar = isGroup ? 'ɴᴇꜱᴛᴇ ɢʀᴜᴘᴏ' : 'ɴᴇꜱᴛᴇ ᴄʜᴀᴛ'
-reply(`*✅ ᴛʀᴀᴠᴀ ᴅᴇ ꜱᴇɢᴜʀᴀɴçᴀ! ᴅᴇ ᴀɢᴏʀᴀ ᴇᴍ ᴅɪᴀɴᴛᴇ ᴇᴜ ʀᴇsᴘᴏɴᴅᴏ ᴘᴇʀᴍᴀɴᴇɴᴛᴇᴍᴇɴᴛᴇ ᴇᴍ ${lugar} 💁‍♂️*` + (!isModoAluguel ? `\n> *⚠️ ꜰᴀʟᴛᴀ ᴜᴍ ᴘᴀssᴏ: ᴜꜱᴇ ${prefix}modoaluguel ᴘᴀʀᴀ ʟɪɢᴀʀ ᴀ ᴛʀᴀᴠᴀ ɢᴇʀᴀʟ — ꜱᴇᴍ ᴇʟᴀ ᴇᴜ ᴀɪɴᴅᴀ ʀᴇsᴘᴏɴᴅᴏ ᴇᴍ ᴛᴏᴅᴏꜱ ᴏꜱ ᴄʜᴀᴛꜱ*` : ``))
+reply(`*✅ ᴛʀᴀᴠᴀ ᴅᴇ ꜱᴇɢᴜʀᴀɴçᴀ! ᴅᴇ ᴀɢᴏʀᴀ ᴇᴍ ᴅɪᴀɴᴛᴇ ᴇᴜ ʀᴇsᴘᴏɴᴅᴏ ᴘᴇʀᴍᴀɴᴇɴᴛᴇᴍᴇɴᴛᴇ ᴇᴍ ${lugar} 💁‍♂️*` + (!nescessario.aluguel ? `\n> *⚠️ ꜰᴀʟᴛᴀ ᴜᴍ ᴘᴀssᴏ: ᴜꜱᴇ ${prefix}modoaluguel ᴘᴀʀᴀ ʟɪɢᴀʀ ᴀ ᴛʀᴀᴠᴀ ɢᴇʀᴀʟ — ꜱᴇᴍ ᴇʟᴀ ᴇᴜ ᴀɪɴᴅᴀ ʀᴇsᴘᴏɴᴅᴏ ᴇᴍ ᴛᴏᴅᴏꜱ ᴏꜱ ᴄʜᴀᴛꜱ*` : ``))
 }
 break
 
