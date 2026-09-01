@@ -378,7 +378,6 @@ const isBanned = ban.includes(sender)
 
 const isVisualizar = nescessario.visualizarmsg
 
-const isModoAluguel = nescessario.aluguel
 
 const isVerificado = nescessario.verificado
 
@@ -1827,21 +1826,29 @@ fs.writeFileSync(keisenAluguel, JSON.stringify(gruposAutorizados, null, 2))
 }
 function ativarAluguelGrupo(from, dias = 0, horas = 0) {
 const agora = new Date()
-const expiraEm = new Date(agora.getTime() + (dias * 24 + horas) * 60 * 60 * 1000)
+const permanente = !dias && !horas
+const expiraEm = permanente ? null : new Date(agora.getTime() + (dias * 24 + horas) * 60 * 60 * 1000).toISOString()
 
 const jaExiste = gruposAutorizados.find(g => g.id === from)
 if (!jaExiste) {
-gruposAutorizados.push({ id: from, expiraEm: expiraEm.toISOString() })
+gruposAutorizados.push(permanente ? { id: from, permanente: true, expiraEm: null } : { id: from, expiraEm })
 salvarGrupos()
 } else {
-jaExiste.expiraEm = expiraEm.toISOString()
+jaExiste.permanente = permanente
+jaExiste.expiraEm = expiraEm
 salvarGrupos()
 }
+}
+
+function desativarAluguelGrupo(id) {
+gruposAutorizados = gruposAutorizados.filter(g => g.id !== id)
+salvarGrupos()
 }
 
 function isGrupoAutorizado(from) {
 const grupo = gruposAutorizados.find(g => g.id === from)
 if (!grupo) return false
+if (grupo.permanente || !grupo.expiraEm) return true
 
 const agora = new Date()
 const expira = new Date(grupo.expiraEm)
@@ -1853,7 +1860,7 @@ return false
 return true
 }
 
-if (isGroup && isModoAluguel && !SoDono && !isGrupoAutorizado(from)) {
+if (nescessario.aluguel && !SoDono && !isGrupoAutorizado(from)) {
  return
 }
 
@@ -3068,7 +3075,7 @@ if(!SoDono) return reply(mess.onlyOwner())
 
 		fs.writeFileSync(`./DADOS DO KEISEN/INFO_KEISEN/media/nescessario.json`, JSON.stringify(nescessario, null, 2) + "\n");
 
-		reply(`*ᴏ ʀᴇᴄᴜʀsᴏ ғᴏɪ ᴀᴛɪᴠᴏ ᴄᴏᴍ sᴜᴄᴇssᴏ 🙇‍♂️*`)
+		reply(`*ᴏ ʀᴇᴄᴜʀsᴏ ғᴏɪ ᴀᴛɪᴠᴏ ᴄᴏᴍ sᴜᴄᴇssᴏ 🙇‍♂️*\n> *🔒 ᴛʀᴀᴠᴀ ɢᴇʀᴀʟ ʟɪɢᴀᴅᴀ: ᴀɢᴏʀᴀ só ʀᴇsᴘᴏɴᴅᴏ ɴᴏs ᴄʜᴀᴛs ʟɪʙᴇʀᴀᴅᴏs.*\n> *✅ ᴜsᴇ ${prefix}liberar ɴᴏ ᴄʜᴀᴛ/ɢʀᴜᴘᴏ ᴏɴᴅᴇ ᴇᴜ ᴅᴇᴠᴏ ғᴀʟᴀʀ (sᴇᴍ ᴘʀᴀᴢᴏ)*\n> *⛔ ᴇ ${prefix}bloquear ᴘᴀʀᴀ ᴍᴇ ᴄᴀʟᴀʀ ʟᴀ́ ᴅᴇ ɴᴏᴠᴏ*`)
 	} else if (nescessario.aluguel) {
 
 		nescessario.aluguel = false
@@ -3086,7 +3093,7 @@ break;
 case 'removeraluguel':
 case 'removealuguel':
 case 'rm_aluguel': {
-if (!isModoAluguel) return reply(`*ᴏ ᴍᴏᴅᴏ ᴀʟᴜɢᴜᴇʟ ᴇsᴛᴀ́ ᴅᴇsᴀᴛɪᴠᴀᴅᴏ.* 🙅‍♂️`)
+if (!nescessario.aluguel) return reply(`*ᴏ ᴍᴏᴅᴏ ᴀʟᴜɢᴜᴇʟ ᴇsᴛᴀ́ ᴅᴇsᴀᴛɪᴠᴀᴅᴏ.* 🙅‍♂️`)
 if (!SoDono) return reply(mess.onlyOwner())
 if (args[0]) {
 const index = parseInt(args[0]) - 1
@@ -3094,21 +3101,19 @@ if (isNaN(index) || index < 0 || index >= gruposAutorizados.length)
 return reply(`*ᴜsᴇ: *rm_aluguel 1*`)
 const alvo = gruposAutorizados[index]
 desativarAluguelGrupo(alvo.id)
-gruposAutorizados.splice(index, 1)
 return reply(`*✅ ᴀʟᴜɢᴜᴇʟ ᴅᴏ ɢʀᴜᴩᴏ ʀᴇᴍᴏᴠɪᴅᴏ ᴄᴏᴍ ꜱᴜᴄᴇꜱꜱᴏ ꜱᴇɴʜᴏʀ(ᴀ)*`)
 }
 if (!isGroup) return reply(mess.onlyGroup())
 const grupo = gruposAutorizados.find(g => g.id === from)
 if (!grupo) return reply(`*ᴇssᴇ ɢʀᴜᴘᴏ ɴᴀ̃ᴏ ᴇsᴛᴀ́ ᴀʟᴜɢᴀᴅᴏ. 🤷‍♂️*`)
 desativarAluguelGrupo(from)
-gruposAutorizados = gruposAutorizados.filter(g => g.id !== from)
 
 reply(`*✅ ᴀʟᴜɢᴜᴇʟ ʀᴇᴍᴏᴠɪᴅᴏ ᴅᴇsᴛᴇ ɢʀᴜᴘᴏ.* 🔓🤷‍♂️`)
 }
 break
 
 case 'lista_aluguel': {
-if (!isModoAluguel) return reply(`*ᴏ ᴍᴏᴅᴏ ᴀʟᴜɢᴜᴇʟ ᴇsᴛᴀ́ ᴅᴇsᴀᴛɪᴠᴀᴅᴏ.* 🙅‍♂️`)
+if (!nescessario.aluguel) return reply(`*ᴏ ᴍᴏᴅᴏ ᴀʟᴜɢᴜᴇʟ ᴇsᴛᴀ́ ᴅᴇsᴀᴛɪᴠᴀᴅᴏ.* 🙅‍♂️`)
 if (gruposAutorizados.length === 0) return reply(`*ɴᴇɴʜᴜᴍ ɢʀᴜᴘᴏ ᴇsᴛᴀ́ ᴀʟᴜɢᴀᴅᴏ ɴᴏ ᴍᴏᴍᴇɴᴛᴏ.* 🙇‍♂️`)
 let texto = `╭─❉ *𝐆𝐑𝐔𝐏𝐎𝐒 𝐂𝐎𝐌 𝐀𝐋𝐔𝐆𝐔𝐄𝐋 𝐀𝐓𝐈𝐕𝐎*\n\n`
 for (let i = 0; i < gruposAutorizados.length; i++) {
@@ -3119,13 +3124,19 @@ const nome = meta.subject || '🕯️ ɢʀᴜᴘᴏ sᴇᴍ ɴᴏᴍᴇ'
 const membros = meta.participants.length || 0
 const inviteCode = await keisen.groupInviteCode(g.id).catch(() => null)
 const link = inviteCode ? `https://chat.whatsapp.com/${inviteCode}` : '🔒 ʟɪɴᴋ ɪɴᴅɪsᴘᴏɴíᴠᴇʟ'
-const expira = new Date(g.expiraEm)
 const agora = new Date()
+let tempoTxt
+if (g.permanente || !g.expiraEm) {
+tempoTxt = '∞ ᴘᴇʀᴍᴀɴᴇɴᴛᴇ'
+} else {
+const expira = new Date(g.expiraEm)
 const restante = expira - agora
 const dias = Math.floor(restante / (1000 * 60 * 60 * 24))
 const horas = Math.floor((restante / (1000 * 60 * 60)) % 24)
 const minutos = Math.floor((restante / (1000 * 60)) % 60)
-texto +=`• *${i + 1}.* ✨ *${nome}*\n• 🔗 ʟɪɴᴋ: ${link}\n• 👤 ᴍᴇᴍʙʀᴏs: ${membros}\n• ⏳ ᴛᴇᴍᴘᴏ ʀᴇsᴛᴀɴᴛᴇ: ${dias}d ${horas}h ${minutos}m\n─────────────────────────────\n`
+tempoTxt = `${dias}d ${horas}h ${minutos}m`
+}
+texto +=`• *${i + 1}.* ✨ *${nome}*\n• 🔗 ʟɪɴᴋ: ${link}\n• 👤 ᴍᴇᴍʙʀᴏs: ${membros}\n• ⏳ ᴛᴇᴍᴘᴏ ʀᴇsᴛᴀɴᴛᴇ: ${tempoTxt}\n─────────────────────────────\n`
 } catch {
 texto +=
 `*${i + 1}.* 💀 ɴᴀ̃ᴏ ᴄᴏɴsᴇɢᴜɪ ᴘᴇɢᴀʀ ᴅᴀᴅᴏs ᴅᴏ ɢʀᴜᴘᴏ\n🆔 ID: ${g.id}\n─────────────────────────────\n`
@@ -3139,9 +3150,10 @@ break
 case 'veraluguel':
 case 'ver_aluguel': {
 if (!isGroup) return reply(mess.onlyGroup())
-if (!isModoAluguel) return reply(`*ᴏ ᴍᴏᴅᴏ ᴀʟᴜɢᴜᴇʟ ᴇsᴛᴀ́ ᴅᴇsᴀᴛɪᴠᴀᴅᴏ.* 🙅‍♂️`)
+if (!nescessario.aluguel) return reply(`*ᴏ ᴍᴏᴅᴏ ᴀʟᴜɢᴜᴇʟ ᴇsᴛᴀ́ ᴅᴇsᴀᴛɪᴠᴀᴅᴏ.* 🙅‍♂️`)
 const grupo = gruposAutorizados.find(g => g.id === from)
 if (!grupo) return reply('*ᴇsᴛᴇ ɢʀᴜᴘᴏ ɴᴀ̃ᴏ ᴘᴏssᴜɪ ᴀʟᴜɢᴜᴇʟ ᴀᴛɪᴠᴏ. 🤷‍♂️*')
+if (grupo.permanente || !grupo.expiraEm) return reply('*♾️ ᴇsᴛᴇ ᴄʜᴀᴛ ᴇꜱᴛᴀ́ ʟɪʙᴇʀᴀᴅᴏ ᴘᴇʀᴍᴀɴᴇɴᴛᴇᴍᴇɴᴛᴇ, ꜱᴇᴍ ᴘʀᴀᴢᴏ ᴅᴇ ᴇxᴘɪʀᴀçᴀᴏ. 🙇‍♂️*')
 const agora = new Date()
 const expira = new Date(grupo.expiraEm)
 if (isNaN(expira)) return reply('*ᴇʀʀᴏ ᴀᴏ ʟᴇʀ ᴀ ᴅᴀᴛᴀ ᴅᴏ ᴀʟᴜɢᴜᴇʟ. 💁‍♂️*')
@@ -3160,7 +3172,7 @@ break
 
 case 'rg_aluguel':
 case 'aluguel': {
-if (!isModoAluguel) return reply(`*ᴏ ᴍᴏᴅᴏ ᴀʟᴜɢᴜᴇʟ ᴇsᴛᴀ́ ᴅᴇsᴀᴛɪᴠᴀᴅᴏ.* 🙅‍♂️`)
+if (!nescessario.aluguel) return reply(`*ᴏ ᴍᴏᴅᴏ ᴀʟᴜɢᴜᴇʟ ᴇsᴛᴀ́ ᴅᴇsᴀᴛɪᴠᴀᴅᴏ.* 🙅‍♂️`)
 if (!isGroup) return reply(mess.onlyGroup())
 if (!SoDono) return reply(mess.onlyOwner())
 if (!args[0]) return reply(`*ᴅɪɢɪᴛᴇ ᴏ ᴛᴇᴍᴘᴏ ᴅᴇ ᴀʟᴜɢᴜᴇʟ ᴇᴍ ᴅɪᴀs. ᴇx: ${prefix}ᴀʟᴜɢᴜᴇʟ 2 4 (2 ᴅɪᴀs ᴇ 4 ʜᴏʀᴀs)* ⚠️🙆‍♂️`)
@@ -3171,6 +3183,25 @@ const agora = new Date()
 const expira = new Date(agora.getTime() + (dias * 24 + horas) * 60 * 60 * 1000)
 const dataFormatada = expira.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })
 reply(mess.rgaluguel(dataFormatada))
+}
+break
+
+case 'liberar':
+case 'liberarbot':
+case 'liberaraqui': {
+if (!SoDono) return reply(mess.onlyOwner())
+ativarAluguelGrupo(from)
+const lugar = isGroup ? 'ɴᴇꜱᴛᴇ ɢʀᴜᴘᴏ' : 'ɴᴇꜱᴛᴇ ᴄʜᴀᴛ'
+reply(`*✅ ᴛʀᴀᴠᴀ ᴅᴇ ꜱᴇɢᴜʀᴀɴçᴀ! ᴅᴇ ᴀɢᴏʀᴀ ᴇᴍ ᴅɪᴀɴᴛᴇ ᴇᴜ ʀᴇsᴘᴏɴᴅᴏ ᴘᴇʀᴍᴀɴᴇɴᴛᴇᴍᴇɴᴛᴇ ᴇᴍ ${lugar} 💁‍♂️*` + (!nescessario.aluguel ? `\n> *⚠️ ꜰᴀʟᴛᴀ ᴜᴍ ᴘᴀssᴏ: ᴜꜱᴇ ${prefix}modoaluguel ᴘᴀʀᴀ ʟɪɢᴀʀ ᴀ ᴛʀᴀᴠᴀ ɢᴇʀᴀʟ — ꜱᴇᴍ ᴇʟᴀ ᴇᴜ ᴀɪɴᴅᴀ ʀᴇsᴘᴏɴᴅᴏ ᴇᴍ ᴛᴏᴅᴏꜱ ᴏꜱ ᴄʜᴀᴛꜱ*` : ``))
+}
+break
+
+case 'bloquear':
+case 'bloquearbot': {
+if (!SoDono) return reply(mess.onlyOwner())
+if (!isGrupoAutorizado(from)) return reply(`*ᴇsᴛᴇ ᴄʜᴀᴛ ɴᴇᴍ ᴇꜱᴛᴀᴠᴀ ʟɪʙᴇʀᴀᴅᴏ. 🤷‍♂️*`)
+desativarAluguelGrupo(from)
+reply(`*🔒 ꜰᴇᴄʜᴏᴜ! ᴅᴇ ᴀɢᴏʀᴀ ᴇᴍ ᴅɪᴀɴᴛᴇ só ꜰᴀʟᴏ ᴀǫᴜɪ ᴄᴏᴍ ᴠᴏᴄᴇ, ᴍᴇꜱᴛʀᴇ 🙇‍♂️*`)
 }
 break
 
@@ -12051,35 +12082,63 @@ case 'meucasamento': {
     break;
 }
 
-case 'cancelarpedido': {
+case 'cancelarpedido':
+case 'cancelar': {
     if (!isGroup) return reply(mess.onlyGroup());
 
     const fs = require('fs');
     const pedidosPath = './DADOS DO KEISEN/usuarios/pedidos.json';
-    
-    let pedidosDB = {};
-    if (fs.existsSync(pedidosPath)) pedidosDB = JSON.parse(fs.readFileSync(pedidosPath));
 
     let usuario = sender;
     const nomeUser = usuario.split('@')[0];
 
-    if (!pedidosDB[usuario]) {
-        return reply(`❌ @${nomeUser}, você não tem nenhum pedido pendente.`);
-    }
+    // ===== 1) Pedido pendente do sistema RPG (pedidos.json) =====
+    let pedidosDB = {};
+    if (fs.existsSync(pedidosPath)) pedidosDB = JSON.parse(fs.readFileSync(pedidosPath));
 
-    let alvo = pedidosDB[usuario].para || pedidosDB[usuario].de;
-    
-    delete pedidosDB[usuario];
-    if (alvo && pedidosDB[alvo]) delete pedidosDB[alvo];
-    fs.writeFileSync(pedidosPath, JSON.stringify(pedidosDB, null, 2));
+    if (pedidosDB[usuario]) {
+        let alvo = pedidosDB[usuario].para || pedidosDB[usuario].de;
 
-    const cancelMsg = `•┈┈·┈•☾•┈┈┈••✦ ☩ ✦••┈┈┈•☽•┈┈·┈•\n\n` +
+        delete pedidosDB[usuario];
+        if (alvo && pedidosDB[alvo]) delete pedidosDB[alvo];
+        fs.writeFileSync(pedidosPath, JSON.stringify(pedidosDB, null, 2));
+
+        const cancelMsg = `•┈┈·┈•☾•┈┈┈••✦ ☩ ✦••┈┈┈•☽•┈┈·┈•\n\n` +
                       `❌ *PEDIDO CANCELADO* ❌\n\n` +
-                      `😔 @${nomeUser} cancelou o pedido de casamento.\n\n` +
+                      `😔 @${nomeUser} cancelou o pedido.\n\n` +
                       `•┈┈·┈•☾•┈┈┈••✦ ☩ ✦••┈┈┈•☽•┈┈·┈•`;
 
-    await keisen.sendMessage(from, { text: cancelMsg }, { quoted: (typeof selo !== 'undefined' ? selo : null) });
-    break;
+        await keisen.sendMessage(from, {
+            text: cancelMsg,
+            mentions: [usuario]
+        }, { quoted: (typeof selo !== 'undefined' ? selo : null) });
+        break;
+    }
+
+    // ===== 2) Pedido pendente do namoro clássico (!namorar) =====
+    const numUsuario = usuario.split('@')[0];
+    const idxPedido = namoro1.findIndex(i => i.namorados === false &&
+        String(i.usu1).split('@')[0] === numUsuario);
+
+    if (idxPedido !== -1) {
+        const parceiroNum = String(namoro1[idxPedido].usu2).split('@')[0];
+        const jidParceiro = parceiroNum.includes('@') ? parceiroNum : `${parceiroNum}@s.whatsapp.net`;
+
+        namoro1.splice(idxPedido, 1);
+        fs.writeFileSync("./DADOS DO KEISEN/func/namoro1.json", JSON.stringify(namoro1));
+
+        const idx2 = namoro2.findIndex(i => String(i.id).split('@')[0] === parceiroNum &&
+            String(i.pedido).split('@')[0] === numUsuario);
+        if (idx2 !== -1) {
+            namoro2.splice(idx2, 1);
+            fs.writeFileSync("./DADOS DO KEISEN/func/namoro2.json", JSON.stringify(namoro2));
+        }
+
+        reply("*ᴘᴇᴅɪᴅᴏ ᴅᴇ ɴᴀᴍᴏʀᴏ ᴄᴀɴᴄᴇʟᴀᴅᴏ! 💁‍♂️*");
+        break;
+    }
+
+    return reply(`❌ @${nomeUser}, você não tem nenhum pedido pendente.`);
 }
 // ==================== SISTEMA DE ADOÇÃO E FAMÍLIA RPG ====================
 
@@ -14366,17 +14425,19 @@ case 'recusar': {
     break;
 }
 
-case 'terminar': {
+case 'terminar':
+case 'terminar_namoro': {
     if (!isGroup) return reply(mess.onlyGroup());
 
     const fs = require('fs');
     const casamentoPath = './DADOS DO KEISEN/usuarios/casamentos.json';
-    
-    let casamentosDB = {};
-    if (fs.existsSync(casamentoPath)) casamentosDB = JSON.parse(fs.readFileSync(casamentoPath));
 
     let usuario = sender;
     const nomeUser = usuario.split('@')[0];
+
+    // ===== 1) Relacionamento do sistema RPG (!namorarrpg / !casarrpg) =====
+    let casamentosDB = {};
+    if (fs.existsSync(casamentoPath)) casamentosDB = JSON.parse(fs.readFileSync(casamentoPath));
 
     let casamentoEncontrado = null;
     let conjugue = null;
@@ -14393,28 +14454,55 @@ case 'terminar': {
         }
     }
 
-    if (!casamentoEncontrado) {
-        return reply(`❌ @${nomeUser}, você não está em um relacionamento.`);
-    }
+    if (casamentoEncontrado) {
+        const nomeConjugue = conjugue.split('@')[0];
 
-    const nomeConjugue = conjugue.split('@')[0];
+        delete casamentosDB[casamentoEncontrado];
+        fs.writeFileSync(casamentoPath, JSON.stringify(casamentosDB, null, 2));
 
-    delete casamentosDB[casamentoEncontrado];
-    fs.writeFileSync(casamentoPath, JSON.stringify(casamentosDB, null, 2));
-
-    const terminoMsg = `•┈┈·┈•☾•┈┈┈••✦ ☩ ✦••┈┈┈•☽•┈┈·┈•\n\n` +
+        const terminoMsg = `•┈┈·┈•☾•┈┈┈••✦ ☩ ✦••┈┈┈•☽•┈┈·┈•\n\n` +
                        `💔 *RELACIONAMENTO TERMINADO* 💔\n\n` +
                        `😢 @${nomeUser} terminou o relacionamento com @${nomeConjugue}.\n\n` +
-                       `┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈\n\n` +
+                       `┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈\n\n` +
                        `📝 *Status:* Solteiro(a) novamente\n` +
                        `💪 Use \`!namorarrpg @user\` para recomeçar\n\n` +
                        `•┈┈·┈•☾•┈┈┈••✦ ☩ ✦••┈┈┈•☽•┈┈·┈•`;
 
-    await keisen.sendMessage(from, {
-        text: terminoMsg,
-        mentions: [usuario, conjugue]
-    }, { quoted: (typeof selo !== 'undefined' ? selo : null) });
-    break;
+        await keisen.sendMessage(from, {
+            text: terminoMsg,
+            mentions: [usuario, conjugue]
+        }, { quoted: (typeof selo !== 'undefined' ? selo : null) });
+        break;
+    }
+
+    // ===== 2) Namoro clássico (!namorar → namoro1.json) =====
+    const numUsuario = usuario.split('@')[0];
+    const idxAceito = namoro1.findIndex(i => i.namorados === true &&
+        (String(i.usu1).split('@')[0] === numUsuario || String(i.usu2).split('@')[0] === numUsuario));
+
+    if (idxAceito !== -1) {
+        const registro = namoro1[idxAceito];
+        const parceiroNum = String(registro.usu1).split('@')[0] === numUsuario
+            ? String(registro.usu2).split('@')[0]
+            : String(registro.usu1).split('@')[0];
+        const jidParceiro = parceiroNum.includes('@') ? parceiroNum : `${parceiroNum}@s.whatsapp.net`;
+
+        // remove TODAS as entradas do casal (registro do pedido + registro aceito)
+        for (let i = namoro1.length - 1; i >= 0; i--) {
+            const a = String(namoro1[i].usu1).split('@')[0];
+            const b = String(namoro1[i].usu2).split('@')[0];
+            if ((a === numUsuario && b === parceiroNum) || (a === parceiroNum && b === numUsuario)) {
+                namoro1.splice(i, 1);
+            }
+        }
+        fs.writeFileSync('./DADOS DO KEISEN/func/namoro1.json', JSON.stringify(namoro1));
+
+        await reply(`*ᴏ ɴᴀᴍᴏʀᴏ ꜰᴏɪ ᴅᴇꜱᴛʀᴜɪ́ᴅᴏ... ᴠᴏᴄᴇ ᴀɢᴏʀᴀ ᴇꜱᴛᴀ ꜱᴏʟᴛᴇɪʀᴏ ᴅᴇ ɴᴏᴠᴏ!🙆‍♂️*`);
+        await keisen.sendMessage(from, { text: `*💔 ᴛᴇɴʜᴏ ᴜᴍᴀ ɴᴏᴛɪ́ᴄɪᴀ ᴛʀɪꜱᴛᴇ... ꜱᴇᴜ ᴘᴀʀᴄᴇɪʀᴏ(ᴀ) ᴀᴄᴀʙᴏᴜ ᴅᴇ ᴛᴇʀᴍɪɴᴀʀ ᴏ ɴᴀᴍᴏʀᴏ...😔*\n> *ɢᴜᴀʀᴅᴇ ᴏꜱ ʙᴏɴꜱ ᴍᴏᴍᴇɴᴛᴏꜱ, ᴍᴇꜱᴍᴏ ǫᴜᴇ ᴅᴏᴀ...🙇‍♂️*`, contextInfo: { ...NkChannelKk, mentionedJid: [usuario, jidParceiro] }}, { quoted: selo });
+        break;
+    }
+
+    return reply(`❌ @${nomeUser}, você não está em um relacionamento.`);
 }
 
 case 'statusnamoro':
@@ -14482,36 +14570,6 @@ case 'meurelacionamento': {
     break;
 }
 
-case 'cancelarpedido': {
-    if (!isGroup) return reply(mess.onlyGroup());
-
-    const fs = require('fs');
-    const pedidosPath = './DADOS DO KEISEN/usuarios/pedidos.json';
-    
-    let pedidosDB = {};
-    if (fs.existsSync(pedidosPath)) pedidosDB = JSON.parse(fs.readFileSync(pedidosPath));
-
-    let usuario = sender;
-    const nomeUser = usuario.split('@')[0];
-
-    if (!pedidosDB[usuario]) {
-        return reply(`❌ @${nomeUser}, você não tem nenhum pedido pendente.`);
-    }
-
-    let alvo = pedidosDB[usuario].para || pedidosDB[usuario].de;
-    
-    delete pedidosDB[usuario];
-    if (alvo && pedidosDB[alvo]) delete pedidosDB[alvo];
-    fs.writeFileSync(pedidosPath, JSON.stringify(pedidosDB, null, 2));
-
-    const cancelMsg = `•┈┈·┈•☾•┈┈┈••✦ ☩ ✦••┈┈┈•☽•┈┈·┈•\n\n` +
-                      `❌ *PEDIDO CANCELADO* ❌\n\n` +
-                      `😔 @${nomeUser} cancelou o pedido de namoro.\n\n` +
-                      `•┈┈·┈•☾•┈┈┈••✦ ☩ ✦••┈┈┈•☽•┈┈·┈•`;
-
-    await keisen.sendMessage(from, { text: cancelMsg }, { quoted: (typeof selo !== 'undefined' ? selo : null) });
-    break;
-}
 case 'listarchaves':
 case 'listarpix': {
     if (!isGroup) return reply(mess.onlyGroup());
@@ -22440,44 +22498,7 @@ await keisen.sendMessage(from, { image: { url: namorar }, caption: texto, contex
 break;
 }
 
-case 'cancelar':
-case 'cancelarpedido': {
-if (!isGroup) return reply(mess.onlyGroup());
-const index1 = namoro1.findIndex(i => i.usu1 === sender);
-if (index1 === -1) return reply("*ᴇᴜ ᴠᴏᴜ ᴄᴀɴᴄᴇʟᴀʀ ᴏ ǫᴜᴇ sᴇ ɴᴀᴏ ᴛᴇᴍ ɴᴀᴅᴀ? 🤦‍♂️*");
-if (namoro1[index1].namorados === true)
-return reply("*ɴᴀᴏ ᴇ ᴘᴏssɪᴠᴇʟ ᴄᴀɴᴄᴇʟᴀʀ ᴀʟɢᴏ ǫᴜᴇ ᴊᴀ ғᴏɪ ᴀᴄᴇɪᴛᴏ 🤷‍♂️*");
-const parceiro = namoro1[index1].usu2 + "@s.whatsapp.net";
-namoro1.splice(index1, 1);
-fs.writeFileSync("./DADOS DO KEISEN/func/namoro1.json", JSON.stringify(namoro1));
-const index2 = namoro2.findIndex(i => i.id === parceiro && i.pedido === sender.split("@")[0]);
-if (index2 !== -1) {
-namoro2.splice(index2, 1);
-fs.writeFileSync("./DADOS DO KEISEN/func/namoro2.json", JSON.stringify(namoro2));
-}
-reply("*ᴘᴇᴅɪᴅᴏ ᴅᴇ ɴᴀᴍᴏʀᴏ ᴄᴀɴᴄᴇʟᴀᴅᴏ! 💁‍♂️*");
-break;
-}
 
-case 'terminar':
-case 'terminar_namoro': {
-if (!JSON.stringify(namoro1).includes(sender))
-return reply(`*ᴠᴏᴄᴇ ɴᴀᴏ ᴇꜱᴛᴀ ɴᴀᴍᴏʀᴀɴᴅᴏ ᴄᴏᴍ ɴɪɴɢᴜᴇᴍ...🙇‍♂️*`);
-let D1 = namoro1.map(i => i.usu1).indexOf(sender);
-if (D1 === -1) D1 = namoro1.map(i => i.usu2).indexOf(sender);
-if (D1 === -1)
-return reply(`*ɴᴀᴏ ᴇɴᴄᴏɴᴛʀᴇɪ ᴏ ꜱᴇᴜ ʀᴇʟᴀᴄɪᴏɴᴀᴍᴇɴᴛᴏ. ᴛᴇɴᴛᴇ ᴅᴇ ɴᴏᴠᴏ 🤷‍♂️*`);
-const parceiro = namoro1[D1].usu1 === sender ? namoro1[D1].usu2 : namoro1[D1].usu1;
-const jidParceiro = parceiro.includes('@s.whatsapp.net') ? parceiro : `${parceiro}@s.whatsapp.net`;
-const D2 = namoro1.map(a => a.usu1).indexOf(jidParceiro);
-if (D2 !== -1) { namoro1[D2].namorados = false; namoro1.splice(D2, 1);
-}
-await reply(`*ᴏ ɴᴀᴍᴏʀᴏ ꜰᴏɪ ᴅᴇꜱᴛʀᴜɪ́ᴅᴏ... ᴠᴏᴄᴇ ᴀɢᴏʀᴀ ᴇꜱᴛᴀ ꜱᴏʟᴛᴇɪʀᴏ ᴅᴇ ɴᴏᴠᴏ!🙆‍♂️*`);
-await keisen.sendMessage(jidParceiro, { text: `*💔 ᴛᴇɴʜᴏ ᴜᴍᴀ ɴᴏᴛɪ́ᴄɪᴀ ᴛʀɪꜱᴛᴇ... ꜱᴇᴜ ᴘᴀʀᴄᴇɪʀᴏ(ᴀ) ᴀᴄᴀʙᴏᴜ ᴅᴇ ᴛᴇʀᴍɪɴᴀʀ ᴏ ɴᴀᴍᴏʀᴏ...😔*\n> *ɢᴜᴀʀᴅᴇ ᴏꜱ ʙᴏɴꜱ ᴍᴏᴍᴇɴᴛᴏꜱ, ᴍᴇꜱᴍᴏ ǫᴜᴇ ᴅᴏᴀ...🙇‍♂️*`, contextInfo: { ...NkChannelKk, mentionedJid: [sender, jidParceiro] }}, { quoted: selo });
-namoro1.splice(D1, 1);
-fs.writeFileSync('./DADOS DO KEISEN/func/namoro1.json', JSON.stringify(namoro1));
-break;
-}
 
 
 case 'minhadupla':
