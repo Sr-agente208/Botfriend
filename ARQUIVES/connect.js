@@ -17,10 +17,21 @@ const axios = require("axios");
 const app = express();
 const port = process.env.PORT || 3000;
 
+const { decidirReconexao } = require("./reconexao.js");
+
 let qrCodeData = null;
 let pairingCodeData = null;
 let connectionStatus = "Iniciando WHITE LOTUS...";
 let socketStatus = "closed";
+
+// --- controle robusto de reconexão ---
+let socketAtual = null;          // socket "da vez" (ignora eventos de sockets antigos)
+let timerReconexao = null;       // evita dois startConnect em paralelo
+let tentativasReconexao = 0;     // para o backoff exponencial
+
+// não deixa um erro assíncrono derrubar o processo (o loop do start.sh também protege)
+process.on("unhandledRejection", (e) => console.log(chalk.red("[PROMESSA REJEITADA]"), e?.message || e));
+process.on("uncaughtException", (e) => console.log(chalk.red("[ERRO NÃO TRATADO]"), e?.message || e));
 
 const sessionDir = "./DADOS DO KEISEN/qr-code";
 
@@ -70,8 +81,24 @@ app.listen(port, "0.0.0.0", () => {
 });
 
 async function startConnect() {
+    try {
+        await _conectar();
+    } catch (err) {
+        console.log(chalk.red("[ERRO START]"), err?.message || err, "— tentando de novo em 10s");
+        connectionStatus = "Falha ao iniciar — tentando de novo...";
+        tentativasReconexao++;
+        timerReconexao = setTimeout(startConnect, 10000);
+    }
+}
+
+async function _conectar() {
     const { state, saveCreds } = await useMultiFileAuthState(sessionDir);
-    const { version } = await fetchLatestBaileysVersion();
+    let version;
+    try {
+        ({ version } = await fetchLatestBaileysVersion());
+    } catch {
+        version = [2, 3000, 0]; // segue com versão padrão se não der pra buscar
+    }
 
     const keisen = makeWASocket({
         version,
@@ -86,6 +113,7 @@ async function startConnect() {
         connectTimeoutMs: 60000,
         keepAliveIntervalMs: 30000,
     });
+    socketAtual = keisen;
 
     keisen.ev.on("connection.update", async (update) => {
         const { connection, lastDisconnect, qr } = update;
@@ -96,15 +124,24 @@ async function startConnect() {
         }
 
         if (connection === "close") {
+            // só o socket ATUAL pode reagir — evita bot duplicado por evento antigo
+            if (keisen !== socketAtual) return;
             const code = (lastDisconnect.error instanceof Boom) ? lastDisconnect.error.output.statusCode : 0;
-            const shouldReconnect = code !== DisconnectReason.loggedOut;
-            
-            console.log(chalk.red(`[CONEXÃO] Fechada (Código: ${code}). Reconectando: ${shouldReconnect}`));
-            connectionStatus = "Reconectando...";
+            if (timerReconexao) clearTimeout(timerReconexao);
+            const plano = decidirReconexao(code, tentativasReconexao);
+
+            if (plano.tipo === "normal") tentativasReconexao++;
+            else tentativasReconexao = 0;
+
+            connectionStatus = plano.tipo === "sessao-invalida"
+                ? "Sessão expirada — gerando novo QR..."
+                : `Reconectando em ${Math.round(plano.atraso / 1000)}s... (código ${code})`;
+            console.log(chalk.red(`[CONEXÃO] Fechada (Código: ${code}). ${connectionStatus}`));
             qrCodeData = null;
             pairingCodeData = null;
-            if (shouldReconnect) setTimeout(startConnect, 5000);
+            timerReconexao = setTimeout(() => startConnect(), plano.atraso);
         } else if (connection === "open") {
+            tentativasReconexao = 0;
             connectionStatus = "Online!";
             qrCodeData = null;
             pairingCodeData = null;

@@ -49,5 +49,12 @@ node ./ARQUIVES/connect.js &
 fi
 NODE_PID=$!
 wait $NODE_PID
+# node caiu (crash): salva backup antes de reiniciar (antiflood: no máx 1 por minuto)
+AGORA=$(date +%s)
+ULTIMA=$(cat /tmp/.ultima_backup 2>/dev/null || echo 0)
+if [ $((AGORA - ULTIMA)) -ge 60 ]; then
+  node ./ARQUIVES/persistencia.js backup 2>/dev/null || true
+  echo $AGORA > /tmp/.ultima_backup
+fi
 sleep 1
 done
