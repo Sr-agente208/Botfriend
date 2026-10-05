@@ -32,6 +32,11 @@ const LINK_BESTIARIO_WIKI = 'https://ordemparanormal.fandom.com/wiki/Besti%C3%A1
 const LINK_ELEMENTOS_WIKI = 'https://ordemparanormal.fandom.com/wiki/Elementos_do_Outro_Lado';
 const LINK_ITENS_AMALDICOADOS_WIKI = 'https://ordemparanormal.fandom.com/wiki/Itens_Amaldi%C3%A7oados';
 const LINK_MEUS_ANIMES = 'https://meusanimes.blog/';
+const LINK_MEUS_ANIMES_PLAYER_HOST_SUFFIX = '.meusdoramas.club';
+const TELEGRAM_CLOUD_VIDEO_UPLOAD_LIMIT = 50 * 1024 * 1024;
+const MEUS_ANIMES_SESSIONS = new Map();
+const MEUS_ANIMES_SESSION_TTL = 6 * 60 * 60 * 1000;
+const ANIME_INTERACOES_PATH = './DADOS DO KEISEN/usuarios/animes_telegram.json';
 
 function gerarLinkMeusAnimes(titulo) {
     const termo = String(titulo || '').trim();
@@ -68,7 +73,8 @@ async function carregarResultadosMeusAnimes(termo, limite = 5) {
         timeout: 18000,
         maxContentLength: 5 * 1024 * 1024,
         headers: {
-            'User-Agent': 'Mozilla/5.0 (compatible; WhiteLotusTelegramBot/1.0)',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/131 Safari/537.36',
+            Referer: LINK_MEUS_ANIMES,
             Accept: 'text/html,application/xhtml+xml'
         }
     });
@@ -101,7 +107,8 @@ async function carregarEpisodiosMeusAnimes(animeUrl, episodioSolicitado = null, 
         timeout: 18000,
         maxContentLength: 8 * 1024 * 1024,
         headers: {
-            'User-Agent': 'Mozilla/5.0 (compatible; WhiteLotusTelegramBot/1.0)',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/131 Safari/537.36',
+            Referer: LINK_MEUS_ANIMES,
             Accept: 'text/html,application/xhtml+xml'
         }
     });
@@ -113,19 +120,371 @@ async function carregarEpisodiosMeusAnimes(animeUrl, episodioSolicitado = null, 
         const url = linkInternoMeusAnimes($(elemento).attr('href'), 'e');
         if (!url || vistos.has(url)) return;
 
+        const item = $(elemento).closest('li');
         const rotulo = ($(elemento).text() || $(elemento).attr('title') || '').replace(/\s+/g, ' ').trim();
+        const numeracao = item.find('.numerando').first().text().trim();
+        const partesNumeracao = numeracao.match(/(\d+)\s*[-–]\s*(\d+)/);
+        const temporadas = partesNumeracao ? Number(partesNumeracao[1]) : null;
+        const numeroDoItem = partesNumeracao ? Number(partesNumeracao[2]) : null;
         const match = `${rotulo} ${url}`.match(/(?:epis[oó]dio|episode|ep)[\s._:#-]*(\d+)/i);
-        const numero = match ? Number(match[1]) : null;
+        const numero = match ? Number(match[1]) : numeroDoItem;
         const titulo = rotulo || (numero ? `Episódio ${numero}` : 'Assistir episódio');
         vistos.add(url);
-        episodios.push({ titulo, numero, url });
+        episodios.push({ titulo, numero, temporada: temporadas, url });
     });
 
     if (episodioSolicitado) {
         const encontrados = episodios.filter(episodio => episodio.numero === episodioSolicitado);
         if (encontrados.length) return encontrados.slice(0, limite);
     }
+    if (limite === Infinity) return episodios;
     return episodios.slice(-limite).reverse();
+}
+
+function limparSessoesMeusAnimes() {
+    const agora = Date.now();
+    for (const [id, sessao] of MEUS_ANIMES_SESSIONS) {
+        if (agora - sessao.criadaEm > MEUS_ANIMES_SESSION_TTL) MEUS_ANIMES_SESSIONS.delete(id);
+    }
+    while (MEUS_ANIMES_SESSIONS.size > 200) {
+        MEUS_ANIMES_SESSIONS.delete(MEUS_ANIMES_SESSIONS.keys().next().value);
+    }
+}
+
+function criarSessaoMeusAnimes(userId, termo, resultados, searchUrl) {
+    limparSessoesMeusAnimes();
+    const id = crypto.randomBytes(6).toString('hex');
+    const sessao = {
+        id,
+        userId: String(userId),
+        termo,
+        searchUrl,
+        resultados: resultados.map(resultado => ({ ...resultado, episodios: null })),
+        criadaEm: Date.now()
+    };
+    MEUS_ANIMES_SESSIONS.set(id, sessao);
+    return sessao;
+}
+
+function obterSessaoMeusAnimes(ctx, id) {
+    const sessao = MEUS_ANIMES_SESSIONS.get(id);
+    if (!sessao || Date.now() - sessao.criadaEm > MEUS_ANIMES_SESSION_TTL) {
+        MEUS_ANIMES_SESSIONS.delete(id);
+        return null;
+    }
+    if (String(ctx.from?.id || '') !== sessao.userId) return null;
+    return sessao;
+}
+
+function lerInteracoesAnime() {
+    try {
+        return fs.existsSync(ANIME_INTERACOES_PATH) ? fs.readJsonSync(ANIME_INTERACOES_PATH) : {};
+    } catch {
+        return {};
+    }
+}
+
+function estadoInteracaoAnime(userId, episodioUrl) {
+    const db = lerInteracoesAnime();
+    return db[String(userId)]?.[episodioUrl] || { favorito: false, visto: false };
+}
+
+function alternarInteracaoAnime(userId, episodioUrl, campo) {
+    const db = lerInteracoesAnime();
+    const userKey = String(userId);
+    db[userKey] ||= {};
+    db[userKey][episodioUrl] ||= { favorito: false, visto: false };
+    db[userKey][episodioUrl][campo] = !db[userKey][episodioUrl][campo];
+    fs.ensureFileSync(ANIME_INTERACOES_PATH);
+    fs.writeJsonSync(ANIME_INTERACOES_PATH, db, { spaces: 2 });
+    return db[userKey][episodioUrl];
+}
+
+function extrairJsonAposMarker(texto, marker) {
+    const markerIndex = texto.indexOf(marker);
+    if (markerIndex < 0) return null;
+    const start = texto.indexOf('{', markerIndex + marker.length);
+    if (start < 0) return null;
+
+    let depth = 0;
+    let dentroString = false;
+    let escape = false;
+    for (let i = start; i < texto.length; i++) {
+        const caractere = texto[i];
+        if (dentroString) {
+            if (escape) escape = false;
+            else if (caractere === '\\') escape = true;
+            else if (caractere === '"') dentroString = false;
+            continue;
+        }
+        if (caractere === '"') dentroString = true;
+        else if (caractere === '{') depth++;
+        else if (caractere === '}' && --depth === 0) {
+            try { return JSON.parse(texto.slice(start, i + 1)); } catch { return null; }
+        }
+    }
+    return null;
+}
+
+async function resolverBloggerVideo(urlBlogger) {
+    const response = await axios.get(urlBlogger, {
+        responseType: 'text',
+        timeout: 25000,
+        maxContentLength: 5 * 1024 * 1024,
+        headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/131 Safari/537.36',
+            Referer: 'https://youtube.googleapis.com/'
+        }
+    });
+    const $ = cheerio.load(response.data);
+    const embeddedSource = $('video source[src], video[src]').first().attr('src');
+    if (embeddedSource) return new URL(embeddedSource, urlBlogger).href;
+
+    const config = extrairJsonAposMarker(response.data, 'VIDEO_CONFIG');
+    const streams = Array.isArray(config?.streams) ? config.streams : [];
+    const orderedStreams = streams
+        .filter(stream => stream?.play_url)
+        .sort((a, b) => Number(b.format_id || 0) - Number(a.format_id || 0));
+    const selected = orderedStreams[0]?.play_url;
+    if (selected) return new URL(selected, urlBlogger).href;
+
+    throw new Error('O provedor de vídeo não retornou um arquivo reproduzível.');
+}
+
+async function obterFonteEpisodioMeusAnimes(episodioUrl) {
+    const pageResponse = await axios.get(episodioUrl, {
+        responseType: 'text',
+        timeout: 20000,
+        maxContentLength: 8 * 1024 * 1024,
+        headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/131 Safari/537.36',
+            Referer: LINK_MEUS_ANIMES,
+            Accept: 'text/html,application/xhtml+xml'
+        }
+    });
+    const $ = cheerio.load(pageResponse.data);
+    const iframeSrc = $('div.play-box-iframe iframe').first().attr('src') ||
+        $('iframe[src*="meusdoramas.club"]').first().attr('src') ||
+        $('iframe[data-src*="meusdoramas.club"]').first().attr('data-src');
+    if (!iframeSrc) throw new Error('Não encontrei o player incorporado neste episódio.');
+
+    const playerUrl = new URL(iframeSrc, episodioUrl);
+    if (!playerUrl.hostname.toLowerCase().endsWith(LINK_MEUS_ANIMES_PLAYER_HOST_SUFFIX)) {
+        throw new Error('O player do episódio não é de um host reconhecido.');
+    }
+    const route = playerUrl.hash.replace(/^#/, '').split('/').filter(Boolean);
+    if (route.length < 4 || route[0] !== 'video') {
+        throw new Error('O player não forneceu os dados de temporada e episódio.');
+    }
+    const [, tmdbId, seasonNumber, episodeNumber] = route;
+    const apiUrl = new URL('/posts/get-video.php', playerUrl.origin);
+    apiUrl.searchParams.set('episode_number', episodeNumber);
+    apiUrl.searchParams.set('season_number', seasonNumber);
+    apiUrl.searchParams.set('tmdb', tmdbId);
+
+    const apiResponse = await axios.get(apiUrl.href, {
+        timeout: 20000,
+        maxContentLength: 2 * 1024 * 1024,
+        headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/131 Safari/537.36',
+            Referer: playerUrl.href,
+            Origin: playerUrl.origin,
+            Accept: 'application/json,text/plain,*/*'
+        }
+    });
+    let data = apiResponse.data;
+    if (typeof data === 'string') {
+        try { data = JSON.parse(data); } catch { throw new Error('Resposta inválida do player.'); }
+    }
+    if (!data?.success || !data.videoUrl) throw new Error('O player não disponibilizou um vídeo para este episódio.');
+
+    const fontes = Array.isArray(data.videoUrl)
+        ? data.videoUrl.map(item => typeof item === 'string' ? item : item?.file).filter(Boolean)
+        : [String(data.videoUrl)];
+    let ultimoErro;
+    for (const fonte of fontes) {
+        try {
+            const urlFonte = new URL(fonte, playerUrl.href).href;
+            const ehBlogger = /blogger\.com\/video\.g\?token=/i.test(urlFonte);
+            const urlResolvida = ehBlogger
+                ? await resolverBloggerVideo(urlFonte)
+                : urlFonte;
+            const urlValidada = await validarUrlPublica(urlResolvida);
+            const pathSemQuery = new URL(urlValidada).pathname.toLowerCase();
+            if (pathSemQuery.endsWith('.m3u8')) {
+                ultimoErro = new Error('Este servidor entregou um stream HLS, não um arquivo MP4 para enviar ao Telegram.');
+                continue;
+            }
+            return {
+                url: urlValidada,
+                headers: { Referer: ehBlogger ? 'https://youtube.googleapis.com/' : playerUrl.href },
+                playerUrl: playerUrl.href
+            };
+        } catch (error) {
+            ultimoErro = error;
+        }
+    }
+    throw ultimoErro || new Error('Nenhuma fonte de vídeo compatível foi encontrada.');
+}
+
+function formatarRotuloEpisodio(episodio, fallbackIndex = 0) {
+    const nome = episodio.numero ? `Episódio ${episodio.numero}` : episodio.titulo || `Episódio ${fallbackIndex + 1}`;
+    return episodio.temporada ? `Temporada ${episodio.temporada} — ${nome}` : nome;
+}
+
+function botoesListaEpisodiosMeusAnimes(sessao, serieIndex, pageIndex = 0, indices = null) {
+    const serie = sessao.resultados[serieIndex];
+    const episodios = serie?.episodios || [];
+    const pageSize = 10;
+    const maxPages = Math.max(1, Math.ceil(episodios.length / pageSize));
+    const page = Math.min(Math.max(0, pageIndex), maxPages - 1);
+    const selectedIndices = indices || Array.from(
+        { length: Math.min(pageSize, Math.max(0, episodios.length - page * pageSize)) },
+        (_, offset) => page * pageSize + offset
+    );
+    const rows = [];
+
+    for (let i = 0; i < selectedIndices.length; i += 2) {
+        rows.push(selectedIndices.slice(i, i + 2).map(index => {
+            const episodio = episodios[index];
+            const label = formatarRotuloEpisodio(episodio, index);
+            return Markup.button.callback(`▶️ ${label}`.slice(0, 55), `ma_ep_${sessao.id}_${serieIndex}_${index}`);
+        }));
+    }
+
+    if (!indices && maxPages > 1) {
+        const navigation = [];
+        if (page > 0) navigation.push(Markup.button.callback('◀️ Anteriores', `ma_page_${sessao.id}_${serieIndex}_${page - 1}`));
+        if (page < maxPages - 1) navigation.push(Markup.button.callback('Próximos ▶️', `ma_page_${sessao.id}_${serieIndex}_${page + 1}`));
+        if (navigation.length) rows.push(navigation);
+    }
+    rows.push([Markup.button.url('🌐 Abrir catálogo no Meus Animes', serie.url)]);
+    return Markup.inlineKeyboard(rows);
+}
+
+async function enviarListaEpisodiosMeusAnimes(ctx, sessao, serieIndex, pageIndex = 0, episodioSolicitado = null) {
+    const serie = sessao.resultados[serieIndex];
+    if (!serie) return ctx.reply('❌ Não encontrei esse anime na busca.');
+    if (!Array.isArray(serie.episodios) || serie.episodios.length === 0) {
+        await ctx.reply('🔎 Carregando a lista de episódios...');
+        try {
+            serie.episodios = await carregarEpisodiosMeusAnimes(serie.url, null, Infinity);
+        } catch (error) {
+            console.warn('[MeusAnimes lista]', error?.message || error);
+            serie.episodios = [];
+        }
+    }
+
+    if (!serie.episodios.length) {
+        return ctx.reply(`Não consegui carregar os episódios de ${sanitizeMd(serie.titulo)}.`, {
+            ...Markup.inlineKeyboard([[Markup.button.url('🌐 Abrir no Meus Animes', serie.url)]])
+        });
+    }
+
+    const indices = episodioSolicitado
+        ? serie.episodios.map((ep, index) => ep.numero === episodioSolicitado ? index : -1).filter(index => index >= 0)
+        : null;
+    const total = serie.episodios.length;
+    const pageSize = 10;
+    const page = Math.min(Math.max(0, pageIndex), Math.ceil(total / pageSize) - 1);
+    const startIndex = page * pageSize;
+    const endIndex = Math.min(total, startIndex + pageSize);
+    const resumo = indices?.length
+        ? `Episódio ${episodioSolicitado} encontrado.`
+        : `Episódios ${startIndex + 1}–${endIndex} de ${total}.`;
+    const texto = `🎬 *${sanitizeMd(serie.titulo)}*\n${resumo}\n\n` +
+        'Toque em um episódio para o bot enviar o vídeo aqui no Telegram.';
+
+    await ctx.reply(texto, {
+        parse_mode: 'Markdown',
+        ...botoesListaEpisodiosMeusAnimes(sessao, serieIndex, page, indices?.length ? indices : null)
+    });
+}
+
+function botoesVideoEpisodioMeusAnimes(ctx, sessao, serieIndex, episodioIndex) {
+    const serie = sessao.resultados[serieIndex];
+    const episodio = serie?.episodios?.[episodioIndex];
+    if (!episodio) return Markup.inlineKeyboard([]);
+    const userId = String(ctx.from?.id || '');
+    const estado = estadoInteracaoAnime(userId, episodio.url);
+    const total = serie.episodios.length;
+    const proxima = episodioIndex + 1;
+    const linhaNavegacao = [Markup.button.callback(`EP ${episodioIndex + 1}/${total}`, `ma_info_${sessao.id}_${serieIndex}_${episodioIndex}`)];
+    if (proxima < total) {
+        linhaNavegacao.push(Markup.button.callback('Próximo ⏭️', `ma_next_${sessao.id}_${serieIndex}_${proxima}`));
+    }
+    return Markup.inlineKeyboard([
+        linhaNavegacao,
+        [
+            Markup.button.callback(estado.favorito ? '⭐ Favoritado' : '☆ Favoritar', `ma_fav_${sessao.id}_${serieIndex}_${episodioIndex}`),
+            Markup.button.callback(estado.visto ? '✅ Visto' : '☑️ Marcar visto', `ma_seen_${sessao.id}_${serieIndex}_${episodioIndex}`)
+        ],
+        [Markup.button.callback('⬅️ Voltar aos Episódios', `ma_back_${sessao.id}_${serieIndex}_${episodioIndex}`)]
+    ]);
+}
+
+async function enviarEpisodioMeusAnimesNoTelegram(ctx, sessao, serieIndex, episodioIndex) {
+    const serie = sessao.resultados[serieIndex];
+    const episodio = serie?.episodios?.[episodioIndex];
+    if (!serie || !episodio) return ctx.reply('❌ Esse episódio não está mais disponível nesta busca.');
+
+    let mensagemProgresso;
+    let arquivoTemporario;
+    try {
+        mensagemProgresso = await ctx.reply(`⏳ Preparando ${formatarRotuloEpisodio(episodio, episodioIndex)} para assistir aqui no Telegram...`);
+        const fonte = await obterFonteEpisodioMeusAnimes(episodio.url);
+        const nomeArquivo = nomeArquivoSeguro(`${serie.titulo}_S${episodio.temporada || 1}E${episodio.numero || episodioIndex + 1}.mp4`);
+
+        const usaBotApiNuvem = /^https?:\/\/api\.telegram\.org$/i.test(TELEGRAM_API_ROOT);
+        if (usaBotApiNuvem) {
+            try {
+                const head = await axios.head(fonte.url, { timeout: 10000, maxRedirects: 3, headers: fonte.headers });
+                const tamanhoHead = Number(head.headers['content-length'] || 0);
+                if (tamanhoHead > TELEGRAM_CLOUD_VIDEO_UPLOAD_LIMIT) {
+                    const tamanhoMB = (tamanhoHead / (1024 * 1024)).toFixed(1);
+                    await ctx.reply(
+                        `⚠️ Este episódio tem ${tamanhoMB} MB. A API pública do Telegram não aceita vídeos deste tamanho enviados pelo bot. Configure um servidor local do Bot API em TELEGRAM_API_ROOT para recebê-lo aqui.`,
+                        { ...Markup.inlineKeyboard([[Markup.button.url('▶️ Abrir episódio no Meus Animes', episodio.url)]]) }
+                    );
+                    return;
+                }
+            } catch (errorHead) {
+                if (errorHead?.response?.status === 413) throw errorHead;
+            }
+        }
+
+        arquivoTemporario = await baixarParaArquivoTemporario(fonte.url, nomeArquivo, true, fonte.headers);
+        const urlLower = fonte.url.toLowerCase();
+        if (urlLower.split('?')[0].endsWith('.m3u8') || arquivoTemporario.contentType.includes('mpegurl')) {
+            throw new Error('A fonte retornou HLS, que o bot não consegue anexar como vídeo MP4.');
+        }
+
+        if (usaBotApiNuvem && arquivoTemporario.tamanho > TELEGRAM_CLOUD_VIDEO_UPLOAD_LIMIT) {
+            const tamanhoMB = (arquivoTemporario.tamanho / (1024 * 1024)).toFixed(1);
+            await ctx.reply(
+                `⚠️ Este episódio tem ${tamanhoMB} MB. Para enviá-lo como vídeo no chat, configure um servidor local do Telegram Bot API em TELEGRAM_API_ROOT.`,
+                { ...Markup.inlineKeyboard([[Markup.button.url('▶️ Abrir episódio no Meus Animes', episodio.url)]]) }
+            );
+            return;
+        }
+
+        const legenda = `📺 *${sanitizeMd(serie.titulo)}*\n${sanitizeMd(formatarRotuloEpisodio(episodio, episodioIndex))}`;
+        await ctx.replyWithVideo(
+            { source: fs.createReadStream(arquivoTemporario.caminho), filename: nomeArquivo },
+            { caption: legenda, parse_mode: 'Markdown', ...botoesVideoEpisodioMeusAnimes(ctx, sessao, serieIndex, episodioIndex) }
+        );
+    } catch (error) {
+        console.error('[MeusAnimes vídeo]', error?.message || error);
+        await ctx.reply(
+            '❌ Não consegui enviar esse episódio como vídeo. Você ainda pode abri-lo no site; confira também se TELEGRAM_API_ROOT está configurado para arquivos grandes.',
+            { ...Markup.inlineKeyboard([[Markup.button.url('▶️ Abrir episódio no Meus Animes', episodio.url)]]) }
+        );
+    } finally {
+        if (arquivoTemporario?.caminho) fs.removeSync(arquivoTemporario.caminho);
+        if (mensagemProgresso?.message_id) {
+            await ctx.telegram.deleteMessage(ctx.chat.id, mensagemProgresso.message_id).catch(() => {});
+        }
+    }
 }
 
 function nomeArquivoSeguro(nome) {
@@ -185,10 +544,10 @@ async function validarUrlPublica(urlInformada) {
     return url.href;
 }
 
-async function baixarParaArquivoTemporario(url, filename, rejeitarPaginaHtml = false) {
+async function baixarParaArquivoTemporario(url, filename, rejeitarPaginaHtml = false, requestHeaders = {}) {
     const response = await axios.get(url, {
         responseType: 'stream',
-        timeout: 5 * 60 * 1000,
+        timeout: 10 * 60 * 1000,
         maxContentLength: MAX_GERARLINK_BYTES,
         maxRedirects: 3,
         beforeRedirect: options => {
@@ -198,7 +557,10 @@ async function baixarParaArquivoTemporario(url, filename, rejeitarPaginaHtml = f
                 throw new Error('O redirecionamento do arquivo apontou para um endereço não permitido.');
             }
         },
-        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; WhiteLotusTelegramBot/1.0)' }
+        headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/131 Safari/537.36',
+            ...requestHeaders
+        }
     });
     const contentType = String(response.headers['content-type'] || '').toLowerCase();
     if (rejeitarPaginaHtml && contentType.includes('text/html')) {
@@ -240,7 +602,7 @@ if (!TOKEN_TG) {
 
 const bot = new Telegraf(TOKEN_TG, {
     telegram: { apiRoot: TELEGRAM_API_ROOT },
-    handlerTimeout: 10 * 60 * 1000
+    handlerTimeout: 20 * 60 * 1000
 });
 
 // ====== TRATAMENTO GLOBAL DE ERROS E SANITIZAÇÃO MARKDOWN ======
@@ -3512,7 +3874,7 @@ bot.action('cmd_gerarlink', async (ctx) => {
     );
 });
 bot.action('cmd_ping', async (ctx) => { await ctx.answerCbQuery('🏓 Pong!'); await ctx.reply('🏓 *Pong!* Bot online! 🪷', { parse_mode: 'Markdown' }); });
-bot.action('cmd_anime_buscar', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('📺 Use: `/assistir <nome do anime>` ou `/anime <nome>`\nO bot pesquisa o catálogo e mostra os links dos títulos e episódios.\nEx: `/assistir Naruto Shippuden ep 7`', { parse_mode: 'Markdown' }); });
+bot.action('cmd_anime_buscar', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('📺 Use: `/assistir <nome do anime>` ou `/anime <nome>`\nO bot pesquisa o catálogo e envia episódios como vídeo no chat quando o player fornece MP4 compatível.\nEx: `/assistir Naruto Shippuden ep 7`', { parse_mode: 'Markdown' }); });
 bot.action('cmd_anime_recentes', async (ctx) => {
     await ctx.answerCbQuery();
     try {
@@ -3526,6 +3888,83 @@ bot.action('cmd_anime_recentes', async (ctx) => {
         });
         await ctx.reply(txt, { parse_mode: 'Markdown' });
     } catch { ctx.reply('❌ Erro ao carregar animes recentes.'); }
+});
+
+bot.action(/^ma_series_([a-f0-9]+)_(\d+)$/, async (ctx) => {
+    const [, sessionId, seriesText] = ctx.match;
+    const sessao = obterSessaoMeusAnimes(ctx, sessionId);
+    const seriesIndex = Number(seriesText);
+    if (!sessao || !sessao.resultados[seriesIndex]) {
+        return ctx.answerCbQuery('Essa busca expirou. Envie /assistir novamente.', { show_alert: true });
+    }
+    await ctx.answerCbQuery('Carregando episódios...');
+    sessao.criadaEm = Date.now();
+    await enviarListaEpisodiosMeusAnimes(ctx, sessao, seriesIndex, 0);
+});
+
+bot.action(/^ma_page_([a-f0-9]+)_(\d+)_(\d+)$/, async (ctx) => {
+    const [, sessionId, seriesText, pageText] = ctx.match;
+    const sessao = obterSessaoMeusAnimes(ctx, sessionId);
+    if (!sessao) return ctx.answerCbQuery('Essa busca expirou. Envie /assistir novamente.', { show_alert: true });
+    await ctx.answerCbQuery();
+    sessao.criadaEm = Date.now();
+    await enviarListaEpisodiosMeusAnimes(ctx, sessao, Number(seriesText), Number(pageText));
+});
+
+bot.action(/^ma_ep_([a-f0-9]+)_(\d+)_(\d+)$/, async (ctx) => {
+    const [, sessionId, seriesText, episodeText] = ctx.match;
+    const sessao = obterSessaoMeusAnimes(ctx, sessionId);
+    if (!sessao) return ctx.answerCbQuery('Essa busca expirou. Envie /assistir novamente.', { show_alert: true });
+    await ctx.answerCbQuery('Preparando o vídeo para enviar aqui...');
+    sessao.criadaEm = Date.now();
+    await enviarEpisodioMeusAnimesNoTelegram(ctx, sessao, Number(seriesText), Number(episodeText));
+});
+
+bot.action(/^ma_next_([a-f0-9]+)_(\d+)_(\d+)$/, async (ctx) => {
+    const [, sessionId, seriesText, episodeText] = ctx.match;
+    const sessao = obterSessaoMeusAnimes(ctx, sessionId);
+    if (!sessao) return ctx.answerCbQuery('Essa busca expirou. Envie /assistir novamente.', { show_alert: true });
+    await ctx.answerCbQuery('Abrindo próximo episódio...');
+    sessao.criadaEm = Date.now();
+    await enviarEpisodioMeusAnimesNoTelegram(ctx, sessao, Number(seriesText), Number(episodeText));
+});
+
+bot.action(/^ma_back_([a-f0-9]+)_(\d+)_(\d+)$/, async (ctx) => {
+    const [, sessionId, seriesText, episodeText] = ctx.match;
+    const sessao = obterSessaoMeusAnimes(ctx, sessionId);
+    if (!sessao) return ctx.answerCbQuery('Essa busca expirou. Envie /assistir novamente.', { show_alert: true });
+    const episodeIndex = Number(episodeText);
+    await ctx.answerCbQuery();
+    sessao.criadaEm = Date.now();
+    await enviarListaEpisodiosMeusAnimes(ctx, sessao, Number(seriesText), Math.floor(episodeIndex / 10));
+});
+
+bot.action(/^ma_fav_([a-f0-9]+)_(\d+)_(\d+)$/, async (ctx) => {
+    const [, sessionId, seriesText, episodeText] = ctx.match;
+    const sessao = obterSessaoMeusAnimes(ctx, sessionId);
+    const episodio = sessao?.resultados[Number(seriesText)]?.episodios?.[Number(episodeText)];
+    if (!sessao || !episodio) return ctx.answerCbQuery('Essa busca expirou. Envie /assistir novamente.', { show_alert: true });
+    alternarInteracaoAnime(ctx.from.id, episodio.url, 'favorito');
+    await ctx.answerCbQuery(estadoInteracaoAnime(ctx.from.id, episodio.url).favorito ? 'Adicionado aos favoritos ⭐' : 'Removido dos favoritos');
+    await ctx.editMessageReplyMarkup(botoesVideoEpisodioMeusAnimes(ctx, sessao, Number(seriesText), Number(episodeText)).reply_markup);
+});
+
+bot.action(/^ma_seen_([a-f0-9]+)_(\d+)_(\d+)$/, async (ctx) => {
+    const [, sessionId, seriesText, episodeText] = ctx.match;
+    const sessao = obterSessaoMeusAnimes(ctx, sessionId);
+    const episodio = sessao?.resultados[Number(seriesText)]?.episodios?.[Number(episodeText)];
+    if (!sessao || !episodio) return ctx.answerCbQuery('Essa busca expirou. Envie /assistir novamente.', { show_alert: true });
+    alternarInteracaoAnime(ctx.from.id, episodio.url, 'visto');
+    await ctx.answerCbQuery(estadoInteracaoAnime(ctx.from.id, episodio.url).visto ? 'Marcado como visto ✅' : 'Marcado como não visto');
+    await ctx.editMessageReplyMarkup(botoesVideoEpisodioMeusAnimes(ctx, sessao, Number(seriesText), Number(episodeText)).reply_markup);
+});
+
+bot.action(/^ma_info_([a-f0-9]+)_(\d+)_(\d+)$/, async (ctx) => {
+    const [, sessionId, seriesText, episodeText] = ctx.match;
+    const sessao = obterSessaoMeusAnimes(ctx, sessionId);
+    if (!sessao) return ctx.answerCbQuery('Essa busca expirou. Envie /assistir novamente.', { show_alert: true });
+    const episodio = sessao.resultados[Number(seriesText)]?.episodios?.[Number(episodeText)];
+    await ctx.answerCbQuery(episodio ? formatarRotuloEpisodio(episodio, Number(episodeText)) : 'Episódio');
 });
 
 function botoesFichaAcoes() {
@@ -3935,7 +4374,7 @@ bot.on(['text', 'photo', 'video', 'audio', 'voice', 'document', 'sticker', 'anim
 /simi <texto> — Chatbot SimSimi
 /letra <música> — Letras de músicas\n
 *🍙 ANIMES & STREAMING*
-/assistir <anime> — Pesquisa no Meus Animes e mostra episódios com botões
+/assistir <anime> — Pesquisa e envia o episódio no Telegram quando há MP4 compatível
 /anirecente — Animes da temporada
 /aniinfo <anime> — Informações detalhadas\n
 *🔴 POKÉDEX & POKÉMON*
@@ -4537,12 +4976,23 @@ bot.on(['text', 'photo', 'video', 'audio', 'voice', 'document', 'sticker', 'anim
                     try {
                         episodiosMeusAnimes = await carregarEpisodiosMeusAnimes(
                             buscaMeusAnimes.resultados[0].url,
-                            episodioSolicitado,
-                            5
+                            null,
+                            Infinity
                         );
                     } catch (erroEpisodios) {
                         console.warn('[MeusAnimes episódios]', erroEpisodios?.message || erroEpisodios);
                     }
+                }
+
+                let sessaoAnime = null;
+                if (buscaMeusAnimes.resultados.length) {
+                    sessaoAnime = criarSessaoMeusAnimes(
+                        ctx.from.id,
+                        termoBusca,
+                        buscaMeusAnimes.resultados,
+                        buscaMeusAnimes.searchUrl
+                    );
+                    if (sessaoAnime.resultados[0]) sessaoAnime.resultados[0].episodios = episodiosMeusAnimes;
                 }
 
                 const infoTxt = `🍙 *${sanitizeMd(title)}*${titleEng && titleEng !== title ? ` (${sanitizeMd(titleEng)})` : ''}\n\n` +
@@ -4561,36 +5011,52 @@ bot.on(['text', 'photo', 'video', 'audio', 'voice', 'document', 'sticker', 'anim
                 }
 
                 let buscaTxt = `🔎 *Pesquisa no Meus Animes:* ${sanitizeMd(termoBusca)}\n\n`;
-                const botoesMeusAnimes = [[Markup.button.url('🔎 Abrir busca no Meus Animes', buscaMeusAnimes.searchUrl)]];
-
-                if (buscaMeusAnimes.resultados.length) {
+                const botoesMeusAnimes = [];
+                if (buscaMeusAnimes.resultados.length && sessaoAnime) {
                     buscaMeusAnimes.resultados.forEach((resultado, indice) => {
-                        buscaTxt += `*${indice + 1}.* [${sanitizeMd(resultado.titulo)}](${resultado.url})\n`;
+                        buscaTxt += `*${indice + 1}.* ${sanitizeMd(resultado.titulo)}\n`;
                         const rotuloBotao = `📚 ${sanitizeMd(resultado.titulo)}`.slice(0, 55);
-                        botoesMeusAnimes.push([Markup.button.url(rotuloBotao, resultado.url)]);
+                        botoesMeusAnimes.push([Markup.button.callback(rotuloBotao, `ma_series_${sessaoAnime.id}_${indice}`)]);
                     });
 
                     if (episodiosMeusAnimes.length) {
                         const tituloAnime = sanitizeMd(buscaMeusAnimes.resultados[0].titulo);
+                        const indicesSolicitados = episodioSolicitado
+                            ? episodiosMeusAnimes.map((ep, index) => ep.numero === episodioSolicitado ? index : -1).filter(index => index >= 0)
+                            : [];
+                        const indicesVisiveis = indicesSolicitados.length
+                            ? indicesSolicitados
+                            : episodiosMeusAnimes.slice(-5).map((_, offset) => episodiosMeusAnimes.length - 1 - offset);
+                        const ordemVisivel = indicesVisiveis;
                         buscaTxt += `\n🎬 *Episódios de ${tituloAnime}:*\n`;
-                        episodiosMeusAnimes.forEach(episodio => {
-                            const rotulo = episodio.numero ? `Episódio ${episodio.numero}` : sanitizeMd(episodio.titulo);
-                            buscaTxt += `• [${rotulo}](${episodio.url})\n`;
+                        ordemVisivel.forEach(index => {
+                            const episodio = episodiosMeusAnimes[index];
+                            const rotulo = formatarRotuloEpisodio(episodio, index);
+                            buscaTxt += `• ${sanitizeMd(rotulo)}\n`;
                         });
+                        buscaTxt += '\nToque em um episódio para receber o vídeo aqui no Telegram.';
 
-                        for (let i = 0; i < episodiosMeusAnimes.length; i += 2) {
-                            const linha = episodiosMeusAnimes.slice(i, i + 2).map(episodio => {
+                        for (let i = 0; i < ordemVisivel.length; i += 2) {
+                            const linha = ordemVisivel.slice(i, i + 2).map(index => {
+                                const episodio = episodiosMeusAnimes[index];
                                 const rotulo = episodio.numero ? `▶️ Ep. ${episodio.numero}` : `▶️ ${sanitizeMd(episodio.titulo)}`;
-                                return Markup.button.url(rotulo.slice(0, 55), episodio.url);
+                                return Markup.button.callback(rotulo.slice(0, 55), `ma_ep_${sessaoAnime.id}_0_${index}`);
                             });
                             botoesMeusAnimes.push(linha);
                         }
-                    } else if (episodioSolicitado) {
-                        buscaTxt += `\n⚠️ Não encontrei o episódio ${episodioSolicitado} na lista do site.\n`;
+                        if (episodiosMeusAnimes.length > 5 || episodioSolicitado) {
+                            botoesMeusAnimes.push([Markup.button.callback('📚 Ver todos os episódios', `ma_series_${sessaoAnime.id}_0`)]);
+                        }
+                        if (episodioSolicitado && !indicesSolicitados.length) {
+                            buscaTxt += `\n⚠️ Não encontrei o episódio ${episodioSolicitado}; estão listados os episódios mais recentes.`;
+                        }
+                    } else {
+                        buscaTxt += 'Não consegui ler a lista de episódios deste título. Escolha o anime para tentar novamente.';
                     }
                 } else {
-                    buscaTxt += 'Não achei um título correspondente agora. Use o botão abaixo para abrir os resultados do site.\n';
+                    buscaTxt += 'Não achei títulos para essa busca. Use o botão para abrir a pesquisa no site.';
                 }
+                botoesMeusAnimes.push([Markup.button.url('🔎 Abrir busca no Meus Animes', buscaMeusAnimes.searchUrl)]);
 
                 await ctx.reply(buscaTxt, {
                     parse_mode: 'Markdown',

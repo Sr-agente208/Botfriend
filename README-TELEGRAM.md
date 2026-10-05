@@ -11,12 +11,16 @@ Variáveis de ambiente obrigatórias:
 | `TELEGRAM_BOT_TOKEN` | Token do bot (obter em [@BotFather](https://t.me/BotFather)) |
 | `GROQ_API_KEY` | Key da Groq (para ©gpt, ©gemini, ©signo, ©nick) |
 | `URL_API_PLAY` | URL da API de música (para ©play) — opcional |
-| `TELEGRAM_API_ROOT` | Opcional; endereço do Bot API local para receber/baixar arquivos Telegram acima de 20 MB |
+| `TELEGRAM_API_ROOT` | Opcional; endereço do Bot API local para baixar/enviar mídia acima dos limites da API pública |
 | `MAX_GERARLINK_MB` | Opcional; tamanho máximo do `gerarlink` (padrão: 500 MB; limitado pelos hosts de upload) |
 
 ### Arquivos maiores que 20 MB no /gerarlink
 
 A API pública do Telegram limita a 20 MB o download de arquivos enviados diretamente ao bot. O comando agora aceita uploads de até `MAX_GERARLINK_MB` (500 MB por padrão) quando a origem é um link HTTPS direto: `/gerarlink https://.../arquivo.mp4`. Para baixar uma mídia maior enviada pelo próprio Telegram, é necessário executar um servidor local do Telegram Bot API e configurar `TELEGRAM_API_ROOT` com o endereço dele (definir a variável sem esse servidor não remove o limite). Os limites finais também dependem dos provedores de hospedagem usados para gerar o link.
+
+### Reproduzir episódios no próprio Telegram
+
+`/assistir <anime>` pesquisa o catálogo, mostra os episódios em botões e tenta enviar o arquivo como vídeo no chat. O envio nativo depende do Meus Animes disponibilizar um MP4 direto; páginas que só oferecem HLS/servidor externo continuam com o botão para abrir o episódio no site. A API pública do Telegram tem limite de envio de vídeo; para episódios grandes (como 171 MB), execute um Bot API local e configure `TELEGRAM_API_ROOT` com o endereço dele. A variável sozinha não instala nem inicia esse servidor.
 
 ## Como obter o token
 
