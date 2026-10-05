@@ -11,6 +11,12 @@ Variáveis de ambiente obrigatórias:
 | `TELEGRAM_BOT_TOKEN` | Token do bot (obter em [@BotFather](https://t.me/BotFather)) |
 | `GROQ_API_KEY` | Key da Groq (para ©gpt, ©gemini, ©signo, ©nick) |
 | `URL_API_PLAY` | URL da API de música (para ©play) — opcional |
+| `TELEGRAM_API_ROOT` | Opcional; endereço do Bot API local para receber/baixar arquivos Telegram acima de 20 MB |
+| `MAX_GERARLINK_MB` | Opcional; tamanho máximo do `gerarlink` (padrão: 500 MB; limitado pelos hosts de upload) |
+
+### Arquivos maiores que 20 MB no /gerarlink
+
+A API pública do Telegram limita a 20 MB o download de arquivos enviados diretamente ao bot. O comando agora aceita uploads de até `MAX_GERARLINK_MB` (500 MB por padrão) quando a origem é um link HTTPS direto: `/gerarlink https://.../arquivo.mp4`. Para baixar uma mídia maior enviada pelo próprio Telegram, é necessário executar um servidor local do Telegram Bot API e configurar `TELEGRAM_API_ROOT` com o endereço dele (definir a variável sem esse servidor não remove o limite). Os limites finais também dependem dos provedores de hospedagem usados para gerar o link.
 
 ## Como obter o token
 

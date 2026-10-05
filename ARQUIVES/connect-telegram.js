@@ -7,6 +7,12 @@ const axios = require('axios');
 const { Jimp, loadFont, HorizontalAlign, VerticalAlign, measureTextHeight } = require('jimp');
 const { SANS_64_BLACK } = require('jimp/fonts');
 const archiver = require('archiver');
+const cheerio = require('cheerio');
+const os = require('os');
+const crypto = require('crypto');
+const { pipeline } = require('stream/promises');
+const dns = require('dns').promises;
+const net = require('net');
 const { generateLink, processFileToLink } = require('./funcoes/linkGen');
 const { uploadToCatbox, uploadToFileIo, uploadTo0x0 } = require('./funcoes/uploaders');
 
@@ -17,26 +23,214 @@ const { uploadToCatbox, uploadToFileIo, uploadTo0x0 } = require('./funcoes/uploa
 const TOKEN_TG = process.env.TELEGRAM_BOT_TOKEN;
 const PORT = process.env.PORT || 3000;
 const PREFIX = '©';
+const TELEGRAM_API_ROOT = (process.env.TELEGRAM_API_ROOT || 'https://api.telegram.org').replace(/\/$/, '');
+const MAX_GERARLINK_MB = Math.max(1, Number.parseInt(process.env.MAX_GERARLINK_MB || '500', 10) || 500);
+const MAX_GERARLINK_BYTES = MAX_GERARLINK_MB * 1024 * 1024;
+const TELEGRAM_CLOUD_DOWNLOAD_LIMIT = 20 * 1024 * 1024;
 const LINK_LIVRO_REGRAS = 'https://dl2.bibliotecaelfica.org/dl/eyJwaWQiOjI3OTcxLCJ1aWQiOm51bGwsInBhdGgiOiJcL3ZhclwvYWNlcnZvXC9zdWdlc3RvZXNcLzVkZjEyYzAyLTJiMWQtNGVhMy04MWZkLTk0ZTZjZDZlMGJhZC5wZGYiLCJtb2RlIjoidmlzdWFsaXphciIsInNwZWVkIjo1MTIwMDAsInNpemUiOjQ4MDI1OTc0LCJ0aXRsZSI6Ik91dHJvcyAtIE9yZGVtIFBhcmFub3JtYWwiLCJleHAiOjE3ODYyNzA2MDN9.d54dffd130fe9d90a51f7e76c29358bdce935545e50e0952be26acad7d274657';
 const LINK_BESTIARIO_WIKI = 'https://ordemparanormal.fandom.com/wiki/Besti%C3%A1rio';
 const LINK_ELEMENTOS_WIKI = 'https://ordemparanormal.fandom.com/wiki/Elementos_do_Outro_Lado';
 const LINK_ITENS_AMALDICOADOS_WIKI = 'https://ordemparanormal.fandom.com/wiki/Itens_Amaldi%C3%A7oados';
 const LINK_MEUS_ANIMES = 'https://meusanimes.blog/';
-const LINK_MEUS_ANIMES_SLIME_EP7 = 'https://meusanimes.blog/e/slime-taoshite-300-nen-shiranai-uchi-ni-level-max-ni-nattemashita-dublado-episodio-7/';
 
-function gerarLinkMeusAnimes(titulo, consulta = '') {
-    const tituloNormalizado = `${titulo || ''} ${consulta || ''}`
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .toLowerCase();
+function gerarLinkMeusAnimes(titulo) {
+    const termo = String(titulo || '').trim();
+    return `${LINK_MEUS_ANIMES}?s=${encodeURIComponent(termo)}`;
+}
 
-    // Usa o episódio fornecido quando a busca for pelo anime indicado pelo usuário.
-    if (tituloNormalizado.includes('slime taoshite') && tituloNormalizado.includes('level max')) {
-        return LINK_MEUS_ANIMES_SLIME_EP7;
+function limparBuscaAnime(termo) {
+    return String(termo || '')
+        .replace(/\b(?:epis[oó]dio|episode|ep)[\s._:#-]*#?\s*\d+\b/gi, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
+function numeroEpisodioSolicitado(termo) {
+    const match = String(termo || '').match(/\b(?:epis[oó]dio|episode|ep)[\s._:#-]*#?\s*(\d+)\b/i);
+    return match ? Number(match[1]) : null;
+}
+
+function linkInternoMeusAnimes(href, prefixo) {
+    try {
+        const url = new URL(href, LINK_MEUS_ANIMES);
+        const hostValido = ['meusanimes.blog', 'www.meusanimes.blog'].includes(url.hostname.toLowerCase());
+        const caminhoValido = new RegExp(`^/${prefixo}/[^/]+/?$`, 'i').test(url.pathname);
+        return hostValido && caminhoValido ? url.href : null;
+    } catch {
+        return null;
+    }
+}
+
+async function carregarResultadosMeusAnimes(termo, limite = 5) {
+    const searchUrl = gerarLinkMeusAnimes(termo);
+    const response = await axios.get(searchUrl, {
+        responseType: 'text',
+        timeout: 18000,
+        maxContentLength: 5 * 1024 * 1024,
+        headers: {
+            'User-Agent': 'Mozilla/5.0 (compatible; WhiteLotusTelegramBot/1.0)',
+            Accept: 'text/html,application/xhtml+xml'
+        }
+    });
+    const $ = cheerio.load(response.data);
+    const vistos = new Set();
+    const resultados = [];
+
+    $('a[href]').each((_, elemento) => {
+        const href = linkInternoMeusAnimes($(elemento).attr('href'), 'a');
+        if (!href || vistos.has(href)) return;
+
+        const titulo = (
+            $(elemento).find('img').attr('alt') ||
+            $(elemento).attr('title') ||
+            $(elemento).text() ||
+            new URL(href).pathname.split('/').filter(Boolean).pop().replace(/-/g, ' ')
+        ).replace(/\s+/g, ' ').trim();
+        if (!titulo) return;
+
+        vistos.add(href);
+        resultados.push({ titulo, url: href });
+    });
+
+    return { searchUrl, resultados: resultados.slice(0, limite) };
+}
+
+async function carregarEpisodiosMeusAnimes(animeUrl, episodioSolicitado = null, limite = 5) {
+    const response = await axios.get(animeUrl, {
+        responseType: 'text',
+        timeout: 18000,
+        maxContentLength: 8 * 1024 * 1024,
+        headers: {
+            'User-Agent': 'Mozilla/5.0 (compatible; WhiteLotusTelegramBot/1.0)',
+            Accept: 'text/html,application/xhtml+xml'
+        }
+    });
+    const $ = cheerio.load(response.data);
+    const vistos = new Set();
+    const episodios = [];
+
+    $('a[href]').each((_, elemento) => {
+        const url = linkInternoMeusAnimes($(elemento).attr('href'), 'e');
+        if (!url || vistos.has(url)) return;
+
+        const rotulo = ($(elemento).text() || $(elemento).attr('title') || '').replace(/\s+/g, ' ').trim();
+        const match = `${rotulo} ${url}`.match(/(?:epis[oó]dio|episode|ep)[\s._:#-]*(\d+)/i);
+        const numero = match ? Number(match[1]) : null;
+        const titulo = rotulo || (numero ? `Episódio ${numero}` : 'Assistir episódio');
+        vistos.add(url);
+        episodios.push({ titulo, numero, url });
+    });
+
+    if (episodioSolicitado) {
+        const encontrados = episodios.filter(episodio => episodio.numero === episodioSolicitado);
+        if (encontrados.length) return encontrados.slice(0, limite);
+    }
+    return episodios.slice(-limite).reverse();
+}
+
+function nomeArquivoSeguro(nome) {
+    const limpo = path.basename(String(nome || 'arquivo.bin')).replace(/[\\\r\n]/g, '_').replace(/[^\w.() -]/g, '_');
+    return limpo.slice(0, 140) || 'arquivo.bin';
+}
+
+function ipv4Publico(ip) {
+    const partes = ip.split('.').map(Number);
+    if (partes.length !== 4 || partes.some(n => !Number.isInteger(n) || n < 0 || n > 255)) return false;
+    const [a, b] = partes;
+    return !(a === 0 || a === 10 || a === 127 || a >= 224 ||
+        (a === 100 && b >= 64 && b <= 127) ||
+        (a === 169 && b === 254) ||
+        (a === 172 && b >= 16 && b <= 31) ||
+        (a === 192 && (b === 0 || b === 168)) ||
+        (a === 198 && (b === 18 || b === 19 || b === 51)) ||
+        (a === 203 && b === 0));
+}
+
+function ipPublico(ip) {
+    const versao = net.isIP(ip);
+    if (versao === 4) return ipv4Publico(ip);
+    if (versao === 6) {
+        const normalizado = ip.toLowerCase();
+        if (normalizado.startsWith('::ffff:')) return ipv4Publico(normalizado.slice(7));
+        return !(
+            normalizado === '::' || normalizado === '::1' ||
+            normalizado.startsWith('fc') || normalizado.startsWith('fd') ||
+            normalizado.startsWith('fe8') || normalizado.startsWith('fe9') ||
+            normalizado.startsWith('fea') || normalizado.startsWith('feb') ||
+            normalizado.startsWith('ff')
+        );
+    }
+    return false;
+}
+
+async function validarUrlPublica(urlInformada) {
+    let url;
+    try {
+        url = new URL(urlInformada);
+    } catch {
+        throw new Error('Informe um link HTTPS válido e direto para o arquivo.');
+    }
+    if (url.protocol !== 'https:' || url.username || url.password) {
+        throw new Error('O link precisa ser HTTPS público, sem credenciais embutidas.');
     }
 
-    const termo = String(titulo || consulta || '').trim();
-    return `${LINK_MEUS_ANIMES}?s=${encodeURIComponent(termo)}`;
+    const host = url.hostname.toLowerCase();
+    if (host === 'localhost' || host.endsWith('.localhost') || host.endsWith('.local') || host.endsWith('.internal')) {
+        throw new Error('Esse endereço não pode ser usado como origem do arquivo.');
+    }
+    const enderecos = net.isIP(host) ? [{ address: host }] : await dns.lookup(host, { all: true });
+    if (!enderecos.length || enderecos.some(item => !ipPublico(item.address))) {
+        throw new Error('O link precisa apontar para um endereço público.');
+    }
+    return url.href;
+}
+
+async function baixarParaArquivoTemporario(url, filename, rejeitarPaginaHtml = false) {
+    const response = await axios.get(url, {
+        responseType: 'stream',
+        timeout: 5 * 60 * 1000,
+        maxContentLength: MAX_GERARLINK_BYTES,
+        maxRedirects: 3,
+        beforeRedirect: options => {
+            const host = String(options.hostname || '').replace(/^\\[|\\]$/g, '').toLowerCase();
+            const isLocal = host === 'localhost' || host.endsWith('.localhost') || host.endsWith('.local') || host.endsWith('.internal');
+            if (options.protocol !== 'https:' || isLocal || (net.isIP(host) && !ipPublico(host))) {
+                throw new Error('O redirecionamento do arquivo apontou para um endereço não permitido.');
+            }
+        },
+        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; WhiteLotusTelegramBot/1.0)' }
+    });
+    const contentType = String(response.headers['content-type'] || '').toLowerCase();
+    if (rejeitarPaginaHtml && contentType.includes('text/html')) {
+        response.data.destroy();
+        throw new Error('O endereço retornou uma página, não um link direto de arquivo.');
+    }
+    const contentLength = Number(response.headers['content-length'] || 0);
+    if (contentLength > MAX_GERARLINK_BYTES) {
+        response.data.destroy();
+        throw new Error(`O arquivo ultrapassa o limite configurado de ${MAX_GERARLINK_MB} MB.`);
+    }
+
+    const caminho = path.join(os.tmpdir(), `white-lotus-${crypto.randomUUID()}-${nomeArquivoSeguro(filename)}`);
+    let tamanho = 0;
+    response.data.on('data', bloco => {
+        tamanho += bloco.length;
+        if (tamanho > MAX_GERARLINK_BYTES) {
+            response.data.destroy(new Error(`O arquivo ultrapassa o limite configurado de ${MAX_GERARLINK_MB} MB.`));
+        }
+    });
+    try {
+        await pipeline(response.data, fs.createWriteStream(caminho, { flags: 'wx' }));
+        if (tamanho === 0) throw new Error('O arquivo está vazio ou o link não retornou conteúdo.');
+        return {
+            caminho,
+            tamanho,
+            contentType
+        };
+    } catch (error) {
+        fs.removeSync(caminho);
+        throw error;
+    }
 }
 
 if (!TOKEN_TG) {
@@ -44,7 +238,10 @@ if (!TOKEN_TG) {
     process.exit(1);
 }
 
-const bot = new Telegraf(TOKEN_TG);
+const bot = new Telegraf(TOKEN_TG, {
+    telegram: { apiRoot: TELEGRAM_API_ROOT },
+    handlerTimeout: 10 * 60 * 1000
+});
 
 // ====== TRATAMENTO GLOBAL DE ERROS E SANITIZAÇÃO MARKDOWN ======
 function sanitizeMd(str) {
@@ -3308,10 +3505,14 @@ bot.action(/^cris_p_(.+)$/, async (ctx) => {
 // Botões de ajuda rápida
 bot.action('cmd_gerarlink', async (ctx) => {
     await ctx.answerCbQuery();
-    await ctx.reply('🔗 *Gerar Link de Mídia*\n\n• Mande foto, vídeo, áudio ou documento na legenda com `/gerarlink` ou `©gerarlink`\n• Ou responda a uma mídia com `gerarlink` / `/gerarlink`.', { parse_mode: 'Markdown' });
+    await ctx.reply(
+        `🔗 Gerar link\n\nEnvie/responda a uma mídia com /gerarlink.\n` +
+        `Para arquivos maiores, use /gerarlink <link HTTPS direto>.\nLimite configurado: ${MAX_GERARLINK_MB} MB.\n` +
+        'A API pública do Telegram limita o download de mídias enviadas ao bot a 20 MB; para arquivos maiores, use o link direto ou configure um Bot API local.'
+    );
 });
 bot.action('cmd_ping', async (ctx) => { await ctx.answerCbQuery('🏓 Pong!'); await ctx.reply('🏓 *Pong!* Bot online! 🪷', { parse_mode: 'Markdown' }); });
-bot.action('cmd_anime_buscar', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('📺 Use: `/assistir <nome do anime>` ou `/anime <nome>`\nEx: `/assistir Naruto Shippuden`', { parse_mode: 'Markdown' }); });
+bot.action('cmd_anime_buscar', async (ctx) => { await ctx.answerCbQuery(); await ctx.reply('📺 Use: `/assistir <nome do anime>` ou `/anime <nome>`\nO bot pesquisa o catálogo e mostra os links dos títulos e episódios.\nEx: `/assistir Naruto Shippuden ep 7`', { parse_mode: 'Markdown' }); });
 bot.action('cmd_anime_recentes', async (ctx) => {
     await ctx.answerCbQuery();
     try {
@@ -3734,7 +3935,7 @@ bot.on(['text', 'photo', 'video', 'audio', 'voice', 'document', 'sticker', 'anim
 /simi <texto> — Chatbot SimSimi
 /letra <música> — Letras de músicas\n
 *🍙 ANIMES & STREAMING*
-/assistir <anime> — Busca anime com botões pra assistir
+/assistir <anime> — Pesquisa no Meus Animes e mostra episódios com botões
 /anirecente — Animes da temporada
 /aniinfo <anime> — Informações detalhadas\n
 *🔴 POKÉDEX & POKÉMON*
@@ -3752,7 +3953,7 @@ bot.on(['text', 'photo', 'video', 'audio', 'voice', 'document', 'sticker', 'anim
 /shazam — Identifica música de áudio respondido\n
 *🎨 STICKERS & MÍDIA*
 /pacote — Gerenciador de figurinhas WhatsApp
-/gerarlink — Gera link público permanente de qualquer mídia
+/gerarlink — Gera link público de mídia (até ${MAX_GERARLINK_MB} MB ou via URL direta)
 /toimg — Converte figurinha em foto
 /togif — Converte sticker/vídeo em GIF
 /brat <texto> — Figurinha estilo Brat\n
@@ -4274,11 +4475,11 @@ bot.on(['text', 'photo', 'video', 'audio', 'voice', 'document', 'sticker', 'anim
             case 'assistir': case 'assistiranime': case 'anime': case 'buscaranime': case 'playanime': case 'watchanime': case 'sushianimes': case 'animes': {
                 if (!q) return ctx.reply(`🍙 *Assistir Anime*\n\nUse: \`/assistir <nome do anime>\`\nEx: \`/assistir Naruto Shippuden\``, { parse_mode: 'Markdown' });
                 
-                await ctx.reply('🔍 Buscando anime e gerando links de streaming...');
+                await ctx.reply('🔎 Pesquisando o anime e seus episódios no catálogo do Meus Animes...');
 
                 let title = q;
                 let titleEng = '';
-                let synopsis = 'Assista aos episódios completos online em português nos servidores de streaming abaixo.';
+                let synopsis = 'Use os botões abaixo para abrir os títulos e episódios encontrados no Meus Animes.';
                 let score = 'N/A';
                 let episodes = '?';
                 let year = '?';
@@ -4314,32 +4515,87 @@ bot.on(['text', 'photo', 'video', 'audio', 'voice', 'document', 'sticker', 'anim
                     } catch {}
                 }
 
-                const linkMeusAnimes = gerarLinkMeusAnimes(title, q);
-                const linkYoutube = `https://www.youtube.com/results?search_query=${encodeURIComponent(title + ' anime episodios dublado legendado')}`;
-                const linkGoogle = `https://www.google.com/search?q=${encodeURIComponent('assistir ' + title + ' anime online dublado legendado')}`;
+                const termoBusca = limparBuscaAnime(q) || q;
+                const episodioSolicitado = numeroEpisodioSolicitado(q);
+                let buscaMeusAnimes = {
+                    searchUrl: gerarLinkMeusAnimes(termoBusca),
+                    resultados: []
+                };
 
-                let txt = `🍙 *${title}*${titleEng && titleEng !== title ? ` (${titleEng})` : ''}\n\n`;
-                txt += `📝 *Sinopse:* ${synopsis}\n\n`;
-                txt += `⭐ *Nota:* ${score} | 📺 *Episódios:* ${episodes} | 📅 *Ano:* ${year}\n`;
-                txt += `🏷️ *Gêneros:* ${genres}\n\n`;
-                txt += `📺 *Onde assistir em Português:*\n`;
-                txt += `• [Assistir no Meus Animes](${linkMeusAnimes})\n`;
-                txt += `• [Buscar episódios / trailer no YouTube](${linkYoutube})\n`;
-                txt += `• [Buscar no Google](${linkGoogle})\n`;
+                const termosParaBuscar = [...new Set([termoBusca, title].filter(Boolean))];
+                for (const termo of termosParaBuscar) {
+                    try {
+                        buscaMeusAnimes = await carregarResultadosMeusAnimes(termo, 5);
+                        if (buscaMeusAnimes.resultados.length) break;
+                    } catch (erroBusca) {
+                        console.warn('[MeusAnimes busca]', erroBusca?.message || erroBusca);
+                    }
+                }
 
-                const inlineButtons = Markup.inlineKeyboard([
-                    [Markup.button.url('📺 Meus Animes', linkMeusAnimes)],
-                    [
-                        Markup.button.url('🎥 YouTube', linkYoutube),
-                        Markup.button.url('🔍 Google', linkGoogle)
-                    ]
-                ]);
+                let episodiosMeusAnimes = [];
+                if (buscaMeusAnimes.resultados[0]) {
+                    try {
+                        episodiosMeusAnimes = await carregarEpisodiosMeusAnimes(
+                            buscaMeusAnimes.resultados[0].url,
+                            episodioSolicitado,
+                            5
+                        );
+                    } catch (erroEpisodios) {
+                        console.warn('[MeusAnimes episódios]', erroEpisodios?.message || erroEpisodios);
+                    }
+                }
+
+                const infoTxt = `🍙 *${sanitizeMd(title)}*${titleEng && titleEng !== title ? ` (${sanitizeMd(titleEng)})` : ''}\n\n` +
+                    `📝 *Sinopse:* ${sanitizeMd(synopsis)}\n\n` +
+                    `⭐ *Nota:* ${score} | 📺 *Episódios:* ${episodes} | 📅 *Ano:* ${year}\n` +
+                    `🏷️ *Gêneros:* ${sanitizeMd(genres)}`;
 
                 if (posterUrl) {
-                    await ctx.replyWithPhoto({ url: posterUrl }, { caption: txt, parse_mode: 'Markdown', ...inlineButtons });
+                    try {
+                        await ctx.replyWithPhoto({ url: posterUrl }, { caption: infoTxt, parse_mode: 'Markdown' });
+                    } catch {
+                        await ctx.reply(infoTxt, { parse_mode: 'Markdown' });
+                    }
                 } else {
-                    await ctx.reply(txt, { parse_mode: 'Markdown', ...inlineButtons });
+                    await ctx.reply(infoTxt, { parse_mode: 'Markdown' });
                 }
+
+                let buscaTxt = `🔎 *Pesquisa no Meus Animes:* ${sanitizeMd(termoBusca)}\n\n`;
+                const botoesMeusAnimes = [[Markup.button.url('🔎 Abrir busca no Meus Animes', buscaMeusAnimes.searchUrl)]];
+
+                if (buscaMeusAnimes.resultados.length) {
+                    buscaMeusAnimes.resultados.forEach((resultado, indice) => {
+                        buscaTxt += `*${indice + 1}.* [${sanitizeMd(resultado.titulo)}](${resultado.url})\n`;
+                        const rotuloBotao = `📚 ${sanitizeMd(resultado.titulo)}`.slice(0, 55);
+                        botoesMeusAnimes.push([Markup.button.url(rotuloBotao, resultado.url)]);
+                    });
+
+                    if (episodiosMeusAnimes.length) {
+                        const tituloAnime = sanitizeMd(buscaMeusAnimes.resultados[0].titulo);
+                        buscaTxt += `\n🎬 *Episódios de ${tituloAnime}:*\n`;
+                        episodiosMeusAnimes.forEach(episodio => {
+                            const rotulo = episodio.numero ? `Episódio ${episodio.numero}` : sanitizeMd(episodio.titulo);
+                            buscaTxt += `• [${rotulo}](${episodio.url})\n`;
+                        });
+
+                        for (let i = 0; i < episodiosMeusAnimes.length; i += 2) {
+                            const linha = episodiosMeusAnimes.slice(i, i + 2).map(episodio => {
+                                const rotulo = episodio.numero ? `▶️ Ep. ${episodio.numero}` : `▶️ ${sanitizeMd(episodio.titulo)}`;
+                                return Markup.button.url(rotulo.slice(0, 55), episodio.url);
+                            });
+                            botoesMeusAnimes.push(linha);
+                        }
+                    } else if (episodioSolicitado) {
+                        buscaTxt += `\n⚠️ Não encontrei o episódio ${episodioSolicitado} na lista do site.\n`;
+                    }
+                } else {
+                    buscaTxt += 'Não achei um título correspondente agora. Use o botão abaixo para abrir os resultados do site.\n';
+                }
+
+                await ctx.reply(buscaTxt, {
+                    parse_mode: 'Markdown',
+                    ...Markup.inlineKeyboard(botoesMeusAnimes)
+                });
                 break;
             }
 
@@ -4377,7 +4633,7 @@ bot.on(['text', 'photo', 'video', 'audio', 'voice', 'document', 'sticker', 'anim
                         `📅 *Status:* ${a.status || 'N/A'}\n` +
                         `🏷️ *Gêneros:* ${a.genres?.map(g => g.name).join(', ') || 'N/A'}\n\n` +
                         `🔗 [Página no MyAnimeList](${a.url})\n` +
-                        `📺 [Assistir no Meus Animes](${gerarLinkMeusAnimes(a.title, q)})`;
+                        `📺 [Assistir no Meus Animes](${gerarLinkMeusAnimes(q || a.title)})`;
 
                     if (a.images?.jpg?.large_image_url) {
                         await ctx.replyWithPhoto({ url: a.images.jpg.large_image_url }, { caption: txt, parse_mode: 'Markdown' });
@@ -4564,111 +4820,108 @@ bot.on(['text', 'photo', 'video', 'audio', 'voice', 'document', 'sticker', 'anim
                 break;
             }
 
-            // ── GERAR LINK (FIXED) ────────────────────────
+            // ── GERAR LINK (upload por stream, compatível com arquivos grandes) ──
             case 'gerarlink': case 'link': case 'upload': {
+                let tempPath = null;
                 try {
                     let mediaObj = null;
                     let mediaType = '';
-
+                    let sourceUrl = null;
                     const msg = ctx.message;
-                    if (msg.photo) {
-                        mediaObj = msg.photo[msg.photo.length - 1];
-                        mediaType = 'foto';
-                    } else if (msg.video) {
-                        mediaObj = msg.video;
-                        mediaType = 'video';
-                    } else if (msg.audio) {
-                        mediaObj = msg.audio;
-                        mediaType = 'audio';
-                    } else if (msg.voice) {
-                        mediaObj = msg.voice;
-                        mediaType = 'voz';
-                    } else if (msg.document) {
-                        mediaObj = msg.document;
-                        mediaType = msg.document.file_name || 'documento';
-                    } else if (msg.sticker) {
-                        mediaObj = msg.sticker;
-                        mediaType = 'figurinha';
-                    } else if (msg.animation) {
-                        mediaObj = msg.animation;
-                        mediaType = 'gif';
+
+                    const detectarMidia = (mensagem) => {
+                        if (!mensagem) return null;
+                        if (mensagem.photo) return { obj: mensagem.photo[mensagem.photo.length - 1], tipo: 'foto' };
+                        if (mensagem.video) return { obj: mensagem.video, tipo: 'vídeo' };
+                        if (mensagem.audio) return { obj: mensagem.audio, tipo: 'áudio' };
+                        if (mensagem.voice) return { obj: mensagem.voice, tipo: 'voz' };
+                        if (mensagem.document) return { obj: mensagem.document, tipo: 'documento' };
+                        if (mensagem.sticker) return { obj: mensagem.sticker, tipo: 'figurinha' };
+                        if (mensagem.animation) return { obj: mensagem.animation, tipo: 'GIF' };
+                        return null;
+                    };
+
+                    const midiaEncontrada = detectarMidia(msg) || detectarMidia(msg.reply_to_message);
+                    if (midiaEncontrada) {
+                        mediaObj = midiaEncontrada.obj;
+                        mediaType = midiaEncontrada.tipo;
                     }
 
-                    if (!mediaObj && msg.reply_to_message) {
-                        const replied = msg.reply_to_message;
-                        if (replied.photo) {
-                            mediaObj = replied.photo[replied.photo.length - 1];
-                            mediaType = 'foto';
-                        } else if (replied.video) {
-                            mediaObj = replied.video;
-                            mediaType = 'video';
-                        } else if (replied.audio) {
-                            mediaObj = replied.audio;
-                            mediaType = 'audio';
-                        } else if (replied.voice) {
-                            mediaObj = replied.voice;
-                            mediaType = 'voz';
-                        } else if (replied.document) {
-                            mediaObj = replied.document;
-                            mediaType = replied.document.file_name || 'documento';
-                        } else if (replied.sticker) {
-                            mediaObj = replied.sticker;
-                            mediaType = 'figurinha';
-                        } else if (replied.animation) {
-                            mediaObj = replied.animation;
-                            mediaType = 'gif';
-                        }
+                    if (!mediaObj && /^https?:\/\//i.test(q)) {
+                        sourceUrl = await validarUrlPublica(q);
+                        mediaType = 'arquivo por URL';
                     }
 
-                    if (!mediaObj) {
+                    if (!mediaObj && !sourceUrl) {
                         return ctx.reply(
-                            '🔗 *Gerar Link de Mídia*\n\n' +
-                            '• Mande uma foto, vídeo, áudio ou documento na legenda com `/gerarlink` ou `gerarlink`\n' +
-                            '• Ou responda a uma mensagem de mídia com `/gerarlink` ou `gerarlink`.',
-                            { parse_mode: 'Markdown' }
+                            '🔗 Gerar link de arquivo\n\n' +
+                            '• Responda a uma mídia ou envie uma mídia com a legenda /gerarlink.\n' +
+                            '• Para arquivos grandes, use: /gerarlink https://link-direto-do-arquivo\n' +
+                            `• Limite configurado para download/upload: ${MAX_GERARLINK_MB} MB.`
                         );
                     }
 
-                    await ctx.reply('⏳ Baixando arquivo e gerando link público...');
-
-                    const fileLink = await ctx.telegram.getFileLink(mediaObj.file_id);
-                    const fileUrl = typeof fileLink === 'string' ? fileLink : (fileLink.href || String(fileLink));
-
-                    const resp = await axios.get(fileUrl, { responseType: 'arraybuffer', timeout: 35000 });
-                    const buffer = Buffer.from(resp.data);
-
-                    let ext = '.bin';
-                    if (mediaType === 'foto') ext = '.jpg';
-                    else if (mediaType === 'video') ext = '.mp4';
-                    else if (mediaType === 'audio' || mediaType === 'voz') ext = '.mp3';
-                    else if (mediaType === 'gif') ext = '.gif';
-                    else if (mediaType === 'figurinha') ext = '.webp';
-
-                    const filename = mediaObj.file_name || `midia_${Date.now()}${ext}`;
-
-                    let linkUrl;
-                    try {
-                        linkUrl = await generateLink(buffer, filename);
-                    } catch (errGen) {
-                        linkUrl = fileUrl;
+                    if (mediaObj?.file_size && mediaObj.file_size > MAX_GERARLINK_BYTES) {
+                        return ctx.reply(`❌ O arquivo ultrapassa o limite configurado de ${MAX_GERARLINK_MB} MB.`);
                     }
 
-                    const sizeKB = mediaObj.file_size ? `${(mediaObj.file_size / 1024).toFixed(1)} KB` : `${(buffer.length / 1024).toFixed(1)} KB`;
+                    const usaBotApiNuvem = /^https?:\/\/api\.telegram\.org$/i.test(TELEGRAM_API_ROOT);
+                    if (mediaObj?.file_size > TELEGRAM_CLOUD_DOWNLOAD_LIMIT && usaBotApiNuvem) {
+                        return ctx.reply(
+                            '⚠️ A API pública do Telegram só permite que o bot baixe arquivos de até 20 MB.\n\n' +
+                            'Para arquivos maiores, envie um link HTTPS direto com /gerarlink <link> ou configure TELEGRAM_API_ROOT com um servidor local do Bot API.'
+                        );
+                    }
 
-                    const linkBtn = Markup.inlineKeyboard([
-                        [Markup.button.url('🔗 Abrir Link Directo', linkUrl)]
-                    ]);
+                    await ctx.reply('⏳ Baixando em partes e gerando o link público...');
 
+                    let filename;
+                    if (mediaObj) {
+                        const fileLink = await ctx.telegram.getFileLink(mediaObj.file_id);
+                        sourceUrl = typeof fileLink === 'string' ? fileLink : (fileLink.href || String(fileLink));
+                        const ext = mediaType === 'foto' ? '.jpg' :
+                            mediaType === 'vídeo' ? '.mp4' :
+                            mediaType === 'áudio' ? '.mp3' :
+                            mediaType === 'voz' ? '.ogg' :
+                            mediaType === 'GIF' ? '.gif' :
+                            mediaType === 'figurinha' ? '.webp' : '.bin';
+                        filename = mediaObj.file_name || `midia_${Date.now()}${ext}`;
+                    } else {
+                        const url = new URL(sourceUrl);
+                        const nomeUrl = decodeURIComponent(path.basename(url.pathname));
+                        filename = nomeUrl || `arquivo_${Date.now()}.bin`;
+                    }
+                    filename = nomeArquivoSeguro(filename);
+
+                    const arquivo = await baixarParaArquivoTemporario(sourceUrl, filename, !mediaObj);
+                    tempPath = arquivo.caminho;
+
+                    const linkUrl = await generateLink(tempPath, filename);
+                    const tamanhoMB = (arquivo.tamanho / (1024 * 1024)).toFixed(2);
                     await ctx.reply(
-                        `✅ *Link gerado com sucesso!*\n\n` +
-                        `📄 *Tipo:* \`${mediaType}\`\n` +
-                        `📦 *Tamanho:* ${sizeKB}\n\n` +
-                        `🔗 *Link:* ${linkUrl}`,
-                        { parse_mode: 'Markdown', ...linkBtn }
+                        `✅ Link gerado com sucesso!\n\n` +
+                        `📄 Tipo: ${mediaType}\n` +
+                        `📦 Tamanho: ${tamanhoMB} MB\n` +
+                        `🔗 ${linkUrl}`,
+                        { ...Markup.inlineKeyboard([[Markup.button.url('🔗 Abrir link', linkUrl)]]) }
                     );
                 } catch (e) {
                     console.error('[ERRO gerarlink]:', e?.message || e);
-                    ctx.reply('❌ Erro ao gerar link para esta mídia. Verifique se o arquivo não passa de 20MB.');
+                    const mensagem = String(e?.message || '');
+                    if (mensagem.includes('ultrapassa o limite')) {
+                        await ctx.reply(`❌ ${mensagem}`);
+                    } else if (mensagem.includes('link HTTPS válido') || mensagem.includes('endereço') || mensagem.includes('HTTPS público') || mensagem.includes('redirecionamento')) {
+                        await ctx.reply(`❌ ${mensagem}`);
+                    } else if (mensagem.includes('página, não um link direto')) {
+                        await ctx.reply('❌ Esse endereço abre uma página, não baixa o arquivo diretamente. Envie o link HTTPS direto de download.');
+                    } else {
+                        await ctx.reply(
+                            '❌ Não consegui baixar ou hospedar o arquivo. Verifique se o link é direto, se o tamanho não ultrapassa ' +
+                            `${MAX_GERARLINK_MB} MB e tente novamente.`
+                        );
+                    }
+                } finally {
+                    if (tempPath) fs.removeSync(tempPath);
                 }
                 break;
             }

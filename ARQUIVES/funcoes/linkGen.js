@@ -1,5 +1,6 @@
 const { uploadToCatbox, uploadToFileIo, uploadTo0x0 } = require('./uploaders.js');
 const fs = require('fs');
+const path = require('path');
 
 function getExtensionFromMime(mimeType) {
     const mimeMap = {
@@ -19,46 +20,56 @@ function getExtensionFromMime(mimeType) {
 }
 
 async function generateLink(media, filename = 'arquivo') {
-    try {
-        return await uploadToCatbox(media, filename);
-    } catch (error1) {
+    const falhas = [];
+    const provedores = [
+        ['Catbox', uploadToCatbox],
+        ['0x0.st', uploadTo0x0],
+        ['File.io', uploadToFileIo]
+    ];
+
+    for (const [nome, upload] of provedores) {
         try {
-            return await uploadToFileIo(media, filename);
-        } catch (error2) {
-            try {
-                return await uploadTo0x0(media, filename);
-            } catch (error3) {
-                throw new Error(`Erro ao gerar link: ${error3.message}`);
-            }
+            return await upload(media, filename);
+        } catch (error) {
+            falhas.push(`${nome}: ${error?.message || error}`);
         }
     }
+
+    throw new Error(`Nenhum host aceitou o arquivo (${falhas.join(' | ')})`);
 }
 
 async function processFileToLink(fileData, fileType = 'arquivo') {
     try {
-        let buffer, filename;
+        let media, filename, size;
         if (Buffer.isBuffer(fileData)) {
-            buffer = fileData;
+            media = fileData;
             filename = `${fileType}_${Date.now()}.bin`;
+            size = media.length;
         } else if (typeof fileData === 'string') {
-            if (fileData.startsWith('http')) {
+            if (/^https?:\/\//i.test(fileData)) {
                 const { getBuffer } = require('./functions.js');
-                buffer = await getBuffer(fileData);
-                filename = fileData.split('/').pop().split('?')[0] || `${fileType}`;
+                media = await getBuffer(fileData);
+                filename = path.basename(new URL(fileData).pathname) || `${fileType}.bin`;
+                size = media.length;
             } else if (fileData.startsWith('data:')) {
                 const matches = fileData.match(/data:(.+?);base64,(.+)/);
                 if (matches) {
-                    buffer = Buffer.from(matches[2], 'base64');
+                    media = Buffer.from(matches[2], 'base64');
                     filename = `${fileType}_${Date.now()}${getExtensionFromMime(matches[1])}`;
+                    size = media.length;
                 }
             } else {
-                buffer = fs.readFileSync(fileData);
-                filename = fileData.split('/').pop();
+                const stat = fs.statSync(fileData);
+                if (!stat.isFile()) throw new Error('O caminho informado não é um arquivo');
+                media = fileData;
+                filename = path.basename(fileData);
+                size = stat.size;
             }
         }
-        if (!buffer) throw new Error('Formato não suportado');
-        const link = await generateLink(buffer, filename);
-        return { success: true, link, filename, size: buffer.length };
+
+        if (!media) throw new Error('Formato não suportado');
+        const link = await generateLink(media, filename);
+        return { success: true, link, filename, size };
     } catch (error) {
         return { success: false, error: error.message };
     }
