@@ -21,6 +21,23 @@ const LINK_LIVRO_REGRAS = 'https://dl2.bibliotecaelfica.org/dl/eyJwaWQiOjI3OTcxL
 const LINK_BESTIARIO_WIKI = 'https://ordemparanormal.fandom.com/wiki/Besti%C3%A1rio';
 const LINK_ELEMENTOS_WIKI = 'https://ordemparanormal.fandom.com/wiki/Elementos_do_Outro_Lado';
 const LINK_ITENS_AMALDICOADOS_WIKI = 'https://ordemparanormal.fandom.com/wiki/Itens_Amaldi%C3%A7oados';
+const LINK_MEUS_ANIMES = 'https://meusanimes.blog/';
+const LINK_MEUS_ANIMES_SLIME_EP7 = 'https://meusanimes.blog/e/slime-taoshite-300-nen-shiranai-uchi-ni-level-max-ni-nattemashita-dublado-episodio-7/';
+
+function gerarLinkMeusAnimes(titulo, consulta = '') {
+    const tituloNormalizado = `${titulo || ''} ${consulta || ''}`
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase();
+
+    // Usa o episódio fornecido quando a busca for pelo anime indicado pelo usuário.
+    if (tituloNormalizado.includes('slime taoshite') && tituloNormalizado.includes('level max')) {
+        return LINK_MEUS_ANIMES_SLIME_EP7;
+    }
+
+    const termo = String(titulo || consulta || '').trim();
+    return `${LINK_MEUS_ANIMES}?s=${encodeURIComponent(termo)}`;
+}
 
 if (!TOKEN_TG) {
     console.error(chalk.red('[ERRO] TELEGRAM_BOT_TOKEN não definido!'));
@@ -3303,8 +3320,8 @@ bot.action('cmd_anime_recentes', async (ctx) => {
         if (!top?.length) return ctx.reply('❌ Não foi possível carregar os animes recentes.');
         let txt = '🏆 *Animes Recentes e da Temporada:*\n\n';
         top.forEach((a, i) => {
-            const linkAf = `https://animefire.plus/pesquisar/${encodeURIComponent(a.title)}`;
-            txt += `*${i + 1}.* [${a.title}](${a.url}) — ⭐ ${a.score || '?'}\n   📺 [Assistir online](${linkAf})\n\n`;
+            const linkMeusAnimes = gerarLinkMeusAnimes(a.title);
+            txt += `*${i + 1}.* [${a.title}](${a.url}) — ⭐ ${a.score || '?'}\n   📺 [Assistir no Meus Animes](${linkMeusAnimes})\n\n`;
         });
         await ctx.reply(txt, { parse_mode: 'Markdown' });
     } catch { ctx.reply('❌ Erro ao carregar animes recentes.'); }
@@ -4297,12 +4314,7 @@ bot.on(['text', 'photo', 'video', 'audio', 'voice', 'document', 'sticker', 'anim
                     } catch {}
                 }
 
-                const searchEnc = encodeURIComponent(title);
-
-                const linkAnimeFire = `https://animefire.plus/pesquisar/${searchEnc}`;
-                const linkAnimesOnline = `https://animesonline.cc/busca?s=${searchEnc}`;
-                const linkGoyabu = `https://goyabu.org/?s=${searchEnc}`;
-                const linkBetterAnime = `https://betteranime.net/pesquisa?titulo=${searchEnc}`;
+                const linkMeusAnimes = gerarLinkMeusAnimes(title, q);
                 const linkYoutube = `https://www.youtube.com/results?search_query=${encodeURIComponent(title + ' anime episodios dublado legendado')}`;
                 const linkGoogle = `https://www.google.com/search?q=${encodeURIComponent('assistir ' + title + ' anime online dublado legendado')}`;
 
@@ -4310,26 +4322,16 @@ bot.on(['text', 'photo', 'video', 'audio', 'voice', 'document', 'sticker', 'anim
                 txt += `📝 *Sinopse:* ${synopsis}\n\n`;
                 txt += `⭐ *Nota:* ${score} | 📺 *Episódios:* ${episodes} | 📅 *Ano:* ${year}\n`;
                 txt += `🏷️ *Gêneros:* ${genres}\n\n`;
-                txt += `📺 *Onde assistir em Português (Links Diretos):*\n`;
-                txt += `• [Assistir no AnimeFire](${linkAnimeFire})\n`;
-                txt += `• [Assistir no AnimesOnline](${linkAnimesOnline})\n`;
-                txt += `• [Assistir no Goyabu](${linkGoyabu})\n`;
-                txt += `• [Assistir no BetterAnime](${linkBetterAnime})\n`;
-                txt += `• [Buscar Episódios / Trailer no YouTube](${linkYoutube})\n`;
-                txt += `• [Buscar no Google Stream](${linkGoogle})\n`;
+                txt += `📺 *Onde assistir em Português:*\n`;
+                txt += `• [Assistir no Meus Animes](${linkMeusAnimes})\n`;
+                txt += `• [Buscar episódios / trailer no YouTube](${linkYoutube})\n`;
+                txt += `• [Buscar no Google](${linkGoogle})\n`;
 
                 const inlineButtons = Markup.inlineKeyboard([
+                    [Markup.button.url('📺 Meus Animes', linkMeusAnimes)],
                     [
-                        Markup.button.url('📺 AnimeFire', linkAnimeFire),
-                        Markup.button.url('📺 AnimesOnline', linkAnimesOnline)
-                    ],
-                    [
-                        Markup.button.url('📺 Goyabu', linkGoyabu),
-                        Markup.button.url('📺 BetterAnime', linkBetterAnime)
-                    ],
-                    [
-                        Markup.button.url('🎥 YouTube Stream', linkYoutube),
-                        Markup.button.url('🔍 Busca Google', linkGoogle)
+                        Markup.button.url('🎥 YouTube', linkYoutube),
+                        Markup.button.url('🔍 Google', linkGoogle)
                     ]
                 ]);
 
@@ -4350,8 +4352,8 @@ bot.on(['text', 'photo', 'video', 'audio', 'voice', 'document', 'sticker', 'anim
 
                     let txt = '🏆 *Animes Recentes e da Temporada:*\n\n';
                     top.forEach((a, i) => {
-                        const linkAf = `https://animefire.plus/pesquisar/${encodeURIComponent(a.title)}`;
-                        txt += `*${i + 1}.* [${a.title}](${a.url}) — ⭐ ${a.score || '?'}\n   📺 [Assistir online](${linkAf})\n\n`;
+                        const linkMeusAnimes = gerarLinkMeusAnimes(a.title);
+                        txt += `*${i + 1}.* [${a.title}](${a.url}) — ⭐ ${a.score || '?'}\n   📺 [Assistir no Meus Animes](${linkMeusAnimes})\n\n`;
                     });
                     await ctx.reply(txt, { parse_mode: 'Markdown' });
                 } catch (e) {
@@ -4375,7 +4377,7 @@ bot.on(['text', 'photo', 'video', 'audio', 'voice', 'document', 'sticker', 'anim
                         `📅 *Status:* ${a.status || 'N/A'}\n` +
                         `🏷️ *Gêneros:* ${a.genres?.map(g => g.name).join(', ') || 'N/A'}\n\n` +
                         `🔗 [Página no MyAnimeList](${a.url})\n` +
-                        `📺 [Assistir no AnimeFire](https://animefire.plus/pesquisar/${encodeURIComponent(a.title)})`;
+                        `📺 [Assistir no Meus Animes](${gerarLinkMeusAnimes(a.title, q)})`;
 
                     if (a.images?.jpg?.large_image_url) {
                         await ctx.replyWithPhoto({ url: a.images.jpg.large_image_url }, { caption: txt, parse_mode: 'Markdown' });
