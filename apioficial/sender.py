@@ -6,8 +6,11 @@ Config por variáveis de ambiente:
   GRAPH_VERSION    versão da API (padrão v23.0)
   GRAPH_BASE       sobrescreve a base (útil p/ testes com mock)
 """
+import logging
 import os
 import requests
+
+log = logging.getLogger("botfriend-oficial")
 
 TOKEN = os.environ.get("ACCESS_TOKEN", "")
 PHONE_ID = os.environ.get("PHONE_NUMBER_ID", "")
@@ -46,5 +49,8 @@ def marcar_lido(message_id):
 
 def _post(payload):
     r = requests.post(_url(), headers=_headers(), json=payload, timeout=30)
+    if not r.ok:
+        # registra o corpo do erro da Meta (contem code/message exatos) p/ diagnostico
+        log.error("graph %s -> %s", r.status_code, r.text[:1000])
     r.raise_for_status()
     return r.json()
