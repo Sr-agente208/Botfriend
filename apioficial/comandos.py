@@ -495,13 +495,13 @@ PET_BASE = {"atk": 6, "def": 6, "vel": 6, "poder": "🌟 Energia Misteriosa"}
 # ─── Caminhos de evolução (cada estilo de criação vira uma forma diferente!) ───
 CAMINHOS = {
     "guerreiro": {"emoji": "⚔️", "adulto": "Guerreiro", "alfa": "👑 Warlord",
-                  "img_a": "pets/adulto_guerreiro.png", "img_f": "pets/alfa_warlord.png",
+                  "img_a": "pets/adulto_guerreiro.jpg", "img_f": "pets/alfa_warlord.jpg",
                   "desc": "pra quem VENCE BATALHAS na arena"},
     "atleta": {"emoji": "💨", "adulto": "Atleta", "alfa": "👑 Relâmpago",
-               "img_a": "pets/adulto_atleta.png", "img_f": "pets/alfa_relampago.png",
+               "img_a": "pets/adulto_atleta.jpg", "img_f": "pets/alfa_relampago.jpg",
                "desc": "pra quem TREINA pesado todo dia"},
     "fofo": {"emoji": "🧸", "adulto": "Fofura", "alfa": "👑 Divino",
-             "img_a": "pets/adulto_fofo.png", "img_f": "pets/alfa_divino.png",
+             "img_a": "pets/adulto_fofo.jpg", "img_f": "pets/alfa_divino.jpg",
              "desc": "pra quem é bem ALIMENTADO e amado"},
 }
 
@@ -520,7 +520,7 @@ def _pet_img(pet):
         candidatos += [cam["img_f"], cam["img_a"]]
     elif nivel >= 5 and cam:
         candidatos += [cam["img_a"]]
-    candidatos.append("pets/filhote_" + slug + ".png")
+    candidatos.append("pets/filhote_" + slug + ".jpg")
     base = os.path.join(os.path.dirname(os.path.abspath(__file__)), "media")
     for c in candidatos:
         if os.path.isfile(os.path.join(base, c)):

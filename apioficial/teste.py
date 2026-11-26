@@ -241,7 +241,7 @@ print("DBG1 pet:", comandos._conta("u33@s.whatsapp.net")["perfil"].get("pet"), "
 m = comandos.MEDIA_ENVIAR.pop("u33@s.whatsapp.net", None)
 ok(m and m["arquivo"].startswith("pets/filhote_"), "adoção com imagem do filhote")
 import os as _os
-ok(all(_os.path.isfile("media/" + f) for f in ["pets/filhote_cachorro.png", "pets/adulto_guerreiro.png", "pets/adulto_atleta.png", "pets/adulto_fofo.png"]), "imagens de pets no deploy")
+ok(all(_os.path.isfile("media/" + f) for f in ["pets/filhote_cachorro.jpg", "pets/adulto_guerreiro.jpg", "pets/adulto_atleta.jpg", "pets/adulto_fofo.jpg"]), "imagens de pets no deploy (leves)")
 # evolução Nv.5: vitorias=3 → caminho guerreiro
 db = comandos._econ(); _p = db["u33@s.whatsapp.net"]["perfil"]["pet"]; _p.update({"nivel": 4, "xp": 390, "vitorias": 3}); comandos._econ_salva(db)
 r = comandos.responder("©treinar", de="u33@s.whatsapp.net")
@@ -249,8 +249,8 @@ ok("Guerreiro" in r and "caminho" in r.lower(), "Nv.5 escolhe caminho guerreiro 
 ok("EVOLUIU" in r.upper(), "evolução anunciada")
 print("DBG2 r:", repr(r[-160:]), "| MEDIA u33:", comandos.MEDIA_ENVIAR.get("u33@s.whatsapp.net"))
 m = comandos.MEDIA_ENVIAR.pop("u33@s.whatsapp.net", None)
-ok(m and m["arquivo"] == "pets/adulto_guerreiro.png", "imagem da evolução adulto guerreiro")
-ok(m and m["arquivo"] == "pets/adulto_guerreiro.png", "imagem da evolução adulto guerreiro")
+ok(m and m["arquivo"] == "pets/adulto_guerreiro.jpg", "imagem da evolução adulto guerreiro")
+ok(m and m["arquivo"] == "pets/adulto_guerreiro.jpg", "imagem da evolução adulto guerreiro")
 # alfa Nv.10
 db = comandos._econ(); _p = db["u33@s.whatsapp.net"]["perfil"]["pet"]; _p.update({"nivel": 9, "xp": 890, "last_train": 0}); comandos._econ_salva(db)
 r = comandos.responder("©treinar", de="u33@s.whatsapp.net")
