@@ -126,6 +126,14 @@ ok("multa aplicada" in r.lower(), "©roubar no bot pega no flagra")
 ok(depois == antes - 15 or antes < 15, "©roubar cobra multa de 15")
 ok("segurança" in comandos.responder("©roubar morganny", de="u17b@s.whatsapp.net").lower(), "©roubar com alvo")
 ok("tapa" in comandos.responder("©tapa @joão").lower(), "©tapa com alvo com @")
+# --- Lote 6b: GIFs nas interações ---
+for verbo in ["carinho", "abraco", "tapa", "beijo", "mordida", "chutar", "soco", "matar", "sentar"]:
+    u = "gif" + verbo + "@s.whatsapp.net"
+    comandos.responder("©" + verbo, de=u)
+    ok(u in comandos.MEDIA_ENVIAR and comandos.MEDIA_ENVIAR.pop(u)["url"].startswith("http"), "GIF do ©" + verbo + " enfileirado")
+ok("u17b@s.whatsapp.net" not in comandos.MEDIA_ENVIAR, "©roubar não manda GIF")
+comandos.responder("©bebado", de="u18@s.whatsapp.net")
+ok(comandos.MEDIA_ENVIAR.pop("u18@s.whatsapp.net")["url"].endswith(".jpg"), "©bebado manda imagem")
 econ = comandos.responder("©saldo", de="u3@s.whatsapp.net")
 ok("EXTRATO" in econ and "N-Coins" in econ, "©saldo mostra extrato bancário")
 trab1 = comandos.responder("©trabalhar", de="u3@s.whatsapp.net")

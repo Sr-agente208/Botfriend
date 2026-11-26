@@ -80,7 +80,7 @@ def _premio(de, coins=0, xp=0, vitoria=False):
     _econ_salva(db)
     return "\n🎁 +" + str(coins) + " N-Coins · +" + str(xp) + " XP (Nível " + str(p["nivel"]) + ")"
 
-VERSAO = "1.7.0"
+VERSAO = "1.8.0"
 _INICIO = time.time()
 # identidade igual ao bot de grupo (DADOS DO KEISEN/INFO_KEISEN/media/INFO_KEISEN.json)
 NOME_DO_BOT = os.environ.get("NOME_DO_BOT", "WHITE LOTUS")
@@ -206,6 +206,23 @@ REACTION_BOT = {
     "sentar": "\n🤖 AAAAA! Meus componentes! 😱",
 }
 
+# GIFs do keisen (mp4 tocado como GIF no WhatsApp) — mesmo links do bot de grupo
+GIF_INTERACOES = {
+    "carinho": "https://telegra.ph/file/2b6b4f4e38214bd6164ce.mp4",
+    "abraco": "https://files.catbox.moe/ecw188.mp4",
+    "tapa": "https://telegra.ph/file/841664f31eb7539c35a2d.mp4",
+    "beijo": "https://files.catbox.moe/97f8yn.mp4",
+    "mordida": "https://telegra.ph/file/75e4c0273be625a2363ce.mp4",
+    "chutar": "https://telegra.ph/file/d4b2525d2e1aeb33fa626.mp4",
+    "soco": "https://telegra.ph/file/f737009edab409fe7be43.mp4",
+    "matar": "https://telegra.ph/file/1135a19fceefa7074caf8.mp4",
+    "sentar": "https://telegra.ph/file/d695e05443043ff9a254d.mp4",
+}
+GIF_BEBADO = "https://telegra.ph/file/b69ac603e275e610d2c34.jpg"  # imagem
+
+# mídia que o app.py deve mandar junto com a próxima resposta deste chat
+MEDIA_ENVIAR = {}
+
 FACE_DADO = {1: "⚀", 2: "⚁", 3: "⚂", 4: "⚃", 5: "⚄", 6: "⚅"}
 
 VERDADES = [
@@ -280,9 +297,9 @@ MENU = "\n".join([
     "  😏 *©cantada* — uma cantada pronta",
     "  🧠 *©curiosidades* — fato aleatório",
     "  🎲 *©brincadeira* — desafio pra você",
-    "  🥰 *©carinho* · 🤗 *©abraco* · 👋 *©tapa* · 😘 *©beijo* · 🦷 *©mordida*",
+    "  🥰 *Com GIF:* ©carinho · ©abraco · ©tapa · ©beijo · 🦷 ©mordida",
     "  ⚔️ *Com alvo:* ©tapa _@pessoa_ · 💀 ©matar · 🦵 ©chutar · 👊 ©soco · 🪑 ©sentar",
-    "  🥴 *©bebado* · 🦹 *©roubar* (rouba o bot… se conseguir 😏)",
+    "  🥴 *©bebado* (com print!) · 🦹 *©roubar* (rouba o bot… se conseguir 😏)",
     "",
     "🥷 *RPG*",
     "  🗡️ *©rpg* — cria/ver teu herói",
@@ -354,7 +371,7 @@ CONFIG = "\n".join([
     "  ✅ Amor (namorar o bot, casamento!)",
     "  ✅ Utilidades (calc, anotações, verdade/desafio)",
     "  ✅ Núcleo de grupos (sorteio, times, regras)",
-    "  ✅ Interações com alvo (morder, matar, soco, chutar, roubar…)",
+    "  ✅ Interações com GIF (morder, matar, soco, chutar, roubar…)",
     "  ✅ Piadas, conselhos & curiosidades",
     "  ✅ Respostas com estilo 😎",
     "",
@@ -600,6 +617,7 @@ def responder(texto, nome="", de="", grupo=""):
     if cmd in ALIASES_INT:
         cmd = ALIASES_INT[cmd]
     if cmd == "bebado":
+        MEDIA_ENVIAR[de or grupo] = {"url": GIF_BEBADO}
         return (
             "🥴 *" + (nome or "Alguém") + " tá mais bêbado que bot em loop infinito!*\n"
             "🍺 *Nível de álcool:* " + str(random.randint(80, 200)) + "%\n\n"
@@ -632,11 +650,14 @@ def responder(texto, nome="", de="", grupo=""):
         return "🦹 *" + (nome or "Alguém") + " tentou roubar " + alvo_int + "… e os seguranças pegaram no flagra!* 👮💸 _Fugiu sem nada! 😂_"
     if cmd in INTERACOES:
         if alvo_int:
-            return ALVO_TEMPLATES[cmd].format(a=(nome or "Alguém"), v=alvo_int)
-        resp = INTERACOES[cmd] + REACTION_BOT.get(cmd, "")
-        if cmd in ("carinho", "abraco", "beijo"):
-            return resp + ("\n\n_Amo tuas interações, " + nome + "! 💖_" if nome else "")
-        return resp
+            resposta = ALVO_TEMPLATES[cmd].format(a=(nome or "Alguém"), v=alvo_int)
+        else:
+            resposta = INTERACOES[cmd] + REACTION_BOT.get(cmd, "")
+            if cmd in ("carinho", "abraco", "beijo"):
+                resposta += ("\n\n_Amo tuas interações, " + nome + "! 💖_" if nome else "")
+        if (de or grupo) and cmd in GIF_INTERACOES:
+            MEDIA_ENVIAR[grupo or de] = {"url": GIF_INTERACOES[cmd]}
+        return resposta
     if cmd in ("saldo", "coins", "banco", "extrato"):
         if not de:
             return "💵 Manda ©saldo no privado que eu preciso saber quem é você! 😄"

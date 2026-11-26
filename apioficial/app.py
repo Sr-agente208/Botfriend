@@ -124,11 +124,23 @@ def processar(msg, value=None):
         resposta = comandos.responder(None)
 
     if resposta:
+        chat = grupo or de
+        media = comandos.MEDIA_ENVIAR.pop(chat, None)
+        if media:
+            try:
+                if grupo:
+                    sender.enviar_video(grupo, media["url"], resposta, grupo=True)
+                else:
+                    sender.enviar_video(de, media["url"], resposta)
+                log.info("respondi com GIF %s (%s)", chat, mid)
+                return
+            except Exception:
+                log.exception("GIF falhou (%s), cai pro texto", media["url"].split("/")[-1])
         if grupo:
             sender.enviar_grupo(grupo, resposta)
         else:
             sender.enviar_texto(de, resposta)
-        log.info("respondi %s (%s)", grupo or de, mid)
+        log.info("respondi %s (%s)", chat, mid)
 
 
 @app.get("/diag")

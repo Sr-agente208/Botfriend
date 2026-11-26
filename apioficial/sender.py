@@ -50,6 +50,36 @@ def enviar_grupo(group_id, texto):
     return _post(payload)
 
 
+def enviar_video(to, url, legenda="", grupo=False):
+    """Envia vídeo por URL (mp4 curto = aparece estilo GIF, com legenda)."""
+    media = {"link": url}
+    if legenda:
+        media["caption"] = legenda[:1024]
+    payload = {
+        "messaging_product": "whatsapp",
+        "recipient_type": "group" if grupo else "individual",
+        "to": to,
+        "type": "video",
+        "video": media,
+    }
+    return _post(payload)
+
+
+def enviar_imagem(to, url, legenda="", grupo=False):
+    """Envia imagem por URL com legenda opcional."""
+    media = {"link": url}
+    if legenda:
+        media["caption"] = legenda[:1024]
+    payload = {
+        "messaging_product": "whatsapp",
+        "recipient_type": "group" if grupo else "individual",
+        "to": to,
+        "type": "image",
+        "image": media,
+    }
+    return _post(payload)
+
+
 def marcar_lido(message_id):
     """Marca a mensagem como lida (bolinha azul). Falha silenciosamente."""
     payload = {"messaging_product": "whatsapp", "status": "read", "message_id": message_id}
