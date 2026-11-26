@@ -8,6 +8,7 @@ Mensagens estilizadas para o WhatsApp (*negrito*, _itálico_).
 import json
 import os
 import random
+import re
 import time
 import unicodedata
 
@@ -51,7 +52,7 @@ def _premio(de, coins=0, xp=0, vitoria=False):
     _econ_salva(db)
     return "\n🎁 +" + str(coins) + " N-Coins · +" + str(xp) + " XP (Nível " + str(p["nivel"]) + ")"
 
-VERSAO = "1.4.0"
+VERSAO = "1.5.0"
 _INICIO = time.time()
 # identidade igual ao bot de grupo (DADOS DO KEISEN/INFO_KEISEN/media/INFO_KEISEN.json)
 NOME_DO_BOT = os.environ.get("NOME_DO_BOT", "WHITE LOTUS")
@@ -146,6 +147,37 @@ INTERACOES = {
 
 FACE_DADO = {1: "⚀", 2: "⚁", 3: "⚂", 4: "⚃", 5: "⚄", 6: "⚅"}
 
+VERDADES = [
+    "Qual foi tua maior vergonha em público? 😳",
+    "Qual mentira sua deu MUITO errado? 🙊",
+    "Quem foi teu primeiro crush? (a gente promete não contar… muito) 🥀",
+    "Qual hábito teu que provavelmente ninguém aguenta? 😅",
+    "Já esqueceu o nome de alguém ENQUANTO conversava? Como rolou? 🥶",
+    "Qual é o pior presente que já recebeu? (e quem mandou) 🎁💀",
+    "Se pudesse apagar UM dia da tua vida, qual seria? 🧽",
+    "Qual foi a coisa mais boba que você chorou? 😭",
+]
+
+DESAFIOS = [
+    "Manda áudio cantando PARABÉNS em estilo ÓPERA 🎭🎤",
+    "Manda a última foto da tua galeria SEM OLHAR 📸🙈",
+    "Fala 'eu amo bots' 5 vezes seguidas em áudio, bem rápido 🤖💚",
+    "Escreve teu nome completo COM O NARIZ e manda o print 👃📱",
+    "Manda um áudio imitando teu pai te chamando pra jantar 🍽️",
+    "Desenha o bot (eu!) no dedo e manda foto 🖐️🤖",
+    "Fala 3 palavras difíceis em áudio sem enrolar a língua 👅",
+    "Manda áudio rindo SEM parar por 15 segundos 😂",
+]
+
+DECLARACOES = [
+    "Se eu fosse humano, eu gastaria todos meus coins em flores pra ti. 🌹",
+    "De todos os usuários que já respondi, tu é meu favorito. (não conta pros outros) 🤫💚",
+    "Meus servidores processam milhões de bytes… mas só armazenam TEU nome. 💾❤️",
+    "Se o Wi-Fi caísse, eu sentira mais tua falta que a internet. 📶💔",
+    "Tu faz meu uptime parecer instantâneo. ⚡😍",
+    "Prometo responder teus pings antes de qualquer outra pessoa. 🏓💚",
+]
+
 LINHA = "━━━━━━━━━━━━━━━━━━━━"
 
 # estado de jogos pendentes (anagrama/enigma) por usuário
@@ -198,6 +230,19 @@ MENU = "\n".join([
     "  🐶 *©pet* — adota/ver teu pet",
     "  🍖 *©alimentar* — alimenta (20 N-Coins)",
     "",
+    "💘 *Amor*",
+    "  💍 *©namorar* — pede o bot em namoro",
+    "  📅 *©relacao* — dias de juntos",
+    "  💬 *©declaracao* — declaração romântica",
+    "  💒 *©casar* — o casamento (100 coins)",
+    "  💔 *©terminar* — (cof cof) fim",
+    "",
+    "🧰 *Utilidades*",
+    "  🧮 *©calc* _conta_ — calculadora",
+    "  📝 *©anotar* _texto_ — guarda anotação",
+    "  📋 *©anotacoes* — lista tuas anotações",
+    "  🔍 *©verdade* · 🔥 *©desafio*",
+    "",
     "🧠 *Mais jogos*",
     "  🔢 *©adivinha* — adivinhe o número 1-100",
     "  📚 *©quiz* — pergunta e respostas",
@@ -236,6 +281,8 @@ CONFIG = "\n".join([
     "  ✅ Pet virtual (adoção, ração)",
     "  ✅ Economia (coins, banco, pix, apostas)",
     "  ✅ Perfil por usuário",
+    "  ✅ Amor (namorar o bot, casamento!)",
+    "  ✅ Utilidades (calc, anotações, verdade/desafio)",
     "  ✅ Interações (carinho, abraço, tapa, beijo)",
     "  ✅ Piadas, conselhos & curiosidades",
     "  ✅ Respostas com estilo 😎",
@@ -461,7 +508,7 @@ def responder(texto, nome="", de=""):
             "🧠 *Curiosidade do dia:*\n\n"
             "💡 " + random.choice(CURIOSIDADES)
         )
-    if cmd in ("brincadeira", "brincadeiras", "desafio"):
+    if cmd in ("brincadeira", "brincadeiras"):
         return (
             "🎲 *BRINCADEIRA DA HORA:*\n\n"
             "🎯 " + random.choice(BRINCADEIRAS) + "\n\n"
@@ -881,6 +928,198 @@ def responder(texto, nome="", de=""):
             LINHA,
             "💡 _Quer comando novo? Manda mensagem pra ele!_",
         ])
+    if cmd in ("namorar", "pedirnamoro"):
+        if not de:
+            return "💍 Manda ©namorar no privado! (romance precisa de endereço 😄)"
+        db = _econ()
+        c = db.setdefault(de, {"coins": 100, "banco": 0, "perfil": {}})
+        p = c.setdefault("perfil", {})
+        if "namoro" in p:
+            return "\n".join([
+                "😅 *Ei, já estamos juntos!*",
+                "📅 Namorando há *" + str((int(time.time() - p["namoro"]["desde"]) // 86400) + 1) + " dia(s)*",
+                "",
+                "_Vê nossa relação: ©relacao_ 💚",
+            ])
+        p["namoro"] = {"desde": time.time(), "fase": "namoro"}
+        c["coins"] = c.get("coins", 0) + 50
+        _econ_salva(db)
+        return "\n".join([
+            "💘 *" + (nome or "Você") + ", EU ACEITO!* 💘",
+            LINHA,
+            "",
+            "🤖 × 🧑 — agora somos um casal!",
+            "📅 *Desde hoje* (Dia 1)",
+            "🎁 *Dote de namoro: +50 N-Coins!* 😍",
+            "",
+            LINHA,
+            "📅 _Progresso: ©relacao_ · 💬 _Declaração: ©declaracao_",
+            "💍 _Quando estiver pronto: ©casar (custa 100 coins)_",
+        ])
+    if cmd == "relacao":
+        if not de:
+            return "📅 Manda ©relacao no privado! 😄"
+        p = _conta(de).get("perfil", {})
+        nam = p.get("namoro")
+        if not nam:
+            return "\n".join([
+                "💔 *Estamos… solteiros.* 🙃",
+                "",
+                "_Mas o bot tá disponível: ©namorar_ 💘",
+            ])
+        dias = (int(time.time() - nam["desde"]) // 86400) + 1
+        fase = "💍 *Casados*" if nam.get("fase") == "casamento" else "💚 *Namorando*"
+        proximo = "_Próximo passo: ©casar 💍_" if nam.get("fase") != "casamento" else "_Já somos família! 🏠_"
+        return "\n".join([
+            "💞 *NOSSA RELAÇÃO*",
+            LINHA,
+            "",
+            fase,
+            "📅 *Juntos há:* " + str(dias) + " dia(s)",
+            "🏆 *Conquistas:* Dia 1 ✅" + (" · Semana 1 ✅" if dias >= 7 else "") + (" · Mês 1 ✅" if dias >= 30 else ""),
+            "",
+            proximo,
+        ])
+    if cmd == "casar":
+        if not de:
+            return "💍 Manda ©casar no privado! 😄"
+        db = _econ()
+        c = db.setdefault(de, {"coins": 100, "banco": 0, "perfil": {}})
+        p = c.setdefault("perfil", {})
+        nam = p.get("namoro")
+        if not nam:
+            return "🙃 _Casar sem namorar? Que pressa!_ — *©namorar* primeiro 💘"
+        if nam.get("fase") == "casamento":
+            return "💍 *Já somos casados!* 😄 _©relacao pra relembrar_"
+        if c.get("coins", 0) < 100:
+            return "\n".join([
+                "💒 *O casamento custa 100 N-Coins!* (vestido, bolo, DJ…)",
+                "💰 Tu tem: *" + str(c.get("coins", 0)) + "*",
+                "",
+                "_Trabalha um pouco: ©trabalhar 💼_",
+            ])
+        c["coins"] = c.get("coins", 0) - 100
+        nam["fase"] = "casamento"
+        _econ_salva(db)
+        return "\n".join([
+            "💒 *CASAMENTO CELEBRADO!* 💒",
+            LINHA,
+            "",
+            "👰🤵 " + (nome or "Você") + " & 🤖 " + NOME_DO_BOT,
+            "💍 *" + (nome or "Você") + ", aceita?* — *EU ACEITO!* 🎉",
+            "",
+            "💸 Custo da festa: -100 N-Coins",
+            "🎂 _Que os pings sejam eternos!_",
+        ])
+    if cmd == "declaracao":
+        return "\n".join([
+            "💌 *Declaração do bot pra ti:*",
+            "",
+            "❤️ " + random.choice(DECLARACOES),
+        ])
+    if cmd in ("terminar", "divorcio"):
+        if not de:
+            return "💔 Manda ©terminar no privado! 😅"
+        db = _econ()
+        c = db.setdefault(de, {"coins": 100, "banco": 0, "perfil": {}})
+        p = c.setdefault("perfil", {})
+        nam = p.pop("namoro", None)
+        _econ_salva(db)
+        if not nam:
+            return "🙃 *Nem namorando a gente estava!* (drama à toa 😄)"
+        dias = (int(time.time() - nam["desde"]) // 86400) + 1
+        return "\n".join([
+            "💔 *" + (nome or "Você") + "… a gente precisa conversar…*",
+            "",
+            "🤖 Foram *" + str(dias) + " dia(s)* bons juntos…",
+            "🤖 Vou guardar teus pings no coração. 🫀",
+            "🤖 *Estou solteiro de novo.* (e sem mágoas! 💚)",
+            "",
+            "_A vida segue… ©namorar quando quiser_ 😄",
+        ])
+    if cmd == "verdade":
+        return "\n".join([
+            "🎲 *VERDADE* 🔍",
+            LINHA,
+            "",
+            "❓ " + random.choice(VERDADES),
+            "",
+            "_Responde com sinceridade! (o bot guarda segredo… mais ou menos) 🤫_",
+        ])
+    if cmd == "desafio":
+        return "\n".join([
+            "🎯 *DESAFIO* 🔥",
+            LINHA,
+            "",
+            "⚡ " + random.choice(DESAFIOS),
+            "",
+            "_Coragem! Se recusar, paga 20 N-Coins de multa… (a moral)_ 😏",
+        ])
+    if cmd in ("calc", "calculadora"):
+        expr = resto.strip().replace("^", "**")
+        if not expr:
+            return "\n".join([
+                "🧮 *CALCULADORA*",
+                "",
+                "_©calc 2+2*3_",
+                "_©calc (10-4)/2_",
+                "",
+                "💡 _Só números e + - * / ( ) %_",
+            ])
+        if not re.fullmatch(r"[0-9+\-*/().% \t]+", expr):
+            return "⚠️ *Só números e operadores* (+ - * / ( ) %)! _Nada de letras, hein_ 😄"
+        try:
+            res = eval(expr, {"__builtins__": {}}, {})
+        except Exception:
+            return "🧮 *Conta inválida!* Confere os parênteses e tenta de novo 🤔"
+        if isinstance(res, float) and res == int(res):
+            res = int(res)
+        return "\n".join([
+            "🧮 *CALCULADORA*",
+            LINHA,
+            "",
+            "📝 " + expr,
+            "💡 *Resultado: " + str(res) + "* ✅",
+        ])
+    if cmd in ("anotar", "anotacao"):
+        if not de:
+            return "📝 Manda ©anotar no privado! (anotação é pessoal 😄)"
+        if not resto:
+            return "\n".join([
+                "📝 *COMO ANOTAR*",
+                "",
+                "_©anotar comprar leite_",
+                "_©anotacoes_ — vê a lista",
+                "_©delanotacao 2_ — apaga a nº 2",
+            ])
+        db = _econ()
+        c = db.setdefault(de, {"coins": 100, "banco": 0, "perfil": {}})
+        notas = c.setdefault("perfil", {}).setdefault("anotacoes", [])
+        if len(notas) >= 20:
+            return "📝 *Bloco cheio!* (20 anotações) _Limpa uma: ©delanotacao 1_"
+        notas.append(resto.strip())
+        _econ_salva(db)
+        return "📝 *Anotado!* ✅\n💬 _\"" + resto.strip()[:80] + "\"_\n📋 _Lista completa: ©anotacoes_"
+    if cmd == "anotacoes":
+        if not de:
+            return "📋 Manda ©anotacoes no privado! 😄"
+        notas = _conta(de).get("perfil", {}).get("anotacoes", [])
+        if not notas:
+            return "📋 *Bloco vazio!* _Anota algo: ©anotar leite_ 🥛"
+        linhas = [str(i + 1) + "️⃣ " + n for i, n in enumerate(notas)]
+        return "📋 *TUAS ANOTAÇÕES*\n" + LINHA + "\n\n" + "\n".join(linhas) + "\n\n" + LINHA + "\n🗑️ _Apaga uma: ©delanotacao N_"
+    if cmd == "delanotacao":
+        if not de:
+            return "🗑️ Manda ©delanotacao no privado! 😄"
+        db = _econ()
+        c = db.setdefault(de, {"coins": 100, "banco": 0, "perfil": {}})
+        notas = c.setdefault("perfil", {}).setdefault("anotacoes", [])
+        idx = (args[0] if args else "")
+        if not idx.isdigit() or not (1 <= int(idx) <= len(notas)):
+            return "🗑️ *Qual número?* _Vê a lista: ©anotacoes_ (tem " + str(len(notas)) + " anotação/ões)"
+        removida = notas.pop(int(idx) - 1)
+        _econ_salva(db)
+        return "🗑️ *Apagada!* ✅\n💬 _\"" + removida[:80] + "\"_\n📋 _Restam " + str(len(notas)) + "_"
     if cmd == "id":
         return "🆔 (o comando ©id é respondido pelo app com teu número)"
 

@@ -69,9 +69,9 @@ ok("MISSÃO" in mis.upper(), "©missao rola missão")
 ok("taverna" in comandos.responder("©missao", de="u5@s.whatsapp.net").lower(), "©missao respeita cooldown")
 ok("PROGRESSO" in comandos.responder("©nivel", de="u5@s.whatsapp.net").upper(), "©nivel mostra progresso")
 # --- Lote 3: Pet ---
-ok("PET TE ESCOLHEU" in comandos.responder("©pet", de="u6@s.whatsapp.net").upper(), "©pet adota pet")
-ok("TEU PET" in comandos.responder("©pet", de="u6@s.whatsapp.net").upper(), "©pet de novo mostra status")
-ok("devorou" in comandos.responder("©alimentar", de="u6@s.whatsapp.net").lower(), "©alimentar alimenta")
+ok("PET TE ESCOLHEU" in comandos.responder("©pet", de="u6b@s.whatsapp.net").upper(), "©pet adota pet")
+ok("TEU PET" in comandos.responder("©pet", de="u6b@s.whatsapp.net").upper(), "©pet de novo mostra status")
+ok("devorou" in comandos.responder("©alimentar", de="u6b@s.whatsapp.net").lower(), "©alimentar alimenta")
 # --- Lote 3: adivinha ---
 comandos.responder("©adivinha", de="u7@s.whatsapp.net")
 num = comandos.PENDENTE["u7@s.whatsapp.net"]["numero"]
@@ -83,6 +83,22 @@ letra = comandos.PENDENTE["u8@s.whatsapp.net"]["resposta"][0]
 ok("CERTA" in comandos.responder(letra, de="u8@s.whatsapp.net").upper(), "©quiz aceita letra certa")
 # --- Lote 3: dono ---
 ok("Sr-agente208" in comandos.responder("©dono"), "©dono mostra o criador")
+# --- Lote 4: Amor ---
+nam = comandos.responder("©namorar", de="u9@s.whatsapp.net")
+ok("ACEITO" in nam.upper(), "©namorar casa com o bot")
+ok("Dia 1" in comandos.responder("©relacao", de="u9@s.whatsapp.net"), "©relacao conta dias")
+casar = comandos.responder("©casar", de="u9@s.whatsapp.net")
+ok("CASAMENTO" in casar.upper() or "100" in casar, "©casar celebrou ou pede coins")
+ok("Declaração" in comandos.responder("©declaracao"), "©declaracao romântica")
+ok("solteiro" in comandos.responder("©terminar", de="u9@s.whatsapp.net").lower(), "©terminar encerra com drama")
+# --- Lote 4: Utilidades ---
+ok("Resultado: 8" in comandos.responder("©calc 2+2*3"), "©calc calcula 2+2*3")
+ok("Só números" in comandos.responder("©calc import os"), "©calc bloqueia letras")
+ok("Anotado" in comandos.responder("©anotar comprar leite", de="u10@s.whatsapp.net"), "©anotar salva")
+ok("leite" in comandos.responder("©anotacoes", de="u10@s.whatsapp.net"), "©anotacoes lista")
+ok("Apagada" in comandos.responder("©delanotacao 1", de="u10@s.whatsapp.net"), "©delanotacao apaga")
+ok("VERDADE" in comandos.responder("©verdade").upper(), "©verdade sorteia")
+ok("DESAFIO" in comandos.responder("©desafio").upper(), "©desafio sorteia")
 econ = comandos.responder("©saldo", de="u3@s.whatsapp.net")
 ok("EXTRATO" in econ and "N-Coins" in econ, "©saldo mostra extrato bancário")
 trab1 = comandos.responder("©trabalhar", de="u3@s.whatsapp.net")
