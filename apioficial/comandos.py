@@ -80,7 +80,7 @@ def _premio(de, coins=0, xp=0, vitoria=False):
     _econ_salva(db)
     return "\n🎁 +" + str(coins) + " N-Coins · +" + str(xp) + " XP (Nível " + str(p["nivel"]) + ")"
 
-VERSAO = "1.8.0"
+VERSAO = "1.9.0"
 _INICIO = time.time()
 # identidade igual ao bot de grupo (DADOS DO KEISEN/INFO_KEISEN/media/INFO_KEISEN.json)
 NOME_DO_BOT = os.environ.get("NOME_DO_BOT", "WHITE LOTUS")
@@ -220,6 +220,40 @@ GIF_INTERACOES = {
 }
 GIF_BEBADO = "https://telegra.ph/file/b69ac603e275e610d2c34.jpg"  # imagem
 
+# Fotos do keisen (links_img.json) p/ comandos de amor e medidores
+FOTOS = {
+    "namorar": "https://files.catbox.moe/a1m5cr.jpg",
+    "casar": "https://files.catbox.moe/gosmx9.jpg",
+    "casal": "https://files.catbox.moe/gosmx9.jpg",
+}
+
+MEDIDORES = {
+    "gado": {"img": "https://telegra.ph/file/6ac2858647969cca031fd.jpg", "emoji": "🐄", "p": "gado(a)"},
+    "corno": {"img": "https://telegra.ph/file/3182942e577dbbc27b17e.jpg", "emoji": "🐂", "p": "corno(a)"},
+    "vesgo": {"img": "https://telegra.ph/file/2c6675f5bc489c219fbb0.jpg", "emoji": "👀", "p": "vesgo(a)"},
+    "gay": {"img": "https://telegra.ph/file/ff2be6c80a680ccf867d2.jpg", "emoji": "🏳️‍🌈", "p": "gay"},
+    "gostoso": {"img": "https://telegra.ph/file/d78d2dcc31a1fb3e1dab2.jpg", "emoji": "🔥", "p": "gostoso(a)"},
+    "gostosa": {"img": "https://telegra.ph/file/1527a63a1290c9c04cb1c.jpg", "emoji": "🔥", "p": "gostosa(a)"},
+    "feio": {"img": "https://telegra.ph/file/bd22339646fe7f163f89c.jpg", "emoji": "🙈", "p": "feio(a)"},
+    "sigma": {"img": "https://telegra.ph/file/16b119fecf08ec2f10fdf.jpg", "emoji": "🐺", "p": "sigma"},
+    "beta": {"img": "https://telegra.ph/file/cd2f7277a3c418b6b47a0.jpg", "emoji": "🐣", "p": "beta"},
+    "louco": {"img": "https://telegra.ph/file/f3f06a76bdce765b3cf45.jpg", "emoji": "🤪", "p": "louco(a)"},
+    "safado": {"img": "https://telegra.ph/file/866c0d15750f87e8fd227.jpg", "emoji": "😏", "p": "safado(a)"},
+    "safada": {"img": "https://telegra.ph/file/ae4f2b979023b226c339c.jpg", "emoji": "😏", "p": "safada(a)"},
+}
+
+def _veredito(pct):
+    if pct >= 90:
+        return "🚨 *CONFIRMADO!*"
+    if pct >= 70:
+        return "😰 *Quase certo!*"
+    if pct >= 40:
+        return "🤔 *Talvez…*"
+    if pct >= 20:
+        return "😏 *Só um pouquinho…*"
+    return "✨ *Zero chance!*"
+
+
 # mídia que o app.py deve mandar junto com a próxima resposta deste chat
 MEDIA_ENVIAR = {}
 
@@ -300,6 +334,9 @@ MENU = "\n".join([
     "  🥰 *Com GIF:* ©carinho · ©abraco · ©tapa · ©beijo · 🦷 ©mordida",
     "  ⚔️ *Com alvo:* ©tapa _@pessoa_ · 💀 ©matar · 🦵 ©chutar · 👊 ©soco · 🪑 ©sentar",
     "  🥴 *©bebado* (com print!) · 🦹 *©roubar* (rouba o bot… se conseguir 😏)",
+    "  📏 *Medidores:* ©gado · ©gay · ©corno · ©vesgo · ©feio · ©gostoso",
+    "  📏 *Mais:* ©sigma · ©beta · ©louco · ©safado · ©gostosa",
+    "  💘 *©shipo* _@a @b_ — shipa duas pessoas (com foto!)",
     "",
     "🥷 *RPG*",
     "  🗡️ *©rpg* — cria/ver teu herói",
@@ -372,6 +409,7 @@ CONFIG = "\n".join([
     "  ✅ Utilidades (calc, anotações, verdade/desafio)",
     "  ✅ Núcleo de grupos (sorteio, times, regras)",
     "  ✅ Interações com GIF (morder, matar, soco, chutar, roubar…)",
+    "  ✅ Medidores com imagem (gado, gay, corno…) + shipamento",
     "  ✅ Piadas, conselhos & curiosidades",
     "  ✅ Respostas com estilo 😎",
     "",
@@ -617,7 +655,7 @@ def responder(texto, nome="", de="", grupo=""):
     if cmd in ALIASES_INT:
         cmd = ALIASES_INT[cmd]
     if cmd == "bebado":
-        MEDIA_ENVIAR[de or grupo] = {"url": GIF_BEBADO}
+        MEDIA_ENVIAR[de or grupo] = {"url": GIF_BEBADO, "tipo": "image"}
         return (
             "🥴 *" + (nome or "Alguém") + " tá mais bêbado que bot em loop infinito!*\n"
             "🍺 *Nível de álcool:* " + str(random.randint(80, 200)) + "%\n\n"
@@ -648,6 +686,39 @@ def responder(texto, nome="", de="", grupo=""):
                 "_Crime não compensa… mas pode tentar de novo depois 😏_",
             ])
         return "🦹 *" + (nome or "Alguém") + " tentou roubar " + alvo_int + "… e os seguranças pegaram no flagra!* 👮💸 _Fugiu sem nada! 😂_"
+    if cmd in MEDIDORES:
+        m = MEDIDORES[cmd]
+        pct = random.randint(1, 100)
+        alvo_med = alvo_int or (nome or "você")
+        MEDIA_ENVIAR[de or grupo] = {"url": m["img"], "tipo": "image"}
+        return (
+            "📏 " + m["emoji"] + " *MEDIDOR DE " + cmd.upper() + "*\n\n"
+            "O quanto *" + alvo_med + "* pode ser uma pessoa " + m["p"] + "?\n"
+            "• A porcentagem de chance é *" + str(pct) + "%*\n\n"
+            + _veredito(pct)
+        )
+    if cmd == "shipo":
+        alvos = [a.lstrip("@") for a in args if a][:2]
+        if len(alvos) < 2:
+            return "💘 *SHIPAMENTO!* Marca duas pessoas: _©shipo @a @b_ 😄"
+        pct = random.randint(1, 100)
+        if (de or grupo):
+            MEDIA_ENVIAR[de or grupo] = {"url": FOTOS["casal"], "tipo": "image"}
+        if pct >= 80:
+            ver = "💒 *Casamento marcado!*"
+        elif pct >= 50:
+            ver = "💚 *Tem futuro!*"
+        elif pct >= 30:
+            ver = "😬 *Complicado…*"
+        else:
+            ver = "🤝 *Só amizade!*"
+        return (
+            "💘 *SHIPAMENTO!* 💘\n"
+            + LINHA + "\n\n"
+            + alvos[0] + " 💞 " + alvos[1] + "\n"
+            "• Chance de dar certo: *" + str(pct) + "%*\n\n"
+            + ver
+        )
     if cmd in INTERACOES:
         if alvo_int:
             resposta = ALVO_TEMPLATES[cmd].format(a=(nome or "Alguém"), v=alvo_int)
@@ -656,7 +727,7 @@ def responder(texto, nome="", de="", grupo=""):
             if cmd in ("carinho", "abraco", "beijo"):
                 resposta += ("\n\n_Amo tuas interações, " + nome + "! 💖_" if nome else "")
         if (de or grupo) and cmd in GIF_INTERACOES:
-            MEDIA_ENVIAR[grupo or de] = {"url": GIF_INTERACOES[cmd]}
+            MEDIA_ENVIAR[grupo or de] = {"url": GIF_INTERACOES[cmd], "tipo": "video"}
         return resposta
     if cmd in ("saldo", "coins", "banco", "extrato"):
         if not de:
@@ -1083,6 +1154,7 @@ def responder(texto, nome="", de="", grupo=""):
         p["namoro"] = {"desde": time.time(), "fase": "namoro"}
         c["coins"] = c.get("coins", 0) + 50
         _econ_salva(db)
+        MEDIA_ENVIAR[de or grupo] = {"url": FOTOS["namorar"], "tipo": "image"}
         return "\n".join([
             "💘 *" + (nome or "Você") + ", EU ACEITO!* 💘",
             LINHA,
@@ -1106,6 +1178,7 @@ def responder(texto, nome="", de="", grupo=""):
                 "",
                 "_Mas o bot tá disponível: ©namorar_ 💘",
             ])
+        MEDIA_ENVIAR[de or grupo] = {"url": FOTOS["casal"], "tipo": "image"}
         dias = (int(time.time() - nam["desde"]) // 86400) + 1
         fase = "💍 *Casados*" if nam.get("fase") == "casamento" else "💚 *Namorando*"
         proximo = "_Próximo passo: ©casar 💍_" if nam.get("fase") != "casamento" else "_Já somos família! 🏠_"
@@ -1140,6 +1213,7 @@ def responder(texto, nome="", de="", grupo=""):
         c["coins"] = c.get("coins", 0) - 100
         nam["fase"] = "casamento"
         _econ_salva(db)
+        MEDIA_ENVIAR[de or grupo] = {"url": FOTOS["casar"], "tipo": "image"}
         return "\n".join([
             "💒 *CASAMENTO CELEBRADO!* 💒",
             LINHA,
