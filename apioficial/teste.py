@@ -152,6 +152,32 @@ ok("CASAMENTO" in comandos.responder("©casar", de="u20@s.whatsapp.net").upper()
 m = comandos.MEDIA_ENVIAR.pop("u20@s.whatsapp.net")
 ok(m["tipo"] == "image", "©casar com foto do casal")
 ok(comandos.MEDIA_ENVIAR.pop("u9@s.whatsapp.net", {}).get("url", "").endswith("gosmx9.jpg"), "©relacao com foto do casal")
+# --- Lote 9: arrumação completa de mídia ---
+for palavra in ["lindo", "linda", "baiano", "baiana", "carioca"]:
+    u = "m9" + palavra + "@s.whatsapp.net"
+    comandos.responder("©" + palavra + " @joao", de=u)
+    ok(comandos.MEDIA_ENVIAR.pop(u, {}).get("tipo") == "image", "medidor ©" + palavra + " com imagem")
+ok("TESTE DE FIDELIDADE" in comandos.responder("©fiel", de="u22@s.whatsapp.net"), "©fiel mede fidelidade")
+ok(comandos.MEDIA_ENVIAR.pop("u22@s.whatsapp.net")["tipo"] == "image", "©fiel com imagem")
+ok("Título" in comandos.responder("©infiel", de="u23@s.whatsapp.net"), "©infiel com título")
+ok(comandos.MEDIA_ENVIAR.pop("u23@s.whatsapp.net", {}).get("tipo") == "image", "©infiel com imagem")
+comandos.responder("©morte fulano", de="u24@s.whatsapp.net")
+m = comandos.MEDIA_ENVIAR.pop("u24@s.whatsapp.net")
+ok(m["tipo"] == "video" and "deathcmd" or m["url"].endswith(".mp4"), "©morte com GIF")
+r = comandos.responder("©idade 23/12/2007", de="u25@s.whatsapp.net")
+ok("anos" in r and "aniversário" in r, "©idade calcula idade")
+ok(comandos.MEDIA_ENVIAR.pop("u25@s.whatsapp.net")["tipo"] == "video", "©idade com GIF")
+ok("Formato" in comandos.responder("©idade errado", de="u25@s.whatsapp.net"), "©idade invalido ensina")
+ok("inválida" in comandos.responder("©idade 30/02/2007", de="u25@s.whatsapp.net"), "©idade data impossível")
+for verbo in ["cagar", "capinarlote", "lavarlouca"]:
+    u = "m9" + verbo + "@s.whatsapp.net"
+    r = comandos.responder("©" + verbo + " @joao", de=u)
+    ok("joao" in r.lower(), "©" + verbo + " com alvo")
+    ok(comandos.MEDIA_ENVIAR.pop(u, {})["tipo"] == "video", "©" + verbo + " com GIF")
+comandos.responder("©enigma", de="u26@s.whatsapp.net")
+ok(comandos.MEDIA_ENVIAR.pop("u26@s.whatsapp.net", {}).get("tipo") == "image", "©enigma com imagem")
+comandos.responder("©xyzabc123", de="u27@s.whatsapp.net")
+ok(comandos.MEDIA_ENVIAR.pop("u27@s.whatsapp.net", {}).get("tipo") == "image", "comando desconhecido com imagem de erro")
 # --- Lote 8: mídia local (pasta media/) ---
 import os
 comandos.responder("©menu", de="u21@s.whatsapp.net")
@@ -249,7 +275,11 @@ try:
     for texto, esperado, mid in [("©menu", "WHITE LOTUS", "wamid.AAA2"), ("©dado 20", "d20", "wamid.AAA3"), ("qualquer besteira", "Não entendi", "wamid.AAA4")]:
         rq.post("http://127.0.0.1:5001/webhook", json=payload(texto, mid), timeout=5)
         time.sleep(0.6)
-        ultimos = [c.get("text", {}).get("body", "") for c in CAPTURADOS if c.get("type") == "text"]
+        ultimos = []
+        for c in CAPTURADOS:
+            if "text" in c: ultimos.append(c["text"].get("body", ""))
+            if "image" in c: ultimos.append(c["image"].get("caption", ""))
+            if "video" in c: ultimos.append(c["video"].get("caption", ""))
         ok(any(esperado in t for t in ultimos), f"'{texto}' -> resposta contém '{esperado}'")
 
     # --- imagem (não-texto) ---

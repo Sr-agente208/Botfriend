@@ -80,7 +80,7 @@ def _premio(de, coins=0, xp=0, vitoria=False):
     _econ_salva(db)
     return "\n🎁 +" + str(coins) + " N-Coins · +" + str(xp) + " XP (Nível " + str(p["nivel"]) + ")"
 
-VERSAO = "1.10.0"
+VERSAO = "1.11.0"
 _INICIO = time.time()
 # identidade igual ao bot de grupo (DADOS DO KEISEN/INFO_KEISEN/media/INFO_KEISEN.json)
 NOME_DO_BOT = os.environ.get("NOME_DO_BOT", "WHITE LOTUS")
@@ -175,6 +175,9 @@ INTERACOES = {
     "soco": "👊 *POW!* … Uau, soco forte! Tô recompilando meus sentimentos… 😵‍💫",
     "matar": "💀 *Morri!* … Últimas palavras: 'guardem meus coins…' 🔋 (_revive com ©ping_)",
     "sentar": "🪑 *CRREEEK!* … MEU TECLADO! Senta não! 😱",
+    "cagar": "💩 *Xiii!* … Nem pro bot tu faz isso! 😱",
+    "capinarlote": "🌾 *Capinando…* … Enxada girando! Ó o pixel da capina! 🌱",
+    "lavarlouca": "🧼 *Espuma até no chip!* … Escova frontal em funcionamento! 🍽️",
 }
 
 ALIASES_INT = {
@@ -192,6 +195,9 @@ ALVO_TEMPLATES = {
     "soco": "👊 {a} meteu um SOCO em {v}! *POW!* 💢",
     "matar": "💀 {a} matou {v}! Que violência… 🔪",
     "sentar": "🪑 {a} sentou em {v}! Coitado… 😳",
+    "cagar": "💩 {a} fez o bolo EM CIMA de {v}! Que nojo! 🤢",
+    "capinarlote": "🌾 {a} botou {v} pra capinar lote! Ó a capina! 🌱",
+    "lavarlouca": "🍽️ {a} botou {v} pra lavar a louça! Sem fofoca! 🧼",
 }
 
 REACTION_BOT = {
@@ -217,7 +223,15 @@ GIF_INTERACOES = {
     "soco": "https://telegra.ph/file/f737009edab409fe7be43.mp4",
     "matar": "https://telegra.ph/file/1135a19fceefa7074caf8.mp4",
     "sentar": "https://telegra.ph/file/d695e05443043ff9a254d.mp4",
+    "cagar": "https://files.catbox.moe/662vzj.mp4",
+    "capinarlote": "https://telegra.ph/file/4682c1b474ce5dee3a48d.mp4",
+    "lavarlouca": "https://files.catbox.moe/qptf5k.mp4",
 }
+GIF_MORTE = "https://telegra.ph/file/298aea280b6af0c4b53e7.mp4"  # ©morte
+GIF_IDADE = "https://files.catbox.moe/5iknjk.mp4"                # ©idade
+IMG_ERRO = "https://files.catbox.moe/yyuype.jpg"                 # comando desconhecido
+IMG_ENIGMA = "https://telegra.ph/file/15be608763684b3e3af38.jpg" # ©enigma
+IMG_FIEL = "https://files.catbox.moe/x8k6en.jpg"                 # ©fiel/©infiel
 GIF_BEBADO = "https://telegra.ph/file/b69ac603e275e610d2c34.jpg"  # imagem
 
 # Fotos do keisen (links_img.json) p/ comandos de amor e medidores
@@ -240,6 +254,11 @@ MEDIDORES = {
     "louco": {"img": "https://telegra.ph/file/f3f06a76bdce765b3cf45.jpg", "emoji": "🤪", "p": "louco(a)"},
     "safado": {"img": "https://telegra.ph/file/866c0d15750f87e8fd227.jpg", "emoji": "😏", "p": "safado(a)"},
     "safada": {"img": "https://telegra.ph/file/ae4f2b979023b226c339c.jpg", "emoji": "😏", "p": "safada(a)"},
+    "lindo": {"img": "https://files.catbox.moe/2r420g.jpg", "emoji": "🪞", "p": "lindo(a)"},
+    "linda": {"img": "https://files.catbox.moe/yb6hpe.jpg", "emoji": "🪞", "p": "linda"},
+    "baiano": {"img": "https://telegra.ph/file/a983df16e9b604faeb24a.jpg", "emoji": "🌵", "p": "baiano(a)"},
+    "baiana": {"img": "https://telegra.ph/file/6c5e2c1bfdde25b828e26.jpg", "emoji": "🌵", "p": "baiana"},
+    "carioca": {"img": "https://telegra.ph/file/4c1f83c5251678fdec1d4.jpg", "emoji": "🏖️", "p": "carioca(a)"},
 }
 
 def _veredito(pct):
@@ -337,6 +356,10 @@ MENU = "\n".join([
     "  📏 *Medidores:* ©gado · ©gay · ©corno · ©vesgo · ©feio · ©gostoso",
     "  📏 *Mais:* ©sigma · ©beta · ©louco · ©safado · ©gostosa",
     "  💘 *©shipo* _@a @b_ — shipa duas pessoas (com foto!)",
+    "  📏 *Novos:* ©lindo · ©linda · ©fiel · ©baiano · ©carioca",
+    "  💀 *©morte* _nome_ — prevê os teus anos (com GIF!)",
+    "  🎂 *©idade* _dd/mm/aaaa_ — calcula com GIF!",
+    "  💩 *©cagar* · 🌾 *©capinarlote* · 🍽️ *©lavarlouca* (com alvo!)",
     "",
     "🥷 *RPG*",
     "  🗡️ *©rpg* — cria/ver teu herói",
@@ -410,6 +433,7 @@ CONFIG = "\n".join([
     "  ✅ Núcleo de grupos (sorteio, times, regras)",
     "  ✅ Interações com GIF (morder, matar, soco, chutar, roubar…)",
     "  ✅ Medidores com imagem (gado, gay, corno…) + shipamento",
+    "  ✅ Morte prevista, idade, capinar lote, lavar louça",
     "  ✅ Menu, perfil e dono com mídia embarcada",
     "  ✅ Piadas, conselhos & curiosidades",
     "  ✅ Respostas com estilo 😎",
@@ -618,6 +642,8 @@ def responder(texto, nome="", de="", grupo=""):
         e = random.choice(ENIGMAS)
         if de:
             PENDENTE[de] = {"tipo": "enigma", "resposta": e["r"], "tentativas": 0}
+        if de or grupo:
+            MEDIA_ENVIAR[de or grupo] = {"url": IMG_ENIGMA, "tipo": "image"}
         return (
             "🧩 *ENIGMA DO DIA!*\n" + LINHA + "\n"
             "🧠 " + e["p"] + "\n\n"
@@ -720,6 +746,61 @@ def responder(texto, nome="", de="", grupo=""):
             + alvos[0] + " 💞 " + alvos[1] + "\n"
             "• Chance de dar certo: *" + str(pct) + "%*\n\n"
             + ver
+        )
+    if cmd in ("fiel", "infiel"):
+        pct = random.randint(1, 100)
+        if cmd == "infiel":
+            pct = 100 - pct
+        alvo_f = alvo_int or (nome or "você")
+        if de or grupo:
+            MEDIA_ENVIAR[de or grupo] = {"url": IMG_FIEL, "tipo": "image"}
+        if pct > 80:
+            titulo = "💍 *Fiel pra Sempre!*"
+        elif pct > 50:
+            titulo = "💘 *Comprometido*"
+        elif pct > 20:
+            titulo = "😏 *Aventureiro*"
+        else:
+            titulo = "💔 *Coração de Pedra*"
+        barra = "█" * (pct // 10) + "░" * (10 - pct // 10)
+        return (
+            "💯 *TESTE DE FIDELIDADE*\n" + LINHA + "\n\n"
+            + alvo_f + " (" + cmd + ") é fiel?\n"
+            "❤️ " + barra + " " + str(pct) + "%\n\n"
+            "🏆 *Título:* " + titulo
+        )
+    if cmd in ("morte", "death"):
+        quem = " ".join(args) if args else (nome or "você")
+        anos_v = random.randint(60, 100)
+        if de or grupo:
+            MEDIA_ENVIAR[de or grupo] = {"url": GIF_MORTE, "tipo": "video"}
+        return (
+            "💀 *CONSULTA DE VIDA*\n" + LINHA + "\n\n"
+            "Pessoas com este nome citado “*" + quem + "*” tendem a morrer aos *" + str(anos_v) + "* anos.\n\n"
+            "_Tranquilo… falta muito ainda! 😄_"
+        )
+    if cmd == "idade":
+        import datetime
+        m_id = re.match(r"^(\d{1,2})/(\d{1,2})/(\d{4})$", resto.strip())
+        if not m_id:
+            return "🎂 *Formato:* _©idade 23/12/2007_ (dd/mm/aaaa) 😄"
+        d_id, mes_id, ano_id = map(int, m_id.groups())
+        try:
+            nasc = datetime.date(ano_id, mes_id, d_id)
+        except ValueError:
+            return "🎂 *Data inválida!* (dia 30/02 não existe, hein 😄)"
+        hoje = datetime.date.today()
+        anos_v = hoje.year - ano_id - ((hoje.month, hoje.day) < (mes_id, d_id))
+        prox = datetime.date(hoje.year + (1 if (hoje.month, hoje.day) > (mes_id, d_id) else 0), mes_id, d_id)
+        dias_pro = (prox - hoje).days
+        if de or grupo:
+            MEDIA_ENVIAR[de or grupo] = {"url": GIF_IDADE, "tipo": "video"}
+        return (
+            "🎂 *CONSULTA DE IDADE*\n" + LINHA + "\n\n"
+            "📅 Nascido em: *" + f"{d_id:02d}/{mes_id:02d}/{ano_id}" + "*\n"
+            "🎯 Idade: *" + str(anos_v) + " anos*\n"
+            "🎈 Faltam *" + str(dias_pro) + " dias* pro teu aniversário!\n\n"
+            "_Muitos anos de vida! 🥳_"
         )
     if cmd in INTERACOES:
         if alvo_int:
@@ -1433,7 +1514,9 @@ def responder(texto, nome="", de="", grupo=""):
     if cmd == "id":
         return "🆔 (o comando ©id é respondido pelo app com teu número)"
 
+    if de or grupo:
+        MEDIA_ENVIAR[de or grupo] = {"url": IMG_ERRO, "tipo": "image"}  # imagem de erro do keisen
     return (
         "Não entendi essa! 🤔\n"
-        "Manda *" + PREFIXO + "menu* pra ver o que eu sei fazer 👆"
+        "Manda *©menu* pra ver o que eu sei fazer 👆"
     )
