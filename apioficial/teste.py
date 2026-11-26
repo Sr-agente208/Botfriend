@@ -198,6 +198,13 @@ m = comandos.MEDIA_ENVIAR.pop("u28@s.whatsapp.net")
 ok(m["tipo"] == "image" and "catbox" in m["url"], "©contador com foto do casal")
 ok("CONTADOR" in comandos.responder("©casal", de="u28@s.whatsapp.net").upper(), "©casal é alias do contador")
 ok("CONTADOR" in comandos.responder("©tempo", de="u28@s.whatsapp.net").upper(), "©tempo é alias do contador")
+# --- Lote 12: ©comer com GIF ---
+u = "u29@s.whatsapp.net"
+r = comandos.responder("©comer @joão", de=u)
+ok("comeu joao" in r.lower(), "©comer com alvo")
+m = comandos.MEDIA_ENVIAR.pop(u)
+ok(m["tipo"] == "video" and m["url"].endswith(".mp4"), "©comer com GIF")
+ok("Marca o alvo" in comandos.responder("©comer", de="u30@s.whatsapp.net"), "©comer sem alvo pede alvo")
 db = comandos._econ(); db["u28@s.whatsapp.net"]["coins"] += 200; db["u28@s.whatsapp.net"]["perfil"]["namoro"]["desde"] -= 40*86400; comandos._econ_salva(db)
 r = comandos.responder("©casar", de="u28@s.whatsapp.net")
 ok("CASAMENTO" in r.upper(), "©casar no contador-teste")

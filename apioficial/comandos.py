@@ -80,7 +80,7 @@ def _premio(de, coins=0, xp=0, vitoria=False):
     _econ_salva(db)
     return "\n🎁 +" + str(coins) + " N-Coins · +" + str(xp) + " XP (Nível " + str(p["nivel"]) + ")"
 
-VERSAO = "1.13.0"
+VERSAO = "1.14.0"
 _INICIO = time.time()
 # identidade igual ao bot de grupo (DADOS DO KEISEN/INFO_KEISEN/media/INFO_KEISEN.json)
 NOME_DO_BOT = os.environ.get("NOME_DO_BOT", "WHITE LOTUS")
@@ -178,6 +178,7 @@ INTERACOES = {
     "cagar": "💩 *Xiii!* … Nem pro bot tu faz isso! 😱",
     "capinarlote": "🌾 *Capinando…* … Enxada girando! Ó o pixel da capina! 🌱",
     "lavarlouca": "🧼 *Espuma até no chip!* … Escova frontal em funcionamento! 🍽️",
+    "comer": "🍽️ *Nhac!* … (o alvo é obrigatório, viu? 😉)",
 }
 
 ALIASES_INT = {
@@ -198,6 +199,7 @@ ALVO_TEMPLATES = {
     "cagar": "💩 {a} fez o bolo EM CIMA de {v}! Que nojo! 🤢",
     "capinarlote": "🌾 {a} botou {v} pra capinar lote! Ó a capina! 🌱",
     "lavarlouca": "🍽️ {a} botou {v} pra lavar a louça! Sem fofoca! 🧼",
+    "comer": "🍽️ {a} comeu {v}! Nhac! 😋",
 }
 
 REACTION_BOT = {
@@ -226,6 +228,7 @@ GIF_INTERACOES = {
     "cagar": "https://files.catbox.moe/662vzj.mp4",
     "capinarlote": "https://telegra.ph/file/4682c1b474ce5dee3a48d.mp4",
     "lavarlouca": "https://files.catbox.moe/qptf5k.mp4",
+    "comer": "https://telegra.ph/file/d46ff5e2b8f4c5335e362.mp4",
 }
 GIF_MORTE = "https://telegra.ph/file/298aea280b6af0c4b53e7.mp4"  # ©morte
 GIF_IDADE = "https://files.catbox.moe/5iknjk.mp4"                # ©idade
@@ -363,7 +366,7 @@ MENU = "\n".join([
     "  📏 *Novos:* ©lindo · ©linda · ©baiano · ©carioca",
     "  💯 *©fiel* _@pessoa_ — analisa o coração… e o resultado chega depois (igual keisen!)",    "  💀 *©morte* _nome_ — prevê os teus anos (com GIF!)",
     "  🎂 *©idade* _dd/mm/aaaa_ — calcula com GIF!",
-    "  💩 *©cagar* · 🌾 *©capinarlote* · 🍽️ *©lavarlouca* (com alvo!)",
+    "  💩 *©cagar* · 🌾 *©capinarlote* · 🍽️ *©lavarlouca* · *©comer* (com alvo!)",
     "",
     "🥷 *RPG*",
     "  🗡️ *©rpg* — cria/ver teu herói",
@@ -813,6 +816,8 @@ def responder(texto, nome="", de="", grupo=""):
             "🎈 Faltam *" + str(dias_pro) + " dias* pro teu aniversário!\n\n"
             "_Muitos anos de vida! 🥳_"
         )
+    if cmd == "comer" and not alvo_int:
+        return "🍽️ *Marca o alvo!* _©comer @pessoa_ 😄"
     if cmd in INTERACOES:
         if alvo_int:
             resposta = ALVO_TEMPLATES[cmd].format(a=(nome or "Alguém"), v=alvo_int)
