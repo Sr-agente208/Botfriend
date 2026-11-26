@@ -35,6 +35,7 @@ ok("vírgula" in comandos.responder("!escolha sozinho"), "!escolha pede 2+ opç�
 ok("configura" in comandos.responder("!config").lower(), "!config mostra painel")
 ok("Sr-agente208" in comandos.responder("!config"), "!config mostra dono real")
 ok("WHITE LOTUS" in comandos.responder("!menu"), "menu mostra nome real do bot")
+ok(comandos.responder("©ping") == comandos.responder("nao entendido xyz"), "© NAO é mais prefixo (marca Mizuki)")
 ok("versão" in comandos.responder("!config").lower(), "!config mostra versão")
 ok("Comandos" in comandos.responder("!menu"), "menu estilizado")
 ok(comandos.responder("oi").startswith("E aí"), "saudação responde")

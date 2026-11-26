@@ -78,7 +78,7 @@ MENU = "\n".join([
     "",
     LINHA,
     "💚 _API oficial = *zero risco de ban*_",
-    "👥 _Grupo (namorar/rpg) = bot de grupo_",
+    "👥 _Comandos de grupo? Chama o bot de grupo!_",
 ])
 
 CONFIG = "\n".join([
@@ -91,15 +91,18 @@ CONFIG = "\n".join([
     "📡 *Conexão:* Cloud API (Meta) ✅",
     "🛡️ *Risco de ban:* zero 💚",
     "👑 *Dono:* " + DONO + " (" + NUMERO_DONO + ")",
-    "⌨️ *Prefixos:* ! e ©",
+    "⌨️ *Prefixo:* !",
     "⏱️ *Online há:* " + _uptime(),
     "",
-    "🎮 *Recursos ativos*",
+    "🎮 *Recursos deste bot*",
     "  ✅ Sorteios (dado, moeda, escolha)",
     "  ✅ Piadas & conselhos",
     "  ✅ Respostas com estilo 😎",
-    "  🚫 Moderação de grupo — _bot de grupo_",
-    "  🚫 Namoro/RPG — _bot de grupo_",
+    "",
+    "👥 *No bot de grupo (keisen)*",
+    "  🔹 Moderação de grupos",
+    "  🔹 Namoro & RPG",
+    "  🔹 Ranks e jogos",
     "",
     LINHA,
     "💡 _Novo comando? Fala com o dono!_",
@@ -119,7 +122,7 @@ def responder(texto, nome=""):
         )
     t = _sem_acento(texto.strip().lower())
     partes = t.split()
-    cmd = partes[0].lstrip("!©")
+    cmd = partes[0].lstrip("!")
     args = partes[1:]
     resto = texto.strip().split(None, 1)[1] if len(texto.strip().split(None, 1)) > 1 else ""
 
