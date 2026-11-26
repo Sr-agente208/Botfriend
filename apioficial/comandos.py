@@ -80,7 +80,7 @@ def _premio(de, coins=0, xp=0, vitoria=False):
     _econ_salva(db)
     return "\n🎁 +" + str(coins) + " N-Coins · +" + str(xp) + " XP (Nível " + str(p["nivel"]) + ")"
 
-VERSAO = "1.14.0"
+VERSAO = "1.15.0"
 _INICIO = time.time()
 # identidade igual ao bot de grupo (DADOS DO KEISEN/INFO_KEISEN/media/INFO_KEISEN.json)
 NOME_DO_BOT = os.environ.get("NOME_DO_BOT", "WHITE LOTUS")
@@ -373,9 +373,11 @@ MENU = "\n".join([
     "  🎯 *©missao* — missão recompensada",
     "  📈 *©nivel* — teu progresso de aventureiro",
     "",
-    "🐾 *Pet*",
-    "  🐶 *©pet* — adota/ver teu pet",
-    "  🍖 *©alimentar* — alimenta (20 N-Coins)",
+    "🐾 *Pet Pokémon*",
+    "  🐶 *©pet* — teu pet (nível, XP, poder!)",
+    "  🍖 *©alimentar* (20 N-Coins) · 🏋️ *©treinar* — XP",
+    "  ⚔️ *©batalha* — arena contra pet selvagem",
+    "  ⚡ *©poder* — poder de batalha do pet",
     "",
     "💘 *Amor*",
     "  💍 *©namorar* — pede o bot em namoro",
@@ -433,7 +435,7 @@ CONFIG = "\n".join([
     "  ✅ Sorteios (dado, moeda, escolha)",
     "  ✅ Jogos (ppt, cassino, anagrama, enigma, adivinha, quiz)",
     "  ✅ RPG (herói, missões, nível/XP)",
-    "  ✅ Pet virtual (adoção, ração)",
+    "  ✅ Pet Pokémon (nível, XP, treino e batalha!)",
     "  ✅ Economia (coins, banco, pix, apostas)",
     "  ✅ Perfil por usuário",
     "  ✅ Amor (namorar o bot, casamento!)",
@@ -476,6 +478,57 @@ def _slot():
         "     [ " + " | ".join(roleta) + " ]\n\n"
         + resultado
     )
+
+
+# ─── Pet Pokémon: stats por espécie, fases e ganho de XP ───
+PET_STATS = {
+    "cachorro": {"atk": 7, "def": 5, "vel": 6, "poder": "🔥 Fogo Leal"},
+    "gato": {"atk": 6, "def": 5, "vel": 8, "poder": "💨 Sombra Ágil"},
+    "dragãozinho": {"atk": 9, "def": 7, "vel": 5, "poder": "🐉 Chama Ancestral"},
+    "raposa": {"atk": 7, "def": 6, "vel": 7, "poder": "🌙 Astúcia Mística"},
+    "pinguim": {"atk": 5, "def": 8, "vel": 4, "poder": "❄️ Gelo Polar"},
+    "unicórnio": {"atk": 8, "def": 6, "vel": 9, "poder": "✨ Luz Estelar"},
+}
+PET_BASE = {"atk": 6, "def": 6, "vel": 6, "poder": "🌟 Energia Misteriosa"}
+
+
+def _pet_default(pet):
+    """Migra pets antigos pro formato Pokémon (nível, XP, stats)."""
+    especie = pet.get("tipo", "🐾 desconhecido").split(" ", 1)[-1]
+    st = PET_STATS.get(especie, PET_BASE)
+    pet.setdefault("nivel", 1)
+    pet.setdefault("xp", 0)
+    pet.setdefault("atk", st["atk"])
+    pet.setdefault("def", st["def"])
+    pet.setdefault("vel", st["vel"])
+    pet.setdefault("vitorias", 0)
+    pet.setdefault("derrotas", 0)
+    return pet
+
+
+def _pet_fase(nivel):
+    if nivel >= 10:
+        return "👑 Alfa"
+    if nivel >= 5:
+        return "🌟 Adulto"
+    return "💫 Filhote"
+
+
+def _pet_ganha_xp(pet, xp):
+    """Soma XP e processa level ups (stats +1) e evoluções de fase."""
+    pet["xp"] = pet.get("xp", 0) + xp
+    linhas = []
+    while pet["xp"] >= pet["nivel"] * 100:
+        pet["xp"] -= pet["nivel"] * 100
+        pet["nivel"] += 1
+        for k in ("atk", "def", "vel"):
+            pet[k] = pet.get(k, 6) + 1
+        linhas.append("🎉 *" + pet["nome"] + " subiu pro Nv." + str(pet["nivel"]) + "!* (stats +1 ⚔️🛡️💨)")
+        fase_antes = _pet_fase(pet["nivel"] - 1)
+        fase_agora = _pet_fase(pet["nivel"])
+        if fase_agora != fase_antes:
+            linhas.append("✨ *" + pet["nome"] + " EVOLUIU: " + fase_antes.split(" ")[1] + " → " + fase_agora + "!* 🎊")
+    return ("\n".join(linhas)) if linhas else ""
 
 
 def responder(texto, nome="", de="", grupo=""):
@@ -1134,30 +1187,145 @@ def responder(texto, nome="", de="", grupo=""):
             tipo = random.choice(["🐶 cachorro", "🐱 gato", "🐲 dragãozinho", "🦊 raposa", "🐧 pinguim", "🦄 unicórnio"])
             nomes = ["Bidu", "Pipoca", "Fumaça", "Turbina", "Bolinha", "Nebulosa", "Amendoim", "Tempestade"]
             p["pet"] = {"nome": random.choice(nomes), "tipo": tipo, "fome": 70}
+            pet = _pet_default(p["pet"])
             _econ_salva(db)
-            pet = p["pet"]
             return "\n".join([
                 "🎉 *UM PET TE ESCOLHEU!* 🎉",
                 LINHA,
                 "",
                 pet["tipo"].split(" ")[0] + " *Nome:* " + pet["nome"],
-                "🐾 *Espécie:* " + pet["tipo"].split(" ", 1)[1],
+                "🐾 *Espécie:* " + pet["tipo"].split(" ", 1)[1] + " · " + _pet_fase(1),
+                "⚡ *Poder:* " + PET_STATS.get(pet["tipo"].split(" ", 1)[1], PET_BASE)["poder"],
                 "🍽️ *Fome:* " + str(pet["fome"]) + "/100",
                 "",
-                "🍖 _Alimenta: ©alimentar (custa 20 N-Coins)_",
+                "🎮 *Jornada Pokémon começa agora!* Nv.1 · 0/100 XP",
+                "",
+                "🍖 _©alimentar (20 N-Coins)_ · 🏋️ _©treinar_",
+                "⚔️ _©batalha — arena contra pets selvagens!_",
                 "🔍 _Vê ele de novo: ©pet_",
             ])
+        _pet_default(pet)
         fome = pet.get("fome", 50)
         carinha = "😍" if fome >= 80 else ("🙂" if fome >= 50 else (" 😟" if fome >= 25 else "💔"))
         barra = "▓" * (fome // 10) + "░" * (10 - fome // 10)
+        barra_xp = "▓" * (pet["xp"] * 10 // (pet["nivel"] * 100)) + "░" * (10 - pet["xp"] * 10 // (pet["nivel"] * 100))
         return "\n".join([
             "🐾 *TEU PET*",
             LINHA,
             "",
             pet["tipo"].split(" ")[0] + " *" + pet["nome"] + "* (" + pet["tipo"].split(" ", 1)[1] + ")",
+            "⭐ " + _pet_fase(pet["nivel"]) + " · *Nv." + str(pet["nivel"]) + "*",
+            "❤️ XP: [" + barra_xp + "] " + str(pet["xp"]) + "/" + str(pet["nivel"] * 100),
+            "⚔️ ATK " + str(pet["atk"]) + " · 🛡️ DEF " + str(pet["def"]) + " · 💨 VEL " + str(pet["vel"]),
+            "💪 *Poder total: " + str(pet["atk"] + pet["def"] + pet["vel"]) + "*",
+            "⚔️ Campanha: " + str(pet["vitorias"]) + "V · " + str(pet["derrotas"]) + "D",
             "🍽️ Fome: [" + barra + "] " + str(fome) + "/100 " + carinha,
             "",
-            "🍖 _Alimenta: ©alimentar (20 N-Coins)_",
+            "🍖 _©alimentar (20 N-Coins)_ · 🏋️ _©treinar_ · ⚔️ _©batalha_",
+        ])
+    if cmd == "poder":
+        if not de:
+            return "⚡ Manda ©poder no privado! 😄"
+        pet = _conta(de).get("perfil", {}).get("pet")
+        if not pet:
+            return "🐾 _Sem pet, sem poder! Adota um: ©pet_"
+        _pet_default(pet)
+        return "\n".join([
+            "⚡ *PODER DE BATALHA*",
+            LINHA,
+            "",
+            pet["tipo"].split(" ")[0] + " *" + pet["nome"] + "* · Nv." + str(pet["nivel"]) + " · " + _pet_fase(pet["nivel"]),
+            "🔥 " + PET_STATS.get(pet["tipo"].split(" ", 1)[1], PET_BASE)["poder"],
+            "⚔️ ATK " + str(pet["atk"]) + " · 🛡️ DEF " + str(pet["def"]) + " · 💨 VEL " + str(pet["vel"]),
+            "💪 *Poder total: " + str(pet["atk"] + pet["def"] + pet["vel"]) + "*",
+            "⚔️ Campanha: " + str(pet["vitorias"]) + "V · " + str(pet["derrotas"]) + "D",
+            "",
+            "⚔️ _Arena: ©batalha_ · 🏋️ _Treino: ©treinar_",
+        ])
+    if cmd == "treinar":
+        if not de:
+            return "🏋️ Manda ©treinar no privado! 😄"
+        db = _econ()
+        c = db.setdefault(de, {"coins": 100, "banco": 0, "perfil": {}})
+        pet = c.setdefault("perfil", {}).get("pet")
+        if not pet:
+            return "🐾 _Sem pet pra treinar! Adota um: ©pet_"
+        _pet_default(pet)
+        agora = time.time()
+        if agora - pet.get("last_train", 0) < 60:
+            resta = int(60 - (agora - pet.get("last_train", 0)))
+            return "🏋️ *" + pet["nome"] + "* tá ofegante… 🥵 de novo em *" + str(resta) + "s*"
+        if pet.get("fome", 0) < 15:
+            return "🍽️ *" + pet["nome"] + "* tá fraco de fome! Alimenta primeiro: ©alimentar"
+        pet["last_train"] = agora
+        pet["fome"] = max(0, pet.get("fome", 0) - 12)
+        extra_stat = ""
+        if random.random() < 0.4:
+            st_up = random.choice(("atk", "def", "vel"))
+            pet[st_up] += 1
+            emoji_st = {"atk": "⚔️", "def": "🛡️", "vel": "💨"}[st_up]
+            extra_stat = "\n📈 *" + pet["nome"] + " ganhou +1 " + emoji_st + " " + st_up.upper() + "!*"
+        lvl = _pet_ganha_xp(pet, 15)
+        _econ_salva(db)
+        return "\n".join([
+            "🏋️ *" + pet["nome"] + " treinou pesado!*",
+            "❤️ +15 XP · 🍽️ fome -12",
+        ]) + extra_stat + ("\n" + lvl if lvl else "")
+    if cmd == "batalha":
+        if not de:
+            return "⚔️ Manda ©batalha no privado! 😄"
+        db = _econ()
+        c = db.setdefault(de, {"coins": 100, "banco": 0, "perfil": {}})
+        pet = c.setdefault("perfil", {}).get("pet")
+        if not pet:
+            return "🐾 _Sem pet pra batalhar! Adota um: ©pet_"
+        _pet_default(pet)
+        agora = time.time()
+        if agora - pet.get("last_battle", 0) < 120:
+            resta = int(120 - (agora - pet.get("last_battle", 0)))
+            return "🩹 *" + pet["nome"] + "* tá recuperando fôlego… ⚔️ de novo em *" + str(resta) + "s*"
+        pet["last_battle"] = agora
+        w_esp = random.choice(list(PET_STATS))
+        w_st = PET_STATS[w_esp]
+        w_nivel = max(1, pet["nivel"] + random.choice([-2, -1, 0, 1, 2]))
+        w_atk = w_st["atk"] + w_nivel - 1
+        w_def = w_st["def"] + w_nivel - 1
+        emoji_w = "🐶🐱🐲🦊🐧🦄"[list(PET_STATS).index(w_esp)]
+        rounds_txt, meus = [], 0
+        for i in range(1, 4):
+            meu_hit = pet["atk"] + random.randint(1, 10)
+            w_hit = w_atk + random.randint(1, 10)
+            if meu_hit >= w_hit:
+                meus += 1
+                rounds_txt.append("🥊 *Round " + str(i) + ":* " + pet["nome"] + " usa " + PET_STATS.get(pet["tipo"].split(" ", 1)[1], PET_BASE)["poder"] + "! 💥 (" + str(meu_hit) + " × " + str(w_hit) + ")")
+            else:
+                rounds_txt.append("🥊 *Round " + str(i) + ":* selvagem contra-ataca! 💢 (" + str(w_hit) + " × " + str(meu_hit) + ")")
+        venceu = meus >= 2
+        if venceu:
+            ganho = random.randint(40, 80)
+            c["coins"] = c.get("coins", 0) + ganho
+            pet["vitorias"] = pet.get("vitorias", 0) + 1
+            lvl = _pet_ganha_xp(pet, 40)
+            resultado = ("\n".join(rounds_txt) + "\n\n🏆 *VITÓRIA! " + pet["nome"] + " venceu o " + emoji_w + " " + w_esp + " selvagem (Nv." + str(w_nivel) + ")!*\n"
+                         "🎁 +" + str(ganho) + " N-Coins · +40 XP")
+        else:
+            pet["derrotas"] = pet.get("derrotas", 0) + 1
+            lvl = _pet_ganha_xp(pet, 12)
+            resultado = ("\n".join(rounds_txt) + "\n\n💀 *Derrota… o " + emoji_w + " " + w_esp + " selvagem (Nv." + str(w_nivel) + ") foi mais forte.*\n"
+                         "💔 +12 XP de experiência (perder também ensina!)")
+        if lvl:
+            resultado += "\n" + lvl
+        _econ_salva(db)
+        if de or grupo:
+            EXTRA_APOS[de or grupo] = {"texto": resultado}
+        return "\n".join([
+            "⚔️ *ARENA PET* 🏟️",
+            LINHA,
+            "",
+            pet["tipo"].split(" ")[0] + " *" + pet["nome"] + "* (Nv." + str(pet["nivel"]) + ") entrou na arena…",
+            "🐾 Um " + emoji_w + " *" + w_esp + " selvagem* apareceu! (Nv." + str(w_nivel) + ")",
+            "",
+            "🥊 *A batalha vai começar… aguenta o suspense!* (_o resultado chega em segundos_)",
         ])
     if cmd == "alimentar":
         if not de:
@@ -1174,17 +1342,17 @@ def responder(texto, nome="", de="", grupo=""):
             return "🍽️ *" + pet["nome"] + "* tá mastigando ainda… 🔄 de novo em *" + str(resta) + "s*"
         if c.get("coins", 0) < 20:
             return "💸 *Sem coins pro ração!* (custa 20) _Ganha com ©trabalhar_ 💼"
+        _pet_default(pet)
         c["coins"] = c.get("coins", 0) - 20
         pet["fome"] = min(100, pet.get("fome", 0) + 35)
         pet["last_feed"] = agora
+        lvl = _pet_ganha_xp(pet, 8)
         _econ_salva(db)
         return "\n".join([
             "🍖 *" + pet["nome"] + " devorou a ração!*" + pet["tipo"].split(" ")[0],
             "🍽️ Fome agora: *" + str(pet["fome"]) + "/100* 😍",
-            "💸 Custo: -20 N-Coins",
-            "",
-            "_Pet feliz, dono feliz! 🐾_",
-        ])
+            "💸 Custo: -20 N-Coins · ❤️ +8 XP",
+        ]) + ("\n" + lvl if lvl else "\n\n_Pet feliz, dono feliz! 🐾_")
     if cmd == "adivinha":
         if not de:
             return "🔢 Manda ©adivinha no privado! 😄"
