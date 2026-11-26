@@ -61,6 +61,28 @@ ok(len(comandos.responder("©cantada")) > 10, "©cantada tem conteúdo")
 ok(len(comandos.responder("©curiosidades")) > 10, "©curiosidades tem conteúdo")
 ok(len(comandos.responder("©brincadeira")) > 10, "©brincadeira sorteia desafio")
 ok("💖" in comandos.responder("©carinho"), "©carinho interage")
+# --- Lote 3: RPG ---
+ok("herói" in comandos.responder("©rpg", de="u5@s.whatsapp.net").lower(), "©rpg cria herói")
+ok("TEU HERÓI" in comandos.responder("©rpg", de="u5@s.whatsapp.net").upper(), "©rpg de novo mostra o herói")
+mis = comandos.responder("©missao", de="u5@s.whatsapp.net")
+ok("MISSÃO" in mis.upper(), "©missao rola missão")
+ok("taverna" in comandos.responder("©missao", de="u5@s.whatsapp.net").lower(), "©missao respeita cooldown")
+ok("PROGRESSO" in comandos.responder("©nivel", de="u5@s.whatsapp.net").upper(), "©nivel mostra progresso")
+# --- Lote 3: Pet ---
+ok("PET TE ESCOLHEU" in comandos.responder("©pet", de="u6@s.whatsapp.net").upper(), "©pet adota pet")
+ok("TEU PET" in comandos.responder("©pet", de="u6@s.whatsapp.net").upper(), "©pet de novo mostra status")
+ok("devorou" in comandos.responder("©alimentar", de="u6@s.whatsapp.net").lower(), "©alimentar alimenta")
+# --- Lote 3: adivinha ---
+comandos.responder("©adivinha", de="u7@s.whatsapp.net")
+num = comandos.PENDENTE["u7@s.whatsapp.net"]["numero"]
+ok("MAIOR" in comandos.responder(str(num - 1), de="u7@s.whatsapp.net"), "©adivinha dá dica maior")
+ok("ACERTOU" in comandos.responder(str(num), de="u7@s.whatsapp.net"), "©adivinha completa o jogo")
+# --- Lote 3: quiz ---
+comandos.responder("©quiz", de="u8@s.whatsapp.net")
+letra = comandos.PENDENTE["u8@s.whatsapp.net"]["resposta"][0]
+ok("CERTA" in comandos.responder(letra, de="u8@s.whatsapp.net").upper(), "©quiz aceita letra certa")
+# --- Lote 3: dono ---
+ok("Sr-agente208" in comandos.responder("©dono"), "©dono mostra o criador")
 econ = comandos.responder("©saldo", de="u3@s.whatsapp.net")
 ok("EXTRATO" in econ and "N-Coins" in econ, "©saldo mostra extrato bancário")
 trab1 = comandos.responder("©trabalhar", de="u3@s.whatsapp.net")

@@ -35,6 +35,22 @@ def _conta(jid):
     db = _econ()
     return db.setdefault(jid, {"coins": 100, "banco": 0, "perfil": {}})
 
+
+def _premio(de, coins=0, xp=0, vitoria=False):
+    """Credita coins/XP e retorna a linha de recompensa (ou '' se anônimo)."""
+    if not de:
+        return ""
+    db = _econ()
+    c = db.setdefault(de, {"coins": 100, "banco": 0, "perfil": {}})
+    c["coins"] = c.get("coins", 0) + coins
+    p = c.setdefault("perfil", {})
+    if vitoria:
+        p["vitorias"] = p.get("vitorias", 0) + 1
+    p["xp"] = p.get("xp", 0) + xp
+    p["nivel"] = p["xp"] // 100 + 1
+    _econ_salva(db)
+    return "\n🎁 +" + str(coins) + " N-Coins · +" + str(xp) + " XP (Nível " + str(p["nivel"]) + ")"
+
 VERSAO = "1.4.0"
 _INICIO = time.time()
 # identidade igual ao bot de grupo (DADOS DO KEISEN/INFO_KEISEN/media/INFO_KEISEN.json)
@@ -173,6 +189,19 @@ MENU = "\n".join([
     "  🎲 *©brincadeira* — desafio pra você",
     "  🥰 *©carinho* · 🤗 *©abraco* · 👋 *©tapa* · 😘 *©beijo*",
     "",
+    "🥷 *RPG*",
+    "  🗡️ *©rpg* — cria/ver teu herói",
+    "  🎯 *©missao* — missão recompensada",
+    "  📈 *©nivel* — teu progresso de aventureiro",
+    "",
+    "🐾 *Pet*",
+    "  🐶 *©pet* — adota/ver teu pet",
+    "  🍖 *©alimentar* — alimenta (20 N-Coins)",
+    "",
+    "🧠 *Mais jogos*",
+    "  🔢 *©adivinha* — adivinhe o número 1-100",
+    "  📚 *©quiz* — pergunta e respostas",
+    "",
     "😄 *Humor*",
     "  😂 *©piada* — risada garantida (ou não)",
     "  💡 *©conselho* — sabedoria duvidosa",
@@ -202,7 +231,11 @@ CONFIG = "\n".join([
     "",
     "🎮 *Recursos deste bot*",
     "  ✅ Sorteios (dado, moeda, escolha)",
-    "  ✅ Jogos (ppt, cassino, anagrama, enigma)",
+    "  ✅ Jogos (ppt, cassino, anagrama, enigma, adivinha, quiz)",
+    "  ✅ RPG (herói, missões, nível/XP)",
+    "  ✅ Pet virtual (adoção, ração)",
+    "  ✅ Economia (coins, banco, pix, apostas)",
+    "  ✅ Perfil por usuário",
     "  ✅ Interações (carinho, abraço, tapa, beijo)",
     "  ✅ Piadas, conselhos & curiosidades",
     "  ✅ Respostas com estilo 😎",
@@ -239,18 +272,47 @@ def _slot():
 
 def responder(texto, nome="", de=""):
     """Recebe o texto da mensagem e devolve a resposta do bot."""
-    # resposta de jogo pendente (anagrama/enigma): qualquer texto do usuário vale
+    # resposta de jogo pendente (anagrama/enigma/adivinha/quiz): texto livre vale
     if de and de in PENDENTE and texto:
         alvo = PENDENTE[de]
         t_raw = texto.strip().lower()
         if not t_raw.startswith(PREFIXO) and not t_raw.startswith("!"):
+            if alvo["tipo"] == "adivinha":
+                chute = t_raw.strip()
+                if not chute.isdigit():
+                    return "🔢 _Manda um NÚMERO! (ou ©adivinha pra começar outro)_"
+                alvo["tentativas"] = alvo.get("tentativas", 0) + 1
+                n = int(chute)
+                if n == alvo["numero"]:
+                    del PENDENTE[de]
+                    bonus = _premio(de, 40, 20, vitoria=True)
+                    return (
+                        "🎉 *ACERTOU! O número era " + str(n) + "!* 🎉\n\n"
+                        "🏆 Você descobriu em *" + str(alvo["tentativas"]) + " tentativa(s)*!"
+                        + bonus
+                    )
+                dica = "📈 É *MAIOR* que " + str(n) + " ⬆️" if n < alvo["numero"] else "📉 É *MENOR* que " + str(n) + " ⬇️"
+                return dica + "\n\n🔢 Tentativa nº " + str(alvo["tentativas"])
+            if alvo["tipo"] == "quiz":
+                letra = t_raw[0]
+                if letra in alvo["resposta"]:
+                    del PENDENTE[de]
+                    bonus = _premio(de, 60, 30, vitoria=True)
+                    return (
+                        "🎉 *RESPOSTA CERTA!* 🎉\n\n"
+                        "✅ É *" + alvo["resposta"][0].upper() + "* — " + alvo["explica"]
+                        + bonus
+                    )
+                return "❌ *Não é essa!* _Tenta de outro jeito, ou ©quiz pra nova pergunta_ 📚"
             certo = _sem_acento(t_raw) in alvo["resposta"]
             if certo:
                 del PENDENTE[de]
+                bonus = _premio(de, 50 if alvo["tipo"] == "anagrama" else 80, 25 if alvo["tipo"] == "anagrama" else 35, vitoria=True)
                 return (
                     "🎉 *ACERTOU!* 🎉\n\n"
                     "✅ A resposta era: *" + alvo["resposta"][0] + "*\n"
                     "🧠 _Tua mente brilha hoje!_ ✨"
+                    + bonus
                 )
             alvo["tentativas"] = alvo.get("tentativas", 0) + 1
             return (
@@ -347,7 +409,7 @@ def responder(texto, nome="", de=""):
         if minha == escolha:
             veredito = "🤝 *EMPATE!* Os dois pensaram igual!"
         elif (escolha, minha) in [("pedra", "tesoura"), ("papel", "pedra"), ("tesoura", "papel")]:
-            veredito = "🎉 *GANHASTE!* " + f"_{escolha} quebra {minha}!_"
+            veredito = "🎉 *GANHASTE!* " + f"_{escolha} quebra {minha}!_" + _premio(de, 30, 15, vitoria=True)
         else:
             veredito = "😈 *GANHEI!* " + f"_Meu {minha} cobriu teu {escolha}!_"
         return (
@@ -606,6 +668,219 @@ def responder(texto, nome="", de=""):
         c.setdefault("perfil", {})["sexo"] = mapado[escolha]
         _econ_salva(db)
         return "✅ *Perfil atualizado!*\n🚻 Gênero: *" + mapado[escolha] + "*\n\n_Vê teu cartão: ©perfil_ 🪪"
+    if cmd in ("rpg", "personagem", "criarrpg"):
+        if not de:
+            return "🗡️ Manda ©rpg no privado! (o herói precisa de dono 😄)"
+        db = _econ()
+        c = db.setdefault(de, {"coins": 100, "banco": 0, "perfil": {}})
+        p = c.setdefault("perfil", {})
+        if "classe" in p:
+            return "\n".join([
+                "🗡️ *TEU HERÓI*",
+                LINHA,
+                "",
+                "🧝 *Nome:* " + (nome or de.split("@")[0]),
+                "⚔️ *Classe:* " + p["classe"],
+                "📈 *Nível:* " + str(p.get("nivel", 1)) + " (" + str(p.get("xp", 0)) + " XP)",
+                "🎯 *Missões:* " + str(p.get("missoes", 0)) + " concluídas",
+                "",
+                LINHA,
+                "🎯 _Missão nova: ©missao_ · 📈 _Progresso: ©nivel_",
+            ])
+        p["classe"] = random.choice(["⚔️ Guerreiro(a)", "🧙 Mago(a)", "🏹 Arqueiro(a)", "🥷 Ninja", "🛡️ Paladino(a)", "🐉 Domador(a) de dragões"])
+        p["xp"] = 0
+        p["nivel"] = 1
+        p["missoes"] = 0
+        _econ_salva(db)
+        return "\n".join([
+            "✨ *BEM-VINDO À AVENTURA!* ✨",
+            LINHA,
+            "",
+            "🎲 Sorteio dos dados… 🎲",
+            "🧝 Teu herói desperta como: *" + p["classe"] + "*",
+            "📈 *Nível inicial:* 1",
+            "",
+            "🎯 Primeira missão: _©missao_",
+            "📊 Teu progresso: _©nivel_",
+        ])
+    if cmd == "missao":
+        if not de:
+            return "🎯 Manda ©missao no privado! (a aventura é tua 😄)"
+        db = _econ()
+        c = db.setdefault(de, {"coins": 100, "banco": 0, "perfil": {}})
+        p = c.setdefault("perfil", {})
+        if "classe" not in p:
+            return "🗡️ _Cria teu herói primeiro: ©rpg_ — depois a gente parte pra missão!"
+        agora = time.time()
+        resta = int(120 - (agora - p.get("ultima_missao", 0)))
+        if resta > 0:
+            return "⏳ *Teu herói tá descansando na taverna!* 🍺 Próxima missão em *" + str(resta) + "s*"
+        p["ultima_missao"] = agora
+        p["missoes"] = p.get("missoes", 0) + 1
+        missao = random.choice([
+            "Derrote 3 slimes na floresta escura 🌲🟢",
+            "Recupere o artefato roubado pelo goblin 😈💎",
+            "Escolte a caravana até a vila segura 🐴🛡️",
+            "Investigue os ruídos no calabouço 🕯️💀",
+            "Colete 10 ervas medicinais pro curandeiro 🌿🧪",
+            "Defenda a ponte dos saqueadores 🌉⚔️",
+            "Encontre o gato perdido da anciã 🐈👵",
+            "Quebre a maldição do poço antigo 🕳️✨",
+        ])
+        coins = random.choice([80, 100, 120, 150, 180, 220])
+        xp_ganho = random.choice([30, 40, 50, 60, 70])
+        c["coins"] = c.get("coins", 0) + coins
+        p["xp"] = p.get("xp", 0) + xp_ganho
+        p["nivel"] = p["xp"] // 100 + 1
+        _econ_salva(db)
+        return "\n".join([
+            "🎯 *MISSÃO CUMPRIDA!*",
+            LINHA,
+            "",
+            "📜 *" + missao + "*",
+            "⚔️ Resultado: *Vitória gloriosa!* 🏆",
+            "",
+            "💰 Reward: *" + str(coins) + " N-Coins*",
+            "📈 XP: *" + str(xp_ganho) + " XP* → Nível *" + str(p["nivel"]) + "*",
+            "",
+            LINHA,
+            "⏳ _Próxima missão em 2 minutos_",
+        ])
+    if cmd in ("nivel", "level"):
+        if not de:
+            return "📈 Manda ©nivel no privado! 😄"
+        p = _conta(de).get("perfil", {})
+        xp = p.get("xp", 0)
+        nivel = p.get("nivel", xp // 100 + 1)
+        falta = nivel * 100 - xp
+        barra = "▓" * min(10, xp % 100 // 10) + "░" * (10 - min(10, xp % 100 // 10))
+        return "\n".join([
+            "📈 *PROGRESSO DO HERÓI*",
+            LINHA,
+            "",
+            "🧝 *Nível:* " + str(nivel),
+            "⭐ *XP total:* " + str(xp),
+            "📊 [" + barra + "] " + str(xp % 100) + "/100 pro próximo",
+            "🎯 *Missões:* " + str(p.get("missoes", 0)),
+            "🏆 *Vitórias em jogos:* " + str(p.get("vitorias", 0)),
+            "",
+            "⚔️ _Missão rápida: ©missao_",
+        ])
+    if cmd in ("pet", "mepet"):
+        if not de:
+            return "🐾 Manda ©pet no privado! 😄"
+        db = _econ()
+        c = db.setdefault(de, {"coins": 100, "banco": 0, "perfil": {}})
+        p = c.setdefault("perfil", {})
+        pet = p.get("pet")
+        if not pet:
+            tipo = random.choice(["🐶 cachorro", "🐱 gato", "🐲 dragãozinho", "🦊 raposa", "🐧 pinguim", "🦄 unicórnio"])
+            nomes = ["Bidu", "Pipoca", "Fumaça", "Turbina", "Bolinha", "Nebulosa", "Amendoim", "Tempestade"]
+            p["pet"] = {"nome": random.choice(nomes), "tipo": tipo, "fome": 70}
+            _econ_salva(db)
+            pet = p["pet"]
+            return "\n".join([
+                "🎉 *UM PET TE ESCOLHEU!* 🎉",
+                LINHA,
+                "",
+                pet["tipo"].split(" ")[0] + " *Nome:* " + pet["nome"],
+                "🐾 *Espécie:* " + pet["tipo"].split(" ", 1)[1],
+                "🍽️ *Fome:* " + str(pet["fome"]) + "/100",
+                "",
+                "🍖 _Alimenta: ©alimentar (custa 20 N-Coins)_",
+                "🔍 _Vê ele de novo: ©pet_",
+            ])
+        fome = pet.get("fome", 50)
+        carinha = "😍" if fome >= 80 else ("🙂" if fome >= 50 else (" 😟" if fome >= 25 else "💔"))
+        barra = "▓" * (fome // 10) + "░" * (10 - fome // 10)
+        return "\n".join([
+            "🐾 *TEU PET*",
+            LINHA,
+            "",
+            pet["tipo"].split(" ")[0] + " *" + pet["nome"] + "* (" + pet["tipo"].split(" ", 1)[1] + ")",
+            "🍽️ Fome: [" + barra + "] " + str(fome) + "/100 " + carinha,
+            "",
+            "🍖 _Alimenta: ©alimentar (20 N-Coins)_",
+        ])
+    if cmd == "alimentar":
+        if not de:
+            return "🍖 Manda ©alimentar no privado! 😄"
+        db = _econ()
+        c = db.setdefault(de, {"coins": 100, "banco": 0, "perfil": {}})
+        p = c.setdefault("perfil", {})
+        pet = p.get("pet")
+        if not pet:
+            return "🐾 _Você ainda não tem pet! Adota um: ©pet_"
+        agora = time.time()
+        if agora - pet.get("last_feed", 0) < 60:
+            resta = int(60 - (agora - pet.get("last_feed", 0)))
+            return "🍽️ *" + pet["nome"] + "* tá mastigando ainda… 🔄 de novo em *" + str(resta) + "s*"
+        if c.get("coins", 0) < 20:
+            return "💸 *Sem coins pro ração!* (custa 20) _Ganha com ©trabalhar_ 💼"
+        c["coins"] = c.get("coins", 0) - 20
+        pet["fome"] = min(100, pet.get("fome", 0) + 35)
+        pet["last_feed"] = agora
+        _econ_salva(db)
+        return "\n".join([
+            "🍖 *" + pet["nome"] + " devorou a ração!*" + pet["tipo"].split(" ")[0],
+            "🍽️ Fome agora: *" + str(pet["fome"]) + "/100* 😍",
+            "💸 Custo: -20 N-Coins",
+            "",
+            "_Pet feliz, dono feliz! 🐾_",
+        ])
+    if cmd == "adivinha":
+        if not de:
+            return "🔢 Manda ©adivinha no privado! 😄"
+        numero = random.randint(1, 100)
+        PENDENTE[de] = {"tipo": "adivinha", "numero": numero, "tentativas": 0}
+        return "\n".join([
+            "🔢 *ADIVINHA O NÚMERO!*",
+            LINHA,
+            "",
+            "🤖 Eu pensei num número de *1 a 100*…",
+            "🎯 Consegue descobrir em menos tentativas?",
+            "",
+            "_Manda teu chute como mensagem normal!_ (ex.: 50)",
+        ])
+    if cmd == "quiz":
+        if not de:
+            return "📚 Manda ©quiz no privado! 😄"
+        q = random.choice([
+            {"p": "Qual é o maior planeta do Sistema Solar?", "o": ["Terra", "Júpiter", "Marte", "Vênus"], "r": ["b"], "e": "Júpiter cabe 1.300 Terras dentro!"},
+            {"p": "Quantos corações tem um polvo?", "o": ["1", "2", "3", "4"], "r": ["c"], "e": "Três! E o sangue é azul."},
+            {"p": "Qual o idioma mais falado do mundo (nativos)?", "o": ["Inglês", "Espanhol", "Mandarim", "Hindi"], "r": ["c"], "e": "Mais de 900 milhões de nativos!"},
+            {"p": "Quem escreveu 'Dom Casmurro'?", "o": ["Machado de Assis", "José de Alencar", "Clarice L.", "Guimarães Rosa"], "r": ["a"], "e": "O clássico de 1899!"},
+            {"p": "Qual animal terrestre mais rápido?", "o": ["Leão", "Guepardo", "Cavalo", "Antílope"], "r": ["b"], "e": "Até 120 km/h em arrancadas!"},
+            {"p": "Quantos países tem a América do Sul?", "o": ["10", "11", "12", "13"], "r": ["c"], "e": "12 países + 1 território (Guiana Francesa)."},
+            {"p": "O que o DNA carrega?", "o": ["Energia", "Informação genética", "Oxigênio", "Sódio"], "r": ["b"], "e": "O manual de construção de você!"},
+            {"p": "Qual é a capital da Austrália?", "o": ["Sydney", "Melbourne", "Canberra", "Perth"], "r": ["c"], "e": "Canberra! Muito agendada pra evitar briga entre Sydney e Melbourne."},
+        ])
+        letras = ["*a)* ", "*b)* ", "*c)* ", "*d)* "]
+        opcoes_txt = "\n".join(letras[i] + o for i, o in enumerate(q["o"]))
+        PENDENTE[de] = {"tipo": "quiz", "resposta": q["r"], "explica": q["e"], "tentativas": 0}
+        return "\n".join([
+            "📚 *QUIZ DO BOT!*",
+            LINHA,
+            "",
+            "❓ " + q["p"],
+            "",
+            opcoes_txt,
+            "",
+            "_Responde com a letra! (a, b, c ou d)_ ✍️",
+        ])
+    if cmd == "dono":
+        return "\n".join([
+            "👑 " + LINHA,
+            "   *MEU CRIADOR*",
+            LINHA,
+            "",
+            "🧑‍💻 *Nome:* " + DONO,
+            "📱 *Número:* " + NUMERO_DONO,
+            "🤖 *Bot:* " + NOME_DO_BOT + " (Cloud API)",
+            "",
+            LINHA,
+            "💡 _Quer comando novo? Manda mensagem pra ele!_",
+        ])
     if cmd == "id":
         return "🆔 (o comando ©id é respondido pelo app com teu número)"
 
