@@ -80,7 +80,7 @@ def _premio(de, coins=0, xp=0, vitoria=False):
     _econ_salva(db)
     return "\n🎁 +" + str(coins) + " N-Coins · +" + str(xp) + " XP (Nível " + str(p["nivel"]) + ")"
 
-VERSAO = "1.15.0"
+VERSAO = "1.16.0"
 _INICIO = time.time()
 # identidade igual ao bot de grupo (DADOS DO KEISEN/INFO_KEISEN/media/INFO_KEISEN.json)
 NOME_DO_BOT = os.environ.get("NOME_DO_BOT", "WHITE LOTUS")
@@ -378,6 +378,7 @@ MENU = "\n".join([
     "  🍖 *©alimentar* (20 N-Coins) · 🏋️ *©treinar* — XP",
     "  ⚔️ *©batalha* — arena contra pet selvagem",
     "  ⚡ *©poder* — poder de batalha do pet",
+    "  🛤️ *©caminhos* — as evoluções do teu pet",
     "",
     "💘 *Amor*",
     "  💍 *©namorar* — pede o bot em namoro",
@@ -491,9 +492,44 @@ PET_STATS = {
 }
 PET_BASE = {"atk": 6, "def": 6, "vel": 6, "poder": "🌟 Energia Misteriosa"}
 
+# ─── Caminhos de evolução (cada estilo de criação vira uma forma diferente!) ───
+CAMINHOS = {
+    "guerreiro": {"emoji": "⚔️", "adulto": "Guerreiro", "alfa": "👑 Warlord",
+                  "img_a": "pets/adulto_guerreiro.png", "img_f": "pets/alfa_warlord.png",
+                  "desc": "pra quem VENCE BATALHAS na arena"},
+    "atleta": {"emoji": "💨", "adulto": "Atleta", "alfa": "👑 Relâmpago",
+               "img_a": "pets/adulto_atleta.png", "img_f": "pets/alfa_relampago.png",
+               "desc": "pra quem TREINA pesado todo dia"},
+    "fofo": {"emoji": "🧸", "adulto": "Fofura", "alfa": "👑 Divino",
+             "img_a": "pets/adulto_fofo.png", "img_f": "pets/alfa_divino.png",
+             "desc": "pra quem é bem ALIMENTADO e amado"},
+}
+
+PET_SLUG = {"cachorro": "cachorro", "gato": "gato", "dragãozinho": "dragao",
+            "raposa": "raposa", "pinguim": "pinguim", "unicórnio": "unicornio"}
+
+
+def _pet_img(pet):
+    """Arquivo de imagem do pet conforme fase e caminho (com fallback)."""
+    import os
+    slug = PET_SLUG.get(pet.get("tipo", "").split(" ", 1)[-1], "cachorro")
+    cam = CAMINHOS.get(pet.get("caminho", ""))
+    nivel = pet.get("nivel", 1)
+    candidatos = []
+    if nivel >= 10 and cam:
+        candidatos += [cam["img_f"], cam["img_a"]]
+    elif nivel >= 5 and cam:
+        candidatos += [cam["img_a"]]
+    candidatos.append("pets/filhote_" + slug + ".png")
+    base = os.path.join(os.path.dirname(os.path.abspath(__file__)), "media")
+    for c in candidatos:
+        if os.path.isfile(os.path.join(base, c)):
+            return c
+    return "fotomenu.png"
+
 
 def _pet_default(pet):
-    """Migra pets antigos pro formato Pokémon (nível, XP, stats)."""
+    """Migra pets antigos pro formato Pokémon (nível, XP, stats, caminho)."""
     especie = pet.get("tipo", "🐾 desconhecido").split(" ", 1)[-1]
     st = PET_STATS.get(especie, PET_BASE)
     pet.setdefault("nivel", 1)
@@ -503,19 +539,24 @@ def _pet_default(pet):
     pet.setdefault("vel", st["vel"])
     pet.setdefault("vitorias", 0)
     pet.setdefault("derrotas", 0)
+    pet.setdefault("treinos", 0)
+    pet.setdefault("feeds", 0)
+    pet.setdefault("caminho", "")
     return pet
 
 
-def _pet_fase(nivel):
+def _pet_fase(pet):
+    nivel = pet.get("nivel", 1)
+    cam = CAMINHOS.get(pet.get("caminho", ""))
     if nivel >= 10:
-        return "👑 Alfa"
+        return (cam["emoji"] + " " + cam["alfa"]) if cam else "👑 Alfa"
     if nivel >= 5:
-        return "🌟 Adulto"
+        return (cam["emoji"] + " " + cam["adulto"]) if cam else "🌟 Adulto"
     return "💫 Filhote"
 
 
-def _pet_ganha_xp(pet, xp):
-    """Soma XP e processa level ups (stats +1) e evoluções de fase."""
+def _pet_ganha_xp(pet, xp, chat=""):
+    """Soma XP e processa level ups (stats +1), escolha de caminho e evoluções."""
     pet["xp"] = pet.get("xp", 0) + xp
     linhas = []
     while pet["xp"] >= pet["nivel"] * 100:
@@ -524,10 +565,20 @@ def _pet_ganha_xp(pet, xp):
         for k in ("atk", "def", "vel"):
             pet[k] = pet.get(k, 6) + 1
         linhas.append("🎉 *" + pet["nome"] + " subiu pro Nv." + str(pet["nivel"]) + "!* (stats +1 ⚔️🛡️💨)")
-        fase_antes = _pet_fase(pet["nivel"] - 1)
-        fase_agora = _pet_fase(pet["nivel"])
+        if pet["nivel"] >= 5 and not pet.get("caminho"):
+            melhor = max((("guerreiro", pet.get("vitorias", 0)),
+                          ("atleta", pet.get("treinos", 0)),
+                          ("fofo", pet.get("feeds", 0))), key=lambda x: x[1])
+            cam = melhor[0] if melhor[1] > 0 else random.choice(list(CAMINHOS))
+            pet["caminho"] = cam
+            info = CAMINHOS[cam]
+            linhas.append("🛤️ *" + pet["nome"] + " escolheu o caminho " + info["emoji"] + " " + info["adulto"] + "!* (" + info["desc"] + ")")
+        fase_antes = _pet_fase({"nivel": pet["nivel"] - 1, "caminho": pet.get("caminho", "")})
+        fase_agora = _pet_fase(pet)
         if fase_agora != fase_antes:
-            linhas.append("✨ *" + pet["nome"] + " EVOLUIU: " + fase_antes.split(" ")[1] + " → " + fase_agora + "!* 🎊")
+            linhas.append("✨ *" + pet["nome"] + " EVOLUIU: " + fase_antes.split(" ")[-1] + " → " + fase_agora + "!* 🎊")
+            if chat:
+                MEDIA_ENVIAR[chat] = {"arquivo": _pet_img(pet), "tipo": "image"}
     return ("\n".join(linhas)) if linhas else ""
 
 
@@ -1176,6 +1227,15 @@ def responder(texto, nome="", de="", grupo=""):
             "",
             "⚔️ _Missão rápida: ©missao_",
         ])
+    if cmd == "caminhos":
+        linhas = ["🛤️ *CAMINHOS DE EVOLUÇÃO*", LINHA, "",
+                  "No Nv.5 teu pet escolhe um caminho conforme a vida que ele leva:", ""]
+        for k, info in CAMINHOS.items():
+            linhas.append(info["emoji"] + " *" + info["adulto"] + " → " + info["alfa"] + "*")
+            linhas.append("   _" + info["desc"] + "_")
+        linhas += ["", "⚔️ Vitórias na arena · 🏋️ Treinos · 🍖 Alimentações", "",
+                   "_Quem manda no destino do teu pet é VOCÊ! 😉_"]
+        return "\n".join(linhas)
     if cmd in ("pet", "mepet"):
         if not de:
             return "🐾 Manda ©pet no privado! 😄"
@@ -1189,22 +1249,27 @@ def responder(texto, nome="", de="", grupo=""):
             p["pet"] = {"nome": random.choice(nomes), "tipo": tipo, "fome": 70}
             pet = _pet_default(p["pet"])
             _econ_salva(db)
+            if de or grupo:
+                MEDIA_ENVIAR[de or grupo] = {"arquivo": _pet_img(pet), "tipo": "image"}
             return "\n".join([
                 "🎉 *UM PET TE ESCOLHEU!* 🎉",
                 LINHA,
                 "",
                 pet["tipo"].split(" ")[0] + " *Nome:* " + pet["nome"],
-                "🐾 *Espécie:* " + pet["tipo"].split(" ", 1)[1] + " · " + _pet_fase(1),
+                "🐾 *Espécie:* " + pet["tipo"].split(" ", 1)[1] + " · " + _pet_fase(pet),
                 "⚡ *Poder:* " + PET_STATS.get(pet["tipo"].split(" ", 1)[1], PET_BASE)["poder"],
                 "🍽️ *Fome:* " + str(pet["fome"]) + "/100",
                 "",
                 "🎮 *Jornada Pokémon começa agora!* Nv.1 · 0/100 XP",
+                "🛤️ _Caminhos de evolução: ©caminhos_",
                 "",
                 "🍖 _©alimentar (20 N-Coins)_ · 🏋️ _©treinar_",
                 "⚔️ _©batalha — arena contra pets selvagens!_",
                 "🔍 _Vê ele de novo: ©pet_",
             ])
         _pet_default(pet)
+        if de or grupo:
+            MEDIA_ENVIAR[de or grupo] = {"arquivo": _pet_img(pet), "tipo": "image"}
         fome = pet.get("fome", 50)
         carinha = "😍" if fome >= 80 else ("🙂" if fome >= 50 else (" 😟" if fome >= 25 else "💔"))
         barra = "▓" * (fome // 10) + "░" * (10 - fome // 10)
@@ -1214,7 +1279,7 @@ def responder(texto, nome="", de="", grupo=""):
             LINHA,
             "",
             pet["tipo"].split(" ")[0] + " *" + pet["nome"] + "* (" + pet["tipo"].split(" ", 1)[1] + ")",
-            "⭐ " + _pet_fase(pet["nivel"]) + " · *Nv." + str(pet["nivel"]) + "*",
+            "⭐ " + _pet_fase(pet) + " · *Nv." + str(pet["nivel"]) + "*",
             "❤️ XP: [" + barra_xp + "] " + str(pet["xp"]) + "/" + str(pet["nivel"] * 100),
             "⚔️ ATK " + str(pet["atk"]) + " · 🛡️ DEF " + str(pet["def"]) + " · 💨 VEL " + str(pet["vel"]),
             "💪 *Poder total: " + str(pet["atk"] + pet["def"] + pet["vel"]) + "*",
@@ -1230,11 +1295,13 @@ def responder(texto, nome="", de="", grupo=""):
         if not pet:
             return "🐾 _Sem pet, sem poder! Adota um: ©pet_"
         _pet_default(pet)
+        if de or grupo:
+            MEDIA_ENVIAR[de or grupo] = {"arquivo": _pet_img(pet), "tipo": "image"}
         return "\n".join([
             "⚡ *PODER DE BATALHA*",
             LINHA,
             "",
-            pet["tipo"].split(" ")[0] + " *" + pet["nome"] + "* · Nv." + str(pet["nivel"]) + " · " + _pet_fase(pet["nivel"]),
+            pet["tipo"].split(" ")[0] + " *" + pet["nome"] + "* · Nv." + str(pet["nivel"]) + " · " + _pet_fase(pet),
             "🔥 " + PET_STATS.get(pet["tipo"].split(" ", 1)[1], PET_BASE)["poder"],
             "⚔️ ATK " + str(pet["atk"]) + " · 🛡️ DEF " + str(pet["def"]) + " · 💨 VEL " + str(pet["vel"]),
             "💪 *Poder total: " + str(pet["atk"] + pet["def"] + pet["vel"]) + "*",
@@ -1258,6 +1325,7 @@ def responder(texto, nome="", de="", grupo=""):
         if pet.get("fome", 0) < 15:
             return "🍽️ *" + pet["nome"] + "* tá fraco de fome! Alimenta primeiro: ©alimentar"
         pet["last_train"] = agora
+        pet["treinos"] = pet.get("treinos", 0) + 1
         pet["fome"] = max(0, pet.get("fome", 0) - 12)
         extra_stat = ""
         if random.random() < 0.4:
@@ -1265,7 +1333,7 @@ def responder(texto, nome="", de="", grupo=""):
             pet[st_up] += 1
             emoji_st = {"atk": "⚔️", "def": "🛡️", "vel": "💨"}[st_up]
             extra_stat = "\n📈 *" + pet["nome"] + " ganhou +1 " + emoji_st + " " + st_up.upper() + "!*"
-        lvl = _pet_ganha_xp(pet, 15)
+        lvl = _pet_ganha_xp(pet, 15, chat=(de or grupo))
         _econ_salva(db)
         return "\n".join([
             "🏋️ *" + pet["nome"] + " treinou pesado!*",
@@ -1305,19 +1373,21 @@ def responder(texto, nome="", de="", grupo=""):
             ganho = random.randint(40, 80)
             c["coins"] = c.get("coins", 0) + ganho
             pet["vitorias"] = pet.get("vitorias", 0) + 1
-            lvl = _pet_ganha_xp(pet, 40)
+            lvl = _pet_ganha_xp(pet, 40, chat=(de or grupo))
             resultado = ("\n".join(rounds_txt) + "\n\n🏆 *VITÓRIA! " + pet["nome"] + " venceu o " + emoji_w + " " + w_esp + " selvagem (Nv." + str(w_nivel) + ")!*\n"
                          "🎁 +" + str(ganho) + " N-Coins · +40 XP")
         else:
             pet["derrotas"] = pet.get("derrotas", 0) + 1
-            lvl = _pet_ganha_xp(pet, 12)
+            lvl = _pet_ganha_xp(pet, 12, chat=(de or grupo))
             resultado = ("\n".join(rounds_txt) + "\n\n💀 *Derrota… o " + emoji_w + " " + w_esp + " selvagem (Nv." + str(w_nivel) + ") foi mais forte.*\n"
                          "💔 +12 XP de experiência (perder também ensina!)")
         if lvl:
             resultado += "\n" + lvl
         _econ_salva(db)
         if de or grupo:
-            EXTRA_APOS[de or grupo] = {"texto": resultado}
+            EXTRA_APOS[de or grupo] = {"texto": resultado, "media": {"arquivo": _pet_img(pet), "tipo": "image"}}
+        if de or grupo:
+            MEDIA_ENVIAR[de or grupo] = {"arquivo": _pet_img(pet), "tipo": "image"}
         return "\n".join([
             "⚔️ *ARENA PET* 🏟️",
             LINHA,
@@ -1346,7 +1416,8 @@ def responder(texto, nome="", de="", grupo=""):
         c["coins"] = c.get("coins", 0) - 20
         pet["fome"] = min(100, pet.get("fome", 0) + 35)
         pet["last_feed"] = agora
-        lvl = _pet_ganha_xp(pet, 8)
+        pet["feeds"] = pet.get("feeds", 0) + 1
+        lvl = _pet_ganha_xp(pet, 8, chat=(de or grupo))
         _econ_salva(db)
         return "\n".join([
             "🍖 *" + pet["nome"] + " devorou a ração!*" + pet["tipo"].split(" ")[0],
