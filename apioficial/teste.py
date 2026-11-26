@@ -99,6 +99,18 @@ ok("leite" in comandos.responder("©anotacoes", de="u10@s.whatsapp.net"), "©ano
 ok("Apagada" in comandos.responder("©delanotacao 1", de="u10@s.whatsapp.net"), "©delanotacao apaga")
 ok("VERDADE" in comandos.responder("©verdade").upper(), "©verdade sorteia")
 ok("DESAFIO" in comandos.responder("©desafio").upper(), "©desafio sorteia")
+# --- Lote 5: Grupos ---
+G = "120363-teste@g.us"
+ok("de grupo" in comandos.responder("©grupo", de="u11@s.whatsapp.net").lower(), "©grupo sem grupo dá aviso")
+ok("PAINEL DO GRUPO" in comandos.responder("©grupo", de="u11@s.whatsapp.net", grupo=G).upper(), "©grupo mostra painel")
+ok("u11" in comandos.responder("©membros", de="u12@s.whatsapp.net", grupo=G), "©membros lista membros ativos")
+ok("só o dono" in comandos.responder("©regras seja legal", de="u15@s.whatsapp.net", grupo=G).lower(), "©regras set é só do dono")
+ok("salvas" in comandos.responder("©regras Respeita a galera", de=comandos.NUMERO_DONO, grupo=G).lower(), "©regras dono salva")
+ok("Respeita a galera" in comandos.responder("©regras", de="u16@s.whatsapp.net", grupo=G), "©regras mostra regras salvas")
+ok("🎉" in comandos.responder("©sorteio", de="u13@s.whatsapp.net", grupo=G), "©sorteio sorteia membro")
+times = comandos.responder("©times 2", de="u14@s.whatsapp.net", grupo=G)
+ok("Time 1" in times and "u11" in times, "©times divide em times")
+ok("u11" in comandos.responder("©msgcount", de="u11@s.whatsapp.net", grupo=G), "©msgcount ranking de fala")
 econ = comandos.responder("©saldo", de="u3@s.whatsapp.net")
 ok("EXTRATO" in econ and "N-Coins" in econ, "©saldo mostra extrato bancário")
 trab1 = comandos.responder("©trabalhar", de="u3@s.whatsapp.net")

@@ -13,6 +13,7 @@ import time
 import unicodedata
 
 ARQ_ECON = os.path.join(os.path.dirname(os.path.abspath(__file__)), "economia.json")
+ARQ_GRUP = os.path.join(os.path.dirname(os.path.abspath(__file__)), "grupos.json")
 
 
 def _econ():
@@ -30,6 +31,33 @@ def _econ_salva(db):
             json.dump(db, f)
     except Exception:
         pass
+
+
+def _grup():
+    """Estado dos grupos: membros ativos, contagem de msgs, regras."""
+    try:
+        with open(ARQ_GRUP) as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+
+def _grup_salva(db):
+    try:
+        with open(ARQ_GRUP, "w") as f:
+            json.dump(db, f)
+    except Exception:
+        pass
+
+
+def _grup_registra(gid, de, nome):
+    """Registra membro ativo + mensagem num grupo (chamado a cada msg de grupo)."""
+    db = _grup()
+    g = db.setdefault(gid, {"membros": {}, "msgs": {}, "total": 0, "regras": "", "nome": ""})
+    g["membros"].setdefault(de, nome or de)
+    g["msgs"][de] = g["msgs"].get(de, 0) + 1
+    g["total"] = g.get("total", 0) + 1
+    _grup_salva(db)
 
 
 def _conta(jid):
@@ -52,7 +80,7 @@ def _premio(de, coins=0, xp=0, vitoria=False):
     _econ_salva(db)
     return "\n🎁 +" + str(coins) + " N-Coins · +" + str(xp) + " XP (Nível " + str(p["nivel"]) + ")"
 
-VERSAO = "1.5.0"
+VERSAO = "1.6.0"
 _INICIO = time.time()
 # identidade igual ao bot de grupo (DADOS DO KEISEN/INFO_KEISEN/media/INFO_KEISEN.json)
 NOME_DO_BOT = os.environ.get("NOME_DO_BOT", "WHITE LOTUS")
@@ -243,6 +271,13 @@ MENU = "\n".join([
     "  📋 *©anotacoes* — lista tuas anotações",
     "  🔍 *©verdade* · 🔥 *©desafio*",
     "",
+    "👥 *Grupo* (ativa com OBA da Meta)",
+    "  👥 *©grupo* — painel do grupo",
+    "  🎲 *©sorteio* — sorteia um membro",
+    "  ⚔️ *©times* _N_ — divide em times",
+    "  📊 *©msgcount* — quem mais fala",
+    "  📜 *©regras* — regras do grupo",
+    "",
     "🧠 *Mais jogos*",
     "  🔢 *©adivinha* — adivinhe o número 1-100",
     "  📚 *©quiz* — pergunta e respostas",
@@ -283,6 +318,7 @@ CONFIG = "\n".join([
     "  ✅ Perfil por usuário",
     "  ✅ Amor (namorar o bot, casamento!)",
     "  ✅ Utilidades (calc, anotações, verdade/desafio)",
+    "  ✅ Núcleo de grupos (sorteio, times, regras)",
     "  ✅ Interações (carinho, abraço, tapa, beijo)",
     "  ✅ Piadas, conselhos & curiosidades",
     "  ✅ Respostas com estilo 😎",
@@ -317,8 +353,11 @@ def _slot():
     )
 
 
-def responder(texto, nome="", de=""):
+def responder(texto, nome="", de="", grupo=""):
     """Recebe o texto da mensagem e devolve a resposta do bot."""
+    # Lote 5: em grupo, registra membro ativo + contagem de mensagens
+    if grupo and de:
+        _grup_registra(grupo, de, nome)
     # resposta de jogo pendente (anagrama/enigma/adivinha/quiz): texto livre vale
     if de and de in PENDENTE and texto:
         alvo = PENDENTE[de]
@@ -1120,6 +1159,99 @@ def responder(texto, nome="", de=""):
         removida = notas.pop(int(idx) - 1)
         _econ_salva(db)
         return "🗑️ *Apagada!* ✅\n💬 _\"" + removida[:80] + "\"_\n📋 _Restam " + str(len(notas)) + "_"
+    # ─── Lote 5: grupos ───
+    if cmd in ("grupo", "infogrupo"):
+        if not grupo:
+            return "\n".join([
+                "👥 *Esse é de grupo!*",
+                "",
+                "_©grupo, ©membros, ©sorteio, ©times, ©msgcount e ©regras funcionam dentro de grupos._",
+                "",
+                "🟢 _O núcleo já tá pronto — espera o selo verde (OBA) da Meta pro número entrar em grupos!_",
+            ])
+        g = _grup().get(grupo, {})
+        membros = g.get("membros", {})
+        msgs = g.get("msgs", {})
+        linhas = [
+            "👥 *PAINEL DO GRUPO*",
+            LINHA,
+            "",
+            "👤 *Membros ativos:* " + str(len(membros)),
+            "💬 *Mensagens trocadas:* " + str(g.get("total", 0)),
+        ]
+        if msgs:
+            top = sorted(msgs.items(), key=lambda x: -x[1])[0]
+            linhas.append("👑 *Maior falador:* @" + top[0].split("@")[0] + " (" + str(top[1]) + " msgs)")
+        regras = g.get("regras", "")
+        if regras:
+            linhas.append("📜 *Regras:* " + regras[:60] + ("…" if len(regras) > 60 else ""))
+        linhas += ["", "🎲 _©sorteio · ⚔️ ©times · 📊 ©msgcount · 📜 ©regras_"]
+        return "\n".join(linhas)
+    if cmd == "membros":
+        if not grupo:
+            return "👥 _©membros é de grupo!_ 🟢"
+        membros = _grup().get(grupo, {}).get("membros", {})
+        if not membros:
+            return "👥 *Ninguém falou ainda!* Manda oi 😄"
+        nomes = ["▫️ @" + m.split("@")[0] for m in membros]
+        return "\n".join(["👥 *MEMBROS ATIVOS* (" + str(len(membros)) + ")", LINHA, ""] + nomes)
+    if cmd == "msgcount":
+        if not grupo:
+            return "📊 _©msgcount é de grupo!_ 🟢"
+        msgs = _grup().get(grupo, {}).get("msgs", {})
+        if not msgs:
+            return "📊 *Sem mensagens contadas ainda!* Conversem 😄"
+        ordem = sorted(msgs.items(), key=lambda x: -x[1])[:5]
+        medalhas = ["🥇", "🥈", "🥉", "4️⃣", "5️⃣"]
+        linhas = ["📊 *QUEM MAIS FALA*", LINHA, ""]
+        for i, (m, n) in enumerate(ordem):
+            linhas.append(medalhas[i] + " @" + m.split("@")[0] + " — " + str(n) + " msgs")
+        return "\n".join(linhas)
+    if cmd == "sorteio":
+        if not grupo:
+            return "🎲 _©sorteio é de grupo!_ 🟢"
+        membros = list(_grup().get(grupo, {}).get("membros", {}))
+        if not membros:
+            return "🎲 *Ninguém pra sortear!* Manda oi primeiro 😄"
+        escolhido = random.choice(membros)
+        return "\n".join([
+            "🎲 *SORTEIO* 🎪",
+            LINHA,
+            "",
+            "🎉 *O escolhido é: @" + escolhido.split("@")[0] + "!* 🎉",
+            "",
+            "_Parabéns… eu acho? 😄_",
+        ])
+    if cmd == "times":
+        if not grupo:
+            return "🟢 _©times é de grupo!_ 🟡"
+        membros = list(_grup().get(grupo, {}).get("membros", {}))
+        if not membros:
+            return "⚔️ *Ninguém pros times!* Conversem primeiro 😄"
+        n = int(args[0]) if args and args[0].isdigit() else 2
+        n = max(2, min(n, len(membros)))
+        random.shuffle(membros)
+        times = [membros[i::n] for i in range(n)]
+        cores = ["🟢", "🟡", "🔵", "🟣", "🔴", "⚪"]
+        linhas = ["⚔️ *TIMES SORTEADOS!*", LINHA, ""]
+        for i, t in enumerate(times):
+            linhas.append(cores[i % len(cores)] + " *Time " + str(i + 1) + ":* "
+                          + ", ".join("@" + m.split("@")[0] for m in t))
+        return "\n".join(linhas)
+    if cmd == "regras":
+        if not grupo:
+            return "📜 _©regras é de grupo!_ 🟢"
+        db = _grup()
+        g = db.setdefault(grupo, {"membros": {}, "msgs": {}, "total": 0, "regras": "", "nome": ""})
+        if resto:
+            if de != NUMERO_DONO:
+                return "📜 *Só o dono pode definir as regras!* 😉"
+            g["regras"] = resto.strip()
+            _grup_salva(db)
+            return "📜 *Regras salvas!* ✅\n💬 _\"" + resto.strip()[:100] + "\"_"
+        if not g.get("regras"):
+            return "📜 *Sem regras ainda!* _O dono define: ©regras respeita a galera_ 😄"
+        return "\n".join(["📜 *REGRAS DO GRUPO*", LINHA, "", g["regras"]])
     if cmd == "id":
         return "🆔 (o comando ©id é respondido pelo app com teu número)"
 

@@ -82,7 +82,7 @@ def receber():
             value = change.get("value", {})
             for msg in value.get("messages", []):
                 try:
-                    processar(msg)
+                    processar(msg, value)
                 except Exception:
                     log.exception("erro processando mensagem")
 
@@ -90,9 +90,10 @@ def receber():
     return "ok", 200
 
 
-def processar(msg):
+def processar(msg, value=None):
     mid = msg.get("id", "")
-    de = msg.get("from", "")
+    grupo = msg.get("group_id", "")  # presente em mensagens de grupo (Groups API)
+    de = msg.get("from", "") or msg.get("from_user_id", "")
     tipo = msg.get("type", "")
     if not mid or not de:
         return
@@ -104,10 +105,16 @@ def processar(msg):
 
     if tipo == "text":
         texto = msg.get("text", {}).get("body", "")
-        nome = ""
-        nome = msg.get("profile", {}).get("name") or msg.get("context", {}).get("from") or ""
-        resposta = comandos.responder(texto, nome, de=de)
+        nome = msg.get("profile", {}).get("name") or ""
+        if not nome and value:
+            for c in value.get("contacts", []):
+                if c.get("wa_id") == msg.get("from", ""):
+                    nome = c.get("profile", {}).get("name", "")
+                    break
+        resposta = comandos.responder(texto, nome, de=de, grupo=grupo)
     elif tipo in ("image", "sticker", "audio", "video", "document", "location", "contacts"):
+        if grupo:
+            return  # em grupo, mídia não gera resposta (evita spam)
         resposta = comandos.responder(None)
     elif tipo == "reaction":
         return  # reação não precisa de resposta
@@ -117,8 +124,11 @@ def processar(msg):
         resposta = comandos.responder(None)
 
     if resposta:
-        sender.enviar_texto(de, resposta)
-        log.info("respondi %s (%s)", de, mid)
+        if grupo:
+            sender.enviar_grupo(grupo, resposta)
+        else:
+            sender.enviar_texto(de, resposta)
+        log.info("respondi %s (%s)", grupo or de, mid)
 
 
 @app.get("/diag")

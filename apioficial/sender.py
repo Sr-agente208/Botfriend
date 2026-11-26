@@ -38,6 +38,18 @@ def enviar_texto(to, texto):
     return _post(payload)
 
 
+def enviar_grupo(group_id, texto):
+    """Envia mensagem de texto para um grupo (Groups API — recipient_type group)."""
+    payload = {
+        "messaging_product": "whatsapp",
+        "recipient_type": "group",
+        "to": group_id,
+        "type": "text",
+        "text": {"body": texto[:4096]},
+    }
+    return _post(payload)
+
+
 def marcar_lido(message_id):
     """Marca a mensagem como lida (bolinha azul). Falha silenciosamente."""
     payload = {"messaging_product": "whatsapp", "status": "read", "message_id": message_id}

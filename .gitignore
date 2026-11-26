@@ -8,3 +8,4 @@ DADOS\ DO\ KEISEN/qr-code/creds.json
 __pycache__/
 *.pyc
 economia.json
+grupos.json
