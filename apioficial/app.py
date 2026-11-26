@@ -154,6 +154,9 @@ def diag():
 
 @app.errorhandler(Exception)
 def erro_geral(e):
+    from werkzeug.exceptions import NotFound
+    if isinstance(e, NotFound):
+        return "not found", 404  # favicon/sondas: não encher o log de traceback
     log.exception("erro não tratado: %s", e)
     return "ok", 200  # nunca derrubar o webhook
 
