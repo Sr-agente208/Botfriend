@@ -11,6 +11,7 @@ import hashlib
 import hmac
 import logging
 import os
+import threading
 from collections import OrderedDict
 
 from flask import Flask, request, jsonify
@@ -145,6 +146,20 @@ def processar(msg, value=None):
         else:
             sender.enviar_texto(de, resposta)
         log.info("respondi %s (%s)", chat, mid)
+
+    # fase 2 (ex.: resultado da fidelidade chega depois do "analisando...")
+    extra = comandos.EXTRA_APOS.pop(chat, None)
+    if extra:
+        def _fase2(media=extra.get("media"), texto=extra["texto"], dest=chat, em_grupo=bool(grupo)):
+            try:
+                if media:
+                    sender.enviar_imagem(dest, media["url"], texto, grupo=em_grupo)
+                else:
+                    sender.enviar_texto(dest, texto)
+                log.info("fase 2 enviada p/ %s", dest)
+            except Exception:
+                log.exception("fase 2 falhou p/ %s", dest)
+        threading.Timer(comandos.ATRASO_FASE2, _fase2).start()
 
 
 @app.get("/diag")

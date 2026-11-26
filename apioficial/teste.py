@@ -157,10 +157,17 @@ for palavra in ["lindo", "linda", "baiano", "baiana", "carioca"]:
     u = "m9" + palavra + "@s.whatsapp.net"
     comandos.responder("©" + palavra + " @joao", de=u)
     ok(comandos.MEDIA_ENVIAR.pop(u, {}).get("tipo") == "image", "medidor ©" + palavra + " com imagem")
-ok("TESTE DE FIDELIDADE" in comandos.responder("©fiel", de="u22@s.whatsapp.net"), "©fiel mede fidelidade")
-ok(comandos.MEDIA_ENVIAR.pop("u22@s.whatsapp.net")["tipo"] == "image", "©fiel com imagem")
-ok("Título" in comandos.responder("©infiel", de="u23@s.whatsapp.net"), "©infiel com título")
-ok(comandos.MEDIA_ENVIAR.pop("u23@s.whatsapp.net", {}).get("tipo") == "image", "©infiel com imagem")
+r = comandos.responder("©fiel @joão", de="u22@s.whatsapp.net")
+ok("Analisando o coração" in r, "©fiel fase 1: analisando...")
+extra = comandos.EXTRA_APOS.pop("u22@s.whatsapp.net")
+ok("Resultado da análise" in extra["texto"] and "Fidelidade" in extra["texto"], "©fiel fase 2: resultado")
+ok("joao" in extra["texto"] and "[" in extra["texto"], "©fiel resultado com alvo e barra")
+ok(extra["media"]["tipo"] == "image", "©fiel resultado com imagem")
+r = comandos.responder("©infiel", de="u23@s.whatsapp.net", nome="Ana")
+ok("Analisando" in r and "Ana" in r, "©infiel fase 1 sem alvo usa o nome")
+extra = comandos.EXTRA_APOS.pop("u23@s.whatsapp.net")
+ok("Título" in extra["texto"], "©infiel resultado com título")
+ok(extra["media"]["tipo"] == "image", "©infiel resultado com imagem")
 comandos.responder("©morte fulano", de="u24@s.whatsapp.net")
 m = comandos.MEDIA_ENVIAR.pop("u24@s.whatsapp.net")
 ok(m["tipo"] == "video" and "deathcmd" or m["url"].endswith(".mp4"), "©morte com GIF")
@@ -250,6 +257,7 @@ env = dict(
     VERIFY_TOKEN="vtk-teste",
     GRAPH_BASE="http://127.0.0.1:8899",
     PORT="5001",
+    ATRASO_FASE2="1",
 )
 proc = subprocess.Popen([sys.executable, "app.py"], cwd=BASE_DIR, env=env,
                         stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
@@ -300,6 +308,19 @@ try:
             if "image" in c: ultimos.append(c["image"].get("caption", ""))
             if "video" in c: ultimos.append(c["video"].get("caption", ""))
         ok(any(esperado in t for t in ultimos), f"'{texto}' -> resposta contém '{esperado}'")
+
+    # --- fidelidade em 2 partes: analisando... -> resultado (após atraso) ---
+    rq.post("http://127.0.0.1:5001/webhook", json=payload("©fiel @keisen", "wamid.F1"), timeout=5)
+    time.sleep(0.7)
+    ultimos = []
+    for c in CAPTURADOS:
+        if "text" in c: ultimos.append(c["text"].get("body", ""))
+    ok(any("Analisando o coração" in t for t in ultimos), "fidelidade fase 1 chega na hora")
+    time.sleep(2.2)
+    caps = []
+    for c in CAPTURADOS:
+        if "image" in c: caps.append(c["image"].get("caption", ""))
+    ok(any("Resultado da análise" in t for t in caps), "fidelidade fase 2 chega com atraso (imagem)")
 
     # --- imagem (não-texto) ---
     p = payload("x", "wamid.AAA5")

@@ -80,7 +80,7 @@ def _premio(de, coins=0, xp=0, vitoria=False):
     _econ_salva(db)
     return "\n🎁 +" + str(coins) + " N-Coins · +" + str(xp) + " XP (Nível " + str(p["nivel"]) + ")"
 
-VERSAO = "1.12.0"
+VERSAO = "1.13.0"
 _INICIO = time.time()
 # identidade igual ao bot de grupo (DADOS DO KEISEN/INFO_KEISEN/media/INFO_KEISEN.json)
 NOME_DO_BOT = os.environ.get("NOME_DO_BOT", "WHITE LOTUS")
@@ -276,6 +276,10 @@ def _veredito(pct):
 # mídia que o app.py deve mandar junto com a próxima resposta deste chat
 MEDIA_ENVIAR = {}
 
+# mensagem extra a enviar APÓS um atraso (efeito "analisando..." -> resultado)
+EXTRA_APOS = {}
+ATRASO_FASE2 = float(os.environ.get("ATRASO_FASE2", "7"))
+
 FACE_DADO = {1: "⚀", 2: "⚁", 3: "⚂", 4: "⚃", 5: "⚄", 6: "⚅"}
 
 VERDADES = [
@@ -356,8 +360,8 @@ MENU = "\n".join([
     "  📏 *Medidores:* ©gado · ©gay · ©corno · ©vesgo · ©feio · ©gostoso",
     "  📏 *Mais:* ©sigma · ©beta · ©louco · ©safado · ©gostosa",
     "  💘 *©shipo* _@a @b_ — shipa duas pessoas (com foto!)",
-    "  📏 *Novos:* ©lindo · ©linda · ©fiel · ©baiano · ©carioca",
-    "  💀 *©morte* _nome_ — prevê os teus anos (com GIF!)",
+    "  📏 *Novos:* ©lindo · ©linda · ©baiano · ©carioca",
+    "  💯 *©fiel* _@pessoa_ — analisa o coração… e o resultado chega depois (igual keisen!)",    "  💀 *©morte* _nome_ — prevê os teus anos (com GIF!)",
     "  🎂 *©idade* _dd/mm/aaaa_ — calcula com GIF!",
     "  💩 *©cagar* · 🌾 *©capinarlote* · 🍽️ *©lavarlouca* (com alvo!)",
     "",
@@ -435,6 +439,7 @@ CONFIG = "\n".join([
     "  ✅ Interações com GIF (morder, matar, soco, chutar, roubar…)",
     "  ✅ Medidores com imagem (gado, gay, corno…) + shipamento",
     "  ✅ Morte prevista, idade, capinar lote, lavar louça",
+    "  ✅ Fidelidade em 2 partes (analisando… → resultado)",
     "  ✅ Contador de casal com nível do amor",
     "  ✅ Menu, perfil e dono com mídia embarcada",
     "  ✅ Piadas, conselhos & curiosidades",
@@ -754,23 +759,27 @@ def responder(texto, nome="", de="", grupo=""):
         if cmd == "infiel":
             pct = 100 - pct
         alvo_f = alvo_int or (nome or "você")
-        if de or grupo:
-            MEDIA_ENVIAR[de or grupo] = {"url": IMG_FIEL, "tipo": "image"}
+        chat = grupo or de
         if pct > 80:
-            titulo = "💍 *Fiel pra Sempre!*"
+            titulo = "😇 Anjo Fiel"
         elif pct > 50:
-            titulo = "💘 *Comprometido*"
+            titulo = "💘 Comprometido"
         elif pct > 20:
-            titulo = "😏 *Aventureiro*"
+            titulo = "😏 Aventureiro"
         else:
-            titulo = "💔 *Coração de Pedra*"
+            titulo = "💔 Coração de Pedra"
         barra = "█" * (pct // 10) + "░" * (10 - pct // 10)
-        return (
-            "💯 *TESTE DE FIDELIDADE*\n" + LINHA + "\n\n"
-            + alvo_f + " (" + cmd + ") é fiel?\n"
-            "❤️ " + barra + " " + str(pct) + "%\n\n"
-            "🏆 *Título:* " + titulo
+        resultado = (
+            "💞 *Resultado da análise de fidelidade:*\n\n"
+            "👤 *Usuário:* " + alvo_f + "\n"
+            "📊 *Fidelidade:* " + str(pct) + "%\n"
+            "🏆 *Título:* " + titulo + "\n\n"
+            "📈 *Barra de Fidelidade:*\n[" + barra + "]"
         )
+        if chat:
+            # fase 1 sai agora ("analisando..."); fase 2 (resultado+imagem) chega depois
+            EXTRA_APOS[chat] = {"texto": resultado, "media": {"url": IMG_FIEL, "tipo": "image"}}
+        return "🔎 Analisando o coração de *" + alvo_f + "*... será fiel mesmo? 😏"
     if cmd in ("morte", "death"):
         quem = " ".join(args) if args else (nome or "você")
         anos_v = random.randint(60, 100)
