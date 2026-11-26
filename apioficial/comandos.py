@@ -5,12 +5,37 @@ Prefixo PRINCIPAL: ©  (o ! é marca da Mizuki Bot — não usado aqui).
 Aceita também sem prefixo (conveniência) e ignora acento/caixa.
 Mensagens estilizadas para o WhatsApp (*negrito*, _itálico_).
 """
+import json
 import os
 import random
 import time
 import unicodedata
 
-VERSAO = "1.3.0"
+ARQ_ECON = os.path.join(os.path.dirname(os.path.abspath(__file__)), "economia.json")
+
+
+def _econ():
+    """Carrega economia.json. Estrutura: {jid: {coins, banco, perfil{}}}"""
+    try:
+        with open(ARQ_ECON) as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+
+def _econ_salva(db):
+    try:
+        with open(ARQ_ECON, "w") as f:
+            json.dump(db, f)
+    except Exception:
+        pass
+
+
+def _conta(jid):
+    db = _econ()
+    return db.setdefault(jid, {"coins": 100, "banco": 0, "perfil": {}})
+
+VERSAO = "1.4.0"
 _INICIO = time.time()
 # identidade igual ao bot de grupo (DADOS DO KEISEN/INFO_KEISEN/media/INFO_KEISEN.json)
 NOME_DO_BOT = os.environ.get("NOME_DO_BOT", "WHITE LOTUS")
@@ -385,6 +410,202 @@ def responder(texto, nome="", de=""):
         if cmd in ("carinho", "abraco", "beijo"):
             return resp + ("\n\n_Amo tuas interações, " + nome + "! 💖_" if nome else "")
         return resp
+    if cmd in ("saldo", "coins", "banco", "extrato"):
+        if not de:
+            return "💵 Manda ©saldo no privado que eu preciso saber quem é você! 😄"
+        c = _conta(de)
+        total = c["coins"] + c["banco"]
+        numero_conta = "N" + ("".join(ch for ch in de[-6:] if ch.isdigit()) or "000000")
+        fmt = lambda v: f"{v:,}".replace(",", ".")
+        return "\n".join([
+            "🏦 " + LINHA,
+            "   *EXTRATO BANCÁRIO* 🏦",
+            LINHA,
+            "",
+            "👤 *Titular:* " + (nome or de.split("@")[0]),
+            "🏛️ *Agência:* 0001",
+            "💳 *Conta:* " + numero_conta,
+            "📊 *Tipo:* Conta N-Coins",
+            "",
+            "💰 *Carteira:* " + fmt(c["coins"]) + " N-Coins",
+            "🏛️ *Banco:* " + fmt(c["banco"]) + " N-Coins",
+            "✨ *TOTAL:* " + fmt(total) + " N-Coins ✨",
+            "",
+            LINHA,
+            "📌 _Ganha mais: ©trabalhar e ©apostar!_",
+        ])
+    if cmd == "trabalhar":
+        if not de:
+            return "💼 Manda ©trabalhar no privado! (preciso saber quem trabalhou 😄)"
+        db = _econ()
+        c = db.setdefault(de, {"coins": 100, "banco": 0, "perfil": {}})
+        agora = time.time()
+        resta = int(60 - (agora - c.get("ultimo_trabalho", 0)))
+        if resta > 0:
+            return "\n".join([
+                "⏳ *Descanso obrigatório!*",
+                "",
+                "💼 Você já trabalhou agora…",
+                "🔄 Volta em *" + str(resta) + "s* pra trabalhar de novo!",
+            ])
+        ganhos = random.choice([50, 75, 100, 120, 150, 200, 250])
+        empregos = [
+            "entregando pizzas 🍕", "dando aula de programação 👨‍💻", "passeando com cachorros 🐕",
+            "vendendo coxinha na esquina 🥟", "administrando o grupo da família 👨‍👩‍👧",
+            "consertando Wi-Fi do vizinho 📶", "fazendo entregas de moto 🏍️",
+        ]
+        c["coins"] = c.get("coins", 0) + ganhos
+        c["ultimo_trabalho"] = agora
+        _econ_salva(db)
+        fmt = lambda v: f"{v:,}".replace(",", ".")
+        return "\n".join([
+            "💼 *JORNADA DE TRABALHO* 💼",
+            LINHA,
+            "",
+            "🛠️ Você passou a tarde " + random.choice(empregos),
+            "",
+            "💰 *Ganhos: +" + str(ganhos) + " N-Coins!* 🎉",
+            "💵 *Carteira:* " + fmt(c["coins"]) + " N-Coins",
+            "",
+            LINHA,
+            "⏳ _Cooldown: 1 minuto_",
+        ])
+    if cmd == "apostar":
+        valor_txt = (args[0] if args else "").replace(".", "").replace(",", "")
+        if not valor_txt:
+            return "\n".join([
+                "🎲 *COMO APOSTAR*",
+                "",
+                "_©apostar 100_",
+                "",
+                "💡 _Mínimo: 10 N-Coins. O bot paga prêmio de até 2,5x!_ 🍀",
+            ])
+        if not de:
+            return "🎲 Manda ©apostar no privado! (preciso saber quem apostou 😄)"
+        db = _econ()
+        c = db.setdefault(de, {"coins": 100, "banco": 0, "perfil": {}})
+        if not valor_txt.isdigit() or int(valor_txt) < 10:
+            return "\n".join([
+                "🎲 *COMO APOSTAR*",
+                "",
+                "_©apostar 100_",
+                "",
+                "💡 _Mínimo: 10 N-Coins. Você tem " + str(c.get("coins", 0)) + "._",
+            ])
+        valor = int(valor_txt)
+        if valor > c.get("coins", 0):
+            return "\n".join([
+                "💸 *Saldo insuficiente!*",
+                "",
+                "💰 Você tem: *" + str(c.get("coins", 0)) + " N-Coins*",
+                "🎯 Apostou: *" + str(valor) + " N-Coins*",
+                "",
+                "_Trabalha um pouquinho: ©trabalhar_ 💼",
+            ])
+        agora = time.time()
+        if agora - c.get("ultima_aposta", 0) < 120:
+            resta = int(120 - (agora - c.get("ultima_aposta", 0)))
+            return "⏳ *Calma, apostador!* Próxima aposta em *" + str(resta) + "s* 🎲"
+        c["ultima_aposta"] = agora
+        fmt = lambda v: f"{v:,}".replace(",", ".")
+        if random.random() < 0.45:
+            premio = int(valor * random.uniform(1.5, 2.5))
+            c["coins"] = c.get("coins", 0) + premio - valor
+            _econ_salva(db)
+            return "\n".join([
+                "🎲 *RESULTADO DA APOSTA*",
+                LINHA,
+                "",
+                "🎯 Aposta: " + str(valor) + " N-Coins",
+                "🎰 Rolando os dados...",
+                "",
+                "🎉 *GANHOU!* Que sorte! 🍀",
+                "💰 *Prêmio: +" + str(premio) + " N-Coins* 🤑",
+                "💵 *Carteira:* " + fmt(c["coins"]) + " N-Coins",
+            ])
+        c["coins"] = c.get("coins", 0) - valor
+        _econ_salva(db)
+        return "\n".join([
+            "🎲 *RESULTADO DA APOSTA*",
+            LINHA,
+            "",
+            "🎯 Aposta: " + str(valor) + " N-Coins",
+            "🎰 Rolando os dados...",
+            "",
+            "😭 *PERDEU!* A casa sempre ganha…",
+            "💸 *-" + str(valor) + " N-Coins*",
+            "💵 *Carteira:* " + fmt(c["coins"]) + " N-Coins",
+            "",
+            "_Amanhã é outro dia! (©trabalhar)_ 💪",
+        ])
+    if cmd == "pix":
+        return "\n".join([
+            "⚡ *PIX N-COINS*",
+            "",
+            "Aqui no bot oficial o pix é *aposta com o bot mesmo!* 😄",
+            "",
+            "Usa: _©apostar 100_",
+            "",
+            "_Transferência entre pessoas fica pro bot de grupo!_",
+        ])
+    if cmd == "rankicoins":
+        db = _econ()
+        lista = sorted(
+            ((jid, c.get("coins", 0) + c.get("banco", 0)) for jid, c in db.items()),
+            key=lambda x: x[1], reverse=True,
+        )[:5]
+        if not lista:
+            return "📊 *Ranking vazio!* Seja o primeiro: ©trabalhar 💼"
+        medalhas = ["🥇", "🥈", "🥉", "4️⃣", "5️⃣"]
+        linhas = [
+            medalhas[i] + " " + (jid.split("@")[0] if "@" in jid else jid) + " — *" + f"{v:,}".replace(",", ".") + "*"
+            for i, (jid, v) in enumerate(lista)
+        ]
+        return "\n".join([
+            "📊 *TOP 5 MAIS RICOS* 💰",
+            LINHA,
+            "",
+            "\n".join(linhas),
+            "",
+            LINHA,
+            "💼 _Sobe no ranking: ©trabalhar e ©apostar!_",
+        ])
+    if cmd in ("perfil", "meuperfil"):
+        if not de:
+            return "🪪 Manda ©perfil no privado! (preciso saber quem é você 😄)"
+        c = _conta(de)
+        p = c.get("perfil", {})
+        fmt = lambda v: f"{v:,}".replace(",", ".")
+        return "\n".join([
+            "🪪 " + LINHA,
+            "      *MEU PERFIL*",
+            LINHA,
+            "",
+            "👤 *Nome:* " + (nome or de.split("@")[0]),
+            "🚻 *Gênero:* " + p.get("sexo", "❓ não definido"),
+            "💰 *Patrimônio:* " + fmt(c["coins"] + c["banco"]) + " N-Coins",
+            "",
+            LINHA,
+            "💡 _Define o gênero: ©sexo Masculino/Feminino/Não binário_",
+        ])
+    if cmd == "sexo":
+        if not de:
+            return "🚻 Manda ©sexo no privado! (é teu perfil 😄)"
+        mapado = {"masculino": "👨 Masculino", "feminino": "👩 Feminino", "nao binario": "🌟 Não binário"}
+        escolha = _sem_acento(" ".join(args)) if args else ""
+        if escolha not in mapado:
+            return "\n".join([
+                "🚻 *Define teu gênero no perfil:*",
+                "",
+                "_©sexo Masculino_ 👨",
+                "_©sexo Feminino_ 👩",
+                "_©sexo Não binário_ 🌟",
+            ])
+        db = _econ()
+        c = db.setdefault(de, {"coins": 100, "banco": 0, "perfil": {}})
+        c.setdefault("perfil", {})["sexo"] = mapado[escolha]
+        _econ_salva(db)
+        return "✅ *Perfil atualizado!*\n🚻 Gênero: *" + mapado[escolha] + "*\n\n_Vê teu cartão: ©perfil_ 🪪"
     if cmd == "id":
         return "🆔 (o comando ©id é respondido pelo app com teu número)"
 
