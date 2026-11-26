@@ -554,8 +554,11 @@ ITENS = [
 EMOJI_SLOT = {"arma": "⚔️", "armadura": "🛡️", "acessorio": "👟", "consumivel": "🧪"}
 
 
-ITEM_IMG = {8: "itens/lamina_dragao.png", 9: "itens/excalibur.png",
-            11: "itens/ceifadora.png", 23: "itens/manto_tita.png"}
+ITEM_IMG = {6: "itens/tridente.png", 7: "itens/cetro.png", 8: "itens/lamina_dragao.png",
+            9: "itens/excalibur.png", 11: "itens/ceifadora.png", 15: "itens/armadura_placas.png",
+            16: "itens/couraca_gelida.png", 17: "itens/malha_flamejante.png", 21: "itens/aegis.png",
+            23: "itens/manto_tita.png", 24: "itens/plumas.png", 25: "itens/luvas_tita.png",
+            26: "itens/mascara.png", 27: "itens/amuleto.png"}
 
 
 def _img_item(iid):
