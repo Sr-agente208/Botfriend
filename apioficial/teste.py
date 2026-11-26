@@ -17,27 +17,46 @@ import comandos
 T = []
 ok = lambda c, m: (T.append((c, m)), print(("PASS" if c else "FAIL") + " - " + m))
 
-r = comandos.responder("!ping")
+r = comandos.responder("©ping")
 ok("Pong" in r, "!ping responde Pong")
 ok(comandos.responder("ping") == r, "funciona sem !")
 ok(comandos.responder("PING") == r, "ignora caixa")
-ok(comandos.responder("!ping ") == r, "ignora espaços")
-ok("comandos" in comandos.responder("!menu").lower(), "!menu mostra menu")
+ok(comandos.responder("©ping ") == r, "ignora espaços")
+ok("comandos" in comandos.responder("©menu").lower(), "!menu mostra menu")
 ok(comandos.responder("qualquer coisa aleatória").startswith("Não entendi"), "fallback educado")
 ok(comandos.responder(None).startswith("Recebi"), "sem texto pede texto")
-d = comandos.responder("!dado 20")
+d = comandos.responder("©dado 20")
 ok("d20" in d and "(d20)" in d, "!dado 20 usa d20")
-ok("cara" in comandos.responder("!moeda") or "coroa" in comandos.responder("!moeda"), "!moeda sorteia")
-ok(len(comandos.responder("!piada")) > 10, "!piada tem conteúdo")
-e = comandos.responder("!escolha pizza, hamburguer, sushi")
+ok("cara" in comandos.responder("©moeda") or "coroa" in comandos.responder("©moeda"), "!moeda sorteia")
+ok(len(comandos.responder("©piada")) > 10, "!piada tem conteúdo")
+e = comandos.responder("©escolha pizza, hamburguer, sushi")
 ok(e.startswith("🤔") and any(x in e for x in ["pizza", "hamburguer", "sushi"]), "!escolha escolhe uma opção")
-ok("vírgula" in comandos.responder("!escolha sozinho"), "!escolha pede 2+ opções")
-ok("configura" in comandos.responder("!config").lower(), "!config mostra painel")
-ok("Sr-agente208" in comandos.responder("!config"), "!config mostra dono real")
-ok("WHITE LOTUS" in comandos.responder("!menu"), "menu mostra nome real do bot")
-ok(comandos.responder("©ping") == comandos.responder("nao entendido xyz"), "© NAO é mais prefixo (marca Mizuki)")
-ok("versão" in comandos.responder("!config").lower(), "!config mostra versão")
-ok("Comandos" in comandos.responder("!menu"), "menu estilizado")
+ok("vírgula" in comandos.responder("©escolha sozinho"), "!escolha pede 2+ opções")
+ok("configura" in comandos.responder("©config").lower(), "!config mostra painel")
+ok("Sr-agente208" in comandos.responder("©config"), "!config mostra dono real")
+ppt = comandos.responder("©ppt pedra")
+ok(any(x in ppt for x in ["pedra", "papel", "tesoura"]), "©ppt joga pedra-papel-tesoura")
+ok("©ppt" in comandos.responder("©ppt"), "©ppt sem arg ensina uso")
+cas = comandos.responder("©cassino")
+ok(any(x in cas for x in ["🍒", "🍋", "🍊", "🔔", "💎", "⭐"]), "©cassino gira os slots")
+ana = comandos.responder("©anagrama", de="u1")
+ok("ANAGRAMA" in ana, "©anagrama mostra palavra embaralhada")
+resp_ana = comandos.PENDENTE["u1"]["resposta"][0]
+ok("ACERTOU" in comandos.responder(resp_ana, de="u1"), "resposta do anagrama é validada")
+enig = comandos.responder("©enigma", de="u2")
+ok("ENIGMA" in enig, "©enigma apresenta o enigma")
+ok("Errou" in comandos.responder("banana", de="u2"), "resposta errada mantém jogo")
+resp_enig = comandos.PENDENTE["u2"]["resposta"][0]
+ok("ACERTOU" in comandos.responder(resp_enig, de="u2"), "resposta do enigma é validada")
+ok("eu nunca" in comandos.responder("©eununca").lower(), "©eununca sorteia confissão")
+ok(len(comandos.responder("©cantada")) > 10, "©cantada tem conteúdo")
+ok(len(comandos.responder("©curiosidades")) > 10, "©curiosidades tem conteúdo")
+ok(len(comandos.responder("©brincadeira")) > 10, "©brincadeira sorteia desafio")
+ok("💖" in comandos.responder("©carinho"), "©carinho interage")
+ok("WHITE LOTUS" in comandos.responder("©menu"), "menu mostra nome real do bot")
+ok("prefixo" in comandos.responder("!ping").lower(), "! morto (marca Mizuki) — responde apontando o ©")
+ok("versão" in comandos.responder("©config").lower(), "!config mostra versão")
+ok("Comandos" in comandos.responder("©menu"), "menu estilizado")
 ok(comandos.responder("oi").startswith("E aí"), "saudação responde")
 
 # ============ 2) INTEGRAÇÃO: webhook + mock da Graph API ============
@@ -90,7 +109,7 @@ try:
             }}]}],
         }
 
-    r = rq.post("http://127.0.0.1:5001/webhook", json=payload("!ping", "wamid.AAA1"), timeout=5)
+    r = rq.post("http://127.0.0.1:5001/webhook", json=payload("©ping", "wamid.AAA1"), timeout=5)
     ok(r.status_code == 200, "webhook responde 200 pra Meta")
     time.sleep(1)
     ok(any(c.get("status") == "read" for c in CAPTURADOS), "marcou como lida (bolinha azul)")
@@ -100,12 +119,12 @@ try:
 
     # --- dedupe: mesma mensagem de novo ---
     antes = len(CAPTURADOS)
-    rq.post("http://127.0.0.1:5001/webhook", json=payload("!ping", "wamid.AAA1"), timeout=5)
+    rq.post("http://127.0.0.1:5001/webhook", json=payload("©ping", "wamid.AAA1"), timeout=5)
     time.sleep(0.8)
     ok(len(CAPTURADOS) == antes, "mensagem duplicada não gera resposta dupla")
 
     # --- comandos variados ---
-    for texto, esperado, mid in [("!menu", "WHITE LOTUS", "wamid.AAA2"), ("!dado 20", "d20", "wamid.AAA3"), ("qualquer besteira", "Não entendi", "wamid.AAA4")]:
+    for texto, esperado, mid in [("©menu", "WHITE LOTUS", "wamid.AAA2"), ("©dado 20", "d20", "wamid.AAA3"), ("qualquer besteira", "Não entendi", "wamid.AAA4")]:
         rq.post("http://127.0.0.1:5001/webhook", json=payload(texto, mid), timeout=5)
         time.sleep(0.6)
         ultimos = [c.get("text", {}).get("body", "") for c in CAPTURADOS if c.get("type") == "text"]

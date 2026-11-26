@@ -106,7 +106,7 @@ def processar(msg):
         texto = msg.get("text", {}).get("body", "")
         nome = ""
         nome = msg.get("profile", {}).get("name") or msg.get("context", {}).get("from") or ""
-        resposta = comandos.responder(texto, nome)
+        resposta = comandos.responder(texto, nome, de=de)
     elif tipo in ("image", "sticker", "audio", "video", "document", "location", "contacts"):
         resposta = comandos.responder(None)
     elif tipo == "reaction":
