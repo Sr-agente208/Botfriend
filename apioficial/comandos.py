@@ -80,7 +80,7 @@ def _premio(de, coins=0, xp=0, vitoria=False):
     _econ_salva(db)
     return "\n🎁 +" + str(coins) + " N-Coins · +" + str(xp) + " XP (Nível " + str(p["nivel"]) + ")"
 
-VERSAO = "1.18.0"
+VERSAO = "1.19.0"
 _INICIO = time.time()
 # identidade igual ao bot de grupo (DADOS DO KEISEN/INFO_KEISEN/media/INFO_KEISEN.json)
 NOME_DO_BOT = os.environ.get("NOME_DO_BOT", "WHITE LOTUS")
@@ -554,11 +554,14 @@ ITENS = [
 EMOJI_SLOT = {"arma": "⚔️", "armadura": "🛡️", "acessorio": "👟", "consumivel": "🧪"}
 
 
-ITEM_IMG = {6: "itens/tridente.png", 7: "itens/cetro.png", 8: "itens/lamina_dragao.png",
-            9: "itens/excalibur.png", 11: "itens/ceifadora.png", 15: "itens/armadura_placas.png",
-            16: "itens/couraca_gelida.png", 17: "itens/malha_flamejante.png", 21: "itens/aegis.png",
-            23: "itens/manto_tita.png", 24: "itens/plumas.png", 25: "itens/luvas_tita.png",
-            26: "itens/mascara.png", 27: "itens/amuleto.png"}
+ITEM_IMG = {4: "itens/gancho.png", 5: "itens/espada_longa.png", 6: "itens/tridente.png",
+            7: "itens/cetro.png", 8: "itens/lamina_dragao.png", 9: "itens/excalibur.png",
+            11: "itens/ceifadora.png", 14: "itens/colete.png", 15: "itens/escudo_redondo.png",
+            16: "itens/traje_batalha.png", 17: "itens/armadura_placas.png", 18: "itens/couraca_gelida.png",
+            19: "itens/malha_flamejante.png", 22: "itens/aegis.png", 23: "itens/manto_tita.png",
+            26: "itens/tenis.png", 27: "itens/monoculo.png", 28: "itens/plumas.png",
+            29: "itens/luvas_tita.png", 30: "itens/mascara.png", 31: "itens/amuleto.png",
+            32: "itens/anel_poder.png", 33: "itens/coroa_real.png", 36: "itens/pena_fenix.png"}
 
 
 def _img_item(iid):
