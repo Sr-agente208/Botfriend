@@ -131,8 +131,8 @@ def diag():
     }
     chamadas = {
         "quem_sou": "/me?fields=id,name",
-        "numero_alvo": f"/{sender.PHONE_ID}?fields=id,display_phone_number,verified_name",
-        "numero_teste": "/1433535196514963?fields=id,display_phone_number,verified_name",
+        "numero_alvo": f"/{sender.PHONE_ID}?fields=id,display_phone_number,verified_name,name_status,account_mode,quality_rating,code_verification_status",
+        "numero_teste": "/1433535196514963?fields=id,display_phone_number,verified_name,name_status,account_mode",
         "wabas_do_negocio_real": "/1232931539690191/owned_whatsapp_business_accounts?fields=id,name,account_review_status",
         "numeros_waba_galo_branco": "/1453154753613404/phone_numbers?fields=id,display_phone_number,verified_name",
         "numeros_waba_teste": "/1164994059250290/phone_numbers?fields=id,display_phone_number,verified_name",
