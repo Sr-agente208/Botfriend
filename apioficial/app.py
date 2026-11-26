@@ -133,11 +133,12 @@ def diag():
         "quem_sou": "/me?fields=id,name",
         "numero_alvo": f"/{sender.PHONE_ID}?fields=id,display_phone_number,verified_name",
         "numero_teste": "/1433535196514963?fields=id,display_phone_number,verified_name",
-        "objeto_1453": "/145315473613404?fields=id,name",
-        "objeto_1164": "/1164994095250290?fields=id,name",
-        "objeto_1232": "/12329315396?fields=id,name",
-        "wabas_de_1453": "/145315473613404/owned_whatsapp_business_accounts?fields=id,name",
-        "wabas_de_1164": "/1164994095250290/owned_whatsapp_business_accounts?fields=id,name",
+        "negocio_real_1232_90191": "/1232931539690191?fields=id,name",
+        "wabas_do_negocio_real": "/1232931539690191/owned_whatsapp_business_accounts?fields=id,name,account_review_status",
+        "waba_real_1818": "/1818796672670004?fields=id,name",
+        "numeros_da_waba_1818": "/1818796672670004/phone_numbers?fields=id,display_phone_number,verified_name",
+        "waba_1453": "/145315473613404?fields=id,name",
+        "numeros_da_waba_1453": "/145315473613404/phone_numbers?fields=id,display_phone_number,verified_name",
         "negocios_do_token": "/me/businesses?fields=id,name",
     }
     for nome, caminho in chamadas.items():
