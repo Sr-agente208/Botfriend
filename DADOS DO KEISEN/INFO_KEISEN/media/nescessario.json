@@ -7,7 +7,7 @@
   "verificado": false,
   "channel": false,
   "anticall": false,
-  "aluguel": false,
+  "aluguel": true,
   "visualizarmsg": false,
   "botoes": true,
   "listanegraG": [
