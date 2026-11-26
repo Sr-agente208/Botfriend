@@ -80,7 +80,7 @@ def _premio(de, coins=0, xp=0, vitoria=False):
     _econ_salva(db)
     return "\n🎁 +" + str(coins) + " N-Coins · +" + str(xp) + " XP (Nível " + str(p["nivel"]) + ")"
 
-VERSAO = "1.16.0"
+VERSAO = "1.17.0"
 _INICIO = time.time()
 # identidade igual ao bot de grupo (DADOS DO KEISEN/INFO_KEISEN/media/INFO_KEISEN.json)
 NOME_DO_BOT = os.environ.get("NOME_DO_BOT", "WHITE LOTUS")
@@ -380,6 +380,11 @@ MENU = "\n".join([
     "  ⚡ *©poder* — poder de batalha do pet",
     "  🛤️ *©caminhos* — as evoluções do teu pet",
     "",
+    "🎒 *Arsenal Pet*",
+    "  🏪 *©loja* — catálogo com 45 itens!",
+    "  🛍️ *©comprar* _N_ · 🎒 *©mochila*",
+    "  ⚔️ *©equipar* _N_ · 🗑️ *©desequipar* · 🧪 *©usar* _N_",
+    "",
     "💘 *Amor*",
     "  💍 *©namorar* — pede o bot em namoro",
     "  📅 *©relacao* — dias de juntos",
@@ -437,6 +442,7 @@ CONFIG = "\n".join([
     "  ✅ Jogos (ppt, cassino, anagrama, enigma, adivinha, quiz)",
     "  ✅ RPG (herói, missões, nível/XP)",
     "  ✅ Pet Pokémon (nível, XP, treino e batalha!)",
+    "  ✅ Arsenal Pet: loja, 45 itens, equipamentos e loot",
     "  ✅ Economia (coins, banco, pix, apostas)",
     "  ✅ Perfil por usuário",
     "  ✅ Amor (namorar o bot, casamento!)",
@@ -491,6 +497,93 @@ PET_STATS = {
     "unicórnio": {"atk": 8, "def": 6, "vel": 9, "poder": "✨ Luz Estelar"},
 }
 PET_BASE = {"atk": 6, "def": 6, "vel": 6, "poder": "🌟 Energia Misteriosa"}
+
+# ─── ARSENAL PET: 45 itens em 5 raridades ───
+# slot: arma(atk) | armadura(def) | acessorio(vel/mix) | consumivel(efeito)
+ITENS = [
+    {"nome": "Espada Enferrujada", "emoji": "🗡️", "slot": "arma", "atk": 2, "preco": 90, "r": "⚪ Comum"},
+    {"nome": "Machadinha do Bosque", "emoji": "🪓", "slot": "arma", "atk": 3, "preco": 140, "r": "⚪ Comum"},
+    {"nome": "Adaga Sombria", "emoji": "🔪", "slot": "arma", "atk": 4, "preco": 220, "r": "🔵 Raro"},
+    {"nome": "Espada Curta", "emoji": "🗡️", "slot": "arma", "atk": 5, "preco": 300, "r": "🔵 Raro"},
+    {"nome": "Gancho Pirata", "emoji": "🪝", "slot": "arma", "atk": 6, "preco": 380, "r": "🔵 Raro"},
+    {"nome": "Espada Longa", "emoji": "⚔️", "slot": "arma", "atk": 7, "preco": 550, "r": "🟣 Épico"},
+    {"nome": "Tridente Abissal", "emoji": "🔱", "slot": "arma", "atk": 9, "preco": 700, "r": "🟣 Épico"},
+    {"nome": "Cetro Flamejante", "emoji": "🪄", "slot": "arma", "atk": 10, "preco": 850, "r": "🟣 Épico"},
+    {"nome": "Lâmina Dracônica", "emoji": "🐲", "slot": "arma", "atk": 13, "preco": 1600, "r": "🟠 Lendário"},
+    {"nome": "Excalibur", "emoji": "⚔️", "slot": "arma", "atk": 16, "preco": 2400, "r": "🟠 Lendário"},
+    {"nome": "Estrela do Crepúsculo", "emoji": "🌟", "slot": "arma", "atk": 20, "preco": 4200, "r": "🌈 Mítico"},
+    {"nome": "Ceifadora de Mundos", "emoji": "☄️", "slot": "arma", "atk": 25, "preco": 6500, "r": "🌈 Mítico"},
+    {"nome": "Capote de Couro", "emoji": "🧥", "slot": "armadura", "def": 2, "preco": 90, "r": "⚪ Comum"},
+    {"nome": "Elmo de Madeira", "emoji": "🪖", "slot": "armadura", "def": 3, "preco": 130, "r": "⚪ Comum"},
+    {"nome": "Colete Reforçado", "emoji": "🦺", "slot": "armadura", "def": 4, "preco": 230, "r": "🔵 Raro"},
+    {"nome": "Escudo Redondo", "emoji": "🛡️", "slot": "armadura", "def": 5, "preco": 310, "r": "🔵 Raro"},
+    {"nome": "Traje de Batalha", "emoji": "🥋", "slot": "armadura", "def": 6, "preco": 400, "r": "🔵 Raro"},
+    {"nome": "Armadura de Placas", "emoji": "🛡️", "slot": "armadura", "def": 8, "preco": 620, "r": "🟣 Épico"},
+    {"nome": "Couraça Gélida", "emoji": "🧊", "slot": "armadura", "def": 9, "preco": 780, "r": "🟣 Épico"},
+    {"nome": "Malha Flamejante", "emoji": "🔥", "slot": "armadura", "def": 10, "preco": 900, "r": "🟣 Épico"},
+    {"nome": "Escama de Dragão", "emoji": "🐉", "slot": "armadura", "def": 7, "atk": 2, "preco": 950, "r": "🟠 Lendário"},
+    {"nome": "Égide Lendária", "emoji": "🛡️", "slot": "armadura", "def": 14, "preco": 1800, "r": "🟠 Lendário"},
+    {"nome": "Aegis Divina", "emoji": "🌟", "slot": "armadura", "def": 18, "preco": 2800, "r": "🟠 Lendário"},
+    {"nome": "Manto do Titã", "emoji": "🌈", "slot": "armadura", "def": 24, "preco": 6800, "r": "🌈 Mítico"},
+    {"nome": "Botas Gastas", "emoji": "🥾", "slot": "acessorio", "vel": 2, "preco": 80, "r": "⚪ Comum"},
+    {"nome": "Cachecol Quente", "emoji": "🧣", "slot": "acessorio", "vel": 2, "def": 1, "preco": 120, "r": "⚪ Comum"},
+    {"nome": "Tênis Veloz", "emoji": "👟", "slot": "acessorio", "vel": 4, "preco": 240, "r": "🔵 Raro"},
+    {"nome": "Monóculo de Alcance", "emoji": "🎯", "slot": "acessorio", "atk": 3, "vel": 2, "preco": 330, "r": "🔵 Raro"},
+    {"nome": "Plumas Leves", "emoji": "🪽", "slot": "acessorio", "vel": 6, "preco": 450, "r": "🟣 Épico"},
+    {"nome": "Luvas de Titã", "emoji": "🧤", "slot": "acessorio", "atk": 3, "def": 2, "preco": 520, "r": "🟣 Épico"},
+    {"nome": "Máscara Sombria", "emoji": "🥷", "slot": "acessorio", "vel": 4, "atk": 2, "preco": 480, "r": "🟣 Épico"},
+    {"nome": "Amuleto Elétrico", "emoji": "⚡", "slot": "acessorio", "vel": 5, "atk": 3, "preco": 760, "r": "🟣 Épico"},
+    {"nome": "Anel do Poder", "emoji": "💍", "slot": "acessorio", "atk": 4, "def": 4, "vel": 4, "preco": 1100, "r": "🟠 Lendário"},
+    {"nome": "Coroa Real", "emoji": "👑", "slot": "acessorio", "atk": 6, "def": 6, "vel": 6, "preco": 2600, "r": "🟠 Lendário"},
+    {"nome": "Talismã Celeste", "emoji": "🌈", "slot": "acessorio", "atk": 8, "def": 8, "vel": 8, "preco": 5200, "r": "🌈 Mítico"},
+    {"nome": "Ração Premium", "emoji": "🍖", "slot": "consumivel", "efeito": "fome60", "preco": 60, "r": "⚪ Comum"},
+    {"nome": "Pena Fênix", "emoji": "🕊️", "slot": "consumivel", "efeito": "fome100", "preco": 150, "r": "🔵 Raro"},
+    {"nome": "Leite Estelar", "emoji": "🥛", "slot": "consumivel", "efeito": "fome30xp10", "preco": 90, "r": "⚪ Comum"},
+    {"nome": "Poção de XP", "emoji": "⚗️", "slot": "consumivel", "efeito": "xp40", "preco": 180, "r": "🔵 Raro"},
+    {"nome": "Elixir Maior", "emoji": "🧪", "slot": "consumivel", "efeito": "xp90", "preco": 380, "r": "🔵 Raro"},
+    {"nome": "Proteína Monster", "emoji": "🥊", "slot": "consumivel", "efeito": "atk1", "preco": 600, "r": "🟣 Épico"},
+    {"nome": "Bife Ancestral", "emoji": "🥩", "slot": "consumivel", "efeito": "def1", "preco": 600, "r": "🟣 Épico"},
+    {"nome": "Mel Mágico", "emoji": "🍯", "slot": "consumivel", "efeito": "vel1", "preco": 600, "r": "🟣 Épico"},
+    {"nome": "Bolo da Ascensão", "emoji": "🎂", "slot": "consumivel", "efeito": "xp200", "preco": 900, "r": "🟠 Lendário"},
+    {"nome": "Néctar Divino", "emoji": "🌈", "slot": "consumivel", "efeito": "xp500fome100", "preco": 2000, "r": "🌈 Mítico"},
+]
+
+EMOJI_SLOT = {"arma": "⚔️", "armadura": "🛡️", "acessorio": "👟", "consumivel": "🧪"}
+
+
+def _bonus_equip(pet):
+    """Soma dos bônus dos itens equipados."""
+    tot = {"atk": 0, "def": 0, "vel": 0}
+    for iid in (pet.get("equipado") or {}).values():
+        if isinstance(iid, int) and 0 <= iid < len(ITENS):
+            it = ITENS[iid]
+            for k in tot:
+                tot[k] += it.get(k, 0)
+    return tot
+
+
+def _pet_stats(pet):
+    """Stats efetivos (base + equipamentos)."""
+    _pet_default(pet)
+    b = _bonus_equip(pet)
+    return pet["atk"] + b["atk"], pet["def"] + b["def"], pet["vel"] + b["vel"]
+
+
+def _sorteia_drop():
+    """Loot de vitória: raridade ponderada."""
+    dado = random.random()
+    pool = [i for i, it in enumerate(ITENS) if it["slot"] != "consumivel"]
+    if dado < 0.50:
+        raros = [i for i in pool if ITENS[i]["r"] == "⚪ Comum"]
+    elif dado < 0.80:
+        raros = [i for i in pool if ITENS[i]["r"] == "🔵 Raro"]
+    elif dado < 0.95:
+        raros = [i for i in pool if ITENS[i]["r"] == "🟣 Épico"]
+    elif dado < 0.997:
+        raros = [i for i in pool if ITENS[i]["r"] == "🟠 Lendário"]
+    else:
+        raros = [i for i in pool if ITENS[i]["r"] == "🌈 Mítico"]
+    return random.choice(raros) if raros else None
 
 # ─── Caminhos de evolução (cada estilo de criação vira uma forma diferente!) ───
 CAMINHOS = {
@@ -1227,6 +1320,176 @@ def responder(texto, nome="", de="", grupo=""):
             "",
             "⚔️ _Missão rápida: ©missao_",
         ])
+    if cmd in ("loja", "arsenal"):
+        linhas = [
+            "🏪 *ARSENAL PET* 🏪",
+            LINHA,
+            "_Kit completo pro teu bichinho — ©comprar N_",
+            "",
+            "⚔️ *ARMAS*",
+        ]
+        for i, it in enumerate(ITENS):
+            if it["slot"] == "arma":
+                linhas.append(str(i + 1) + "️⃣ " + it["emoji"] + " " + it["nome"] + " (+" + str(it.get("atk", 0)) + " ATK) — " + str(it["preco"]) + " · " + it["r"])
+        linhas.append("")
+        linhas.append("🛡️ *ARMADURAS*")
+        for i, it in enumerate(ITENS):
+            if it["slot"] == "armadura":
+                linhas.append(str(i + 1) + "️⃣ " + it["emoji"] + " " + it["nome"] + " (+" + str(it.get("def", 0)) + " DEF) — " + str(it["preco"]) + " · " + it["r"])
+        linhas.append("")
+        linhas.append("👟 *ACESSÓRIOS*")
+        for i, it in enumerate(ITENS):
+            if it["slot"] == "acessorio":
+                bonus = "+".join(str(it.get(k, 0)) + k.upper()[0] for k in ("atk", "def", "vel") if it.get(k))
+                linhas.append(str(i + 1) + "️⃣ " + it["emoji"] + " " + it["nome"] + " (" + bonus + ") — " + str(it["preco"]) + " · " + it["r"])
+        linhas.append("")
+        linhas.append("🧪 *CONSUMÍVEIS*")
+        for i, it in enumerate(ITENS):
+            if it["slot"] == "consumivel":
+                linhas.append(str(i + 1) + "️⃣ " + it["emoji"] + " " + it["nome"] + " — " + str(it["preco"]) + " · " + it["r"])
+        linhas += ["", "🎒 _Mochila: ©mochila · Equipar: ©equipar N_"]
+        return "\n".join(linhas)
+    if cmd in ("comprar", "compraitem"):
+        if not de:
+            return "🏪 Manda ©comprar no privado! 😄"
+        num = args[0] if args else ""
+        if not num.isdigit() or not (1 <= int(num) <= len(ITENS)):
+            return "🏪 *Qual item?* _Vê o catálogo: ©loja_ (itens 1 a " + str(len(ITENS)) + ")"
+        it = ITENS[int(num) - 1]
+        db = _econ()
+        c = db.setdefault(de, {"coins": 100, "banco": 0, "perfil": {}})
+        if c.get("coins", 0) < it["preco"]:
+            return "💸 *" + it["nome"] + " custa " + str(it["preco"]) + " N-Coins!* Tu tem " + str(c.get("coins", 0)) + " _— ©trabalhar mais um pouco_ 💼"
+        c["coins"] -= it["preco"]
+        mochila = c["perfil"].setdefault("mochila", [])
+        if len(mochila) >= 30:
+            return "🎒 *Mochila cheia!* (30 itens) _Usa ou vende algo… futuramente 😄_"
+        mochila.append(int(num) - 1)
+        _econ_salva(db)
+        return "\n".join([
+            "🛍️ *COMPRA EFETUADA!*",
+            LINHA,
+            "",
+            it["emoji"] + " *" + it["nome"] + "* (" + it["r"] + ")",
+            "💸 -" + str(it["preco"]) + " N-Coins · 💰 Saldo: " + str(c["coins"]),
+            "",
+            "🎒 _Vê na ©mochila · " + ("Usa: ©usar " + num if it["slot"] == "consumivel" else "Equipa: ©equipar " + num) + "_",
+        ])
+    if cmd in ("mochila", "bag"):
+        if not de:
+            return "🎒 Manda ©mochila no privado! 😄"
+        p = _conta(de).get("perfil", {})
+        mochila = p.get("mochila", [])
+        pet = p.get("pet")
+        eq = (pet or {}).get("equipado", {})
+        linhas = ["🎒 *MOCHILA DO TREINADOR*", LINHA, ""]
+        if eq:
+            linhas.append("🔗 *Equipado:* " + " · ".join(EMOJI_SLOT.get(s, "") + " " + ITENS[i]["nome"] for s, i in eq.items() if isinstance(i, int) and 0 <= i < len(ITENS)))
+            linhas.append("")
+        if not mochila:
+            linhas.append("_Vazia! Compra na ©loja_ 🏪")
+        for pos, iid in enumerate(mochila):
+            if 0 <= iid < len(ITENS):
+                it = ITENS[iid]
+                marca = " ✅equipado" if iid in eq.values() else ""
+                extra = ""
+                if it["slot"] != "consumivel":
+                    extra = " (" + "+".join(str(it.get(k, 0)) + k.upper()[0] for k in ("atk", "def", "vel") if it.get(k)) + ")"
+                linhas.append(str(pos + 1) + ". " + it["emoji"] + " " + it["nome"] + extra + marca)
+        linhas += ["", "⚔️ _Equipar: ©equipar N_ · 🧪 _Usar: ©usar N_ · 🗑️ _Tirar: ©desequipar N_"]
+        return "\n".join(linhas)
+    if cmd == "equipar":
+        if not de:
+            return "⚔️ Manda ©equipar no privado! 😄"
+        db = _econ()
+        c = db.setdefault(de, {"coins": 100, "banco": 0, "perfil": {}})
+        pet = c["perfil"].get("pet")
+        if not pet:
+            return "🐾 _Adota um pet primeiro: ©pet_"
+        mochila = c["perfil"].get("mochila", [])
+        num = args[0] if args else ""
+        if not num.isdigit() or not (1 <= int(num) <= len(mochila)):
+            return "🎒 *Qual item da mochila?* _©mochila_ pra ver (tens " + str(len(mochila)) + " itens)"
+        iid = mochila[int(num) - 1]
+        it = ITENS[iid]
+        if it["slot"] == "consumivel":
+            return "🧪 *Isso é consumível!* Usa: _©usar " + num + "_"
+        pet.setdefault("equipado", {})
+        antigo = pet["equipado"].get(it["slot"])
+        pet["equipado"][it["slot"]] = iid
+        mochila.pop(int(num) - 1)
+        if antigo is not None and antigo != iid:
+            mochila.append(antigo)
+        _econ_salva(db)
+        extra = "+".join(str(it.get(k, 0)) + k.upper()[0] for k in ("atk", "def", "vel") if it.get(k))
+        return "\n".join([
+            "⚔️ *EQUIPADO!*",
+            "",
+            pet["tipo"].split(" ")[0] + " *" + pet["nome"] + "* vestiu:",
+            it["emoji"] + " *" + it["nome"] + "* (" + extra + ") " + it["r"],
+            "",
+            "💪 *Novo poder total: " + str(sum(_pet_stats(pet))) + "*",
+            "🎒 _Mochila: ©mochila_",
+        ])
+    if cmd == "desequipar":
+        if not de:
+            return "🗑️ Manda ©desequipar no privado! 😄"
+        db = _econ()
+        c = db.setdefault(de, {"coins": 100, "banco": 0, "perfil": {}})
+        pet = c["perfil"].get("pet")
+        if not pet or not pet.get("equipado"):
+            return "🐾 _Nada equipado! ©equipar N pra vestir_"
+        alvo = args[0].lower() if args else ""
+        slots = {"arma", "armadura", "acessorio"}
+        iid = None
+        if alvo in slots and alvo in pet["equipado"]:
+            iid = pet["equipado"].pop(alvo)
+        elif alvo.isdigit() and int(alvo) in pet["equipado"].values():
+            iid = next(pet["equipado"].pop(s) for s, v in pet["equipado"].items() if v == int(alvo))
+        if iid is None:
+            return "🗑️ *Qual slot?* _©desequipar arma / armadura / acessorio_"
+        c["perfil"].setdefault("mochila", []).append(iid)
+        _econ_salva(db)
+        return "🗑️ *" + ITENS[iid]["nome"] + "* de volta pra mochila! 🎒\n💪 _Poder total agora: " + str(sum(_pet_stats(pet))) + "_"
+    if cmd == "usar":
+        if not de:
+            return "🧪 Manda ©usar no privado! 😄"
+        db = _econ()
+        c = db.setdefault(de, {"coins": 100, "banco": 0, "perfil": {}})
+        pet = c["perfil"].get("pet")
+        if not pet:
+            return "🐾 _Adota um pet primeiro: ©pet_"
+        mochila = c["perfil"].get("mochila", [])
+        num = args[0] if args else ""
+        if not num.isdigit() or not (1 <= int(num) <= len(mochila)):
+            return "🧪 *Qual item?* _©mochila_ pra ver"
+        iid = mochila[int(num) - 1]
+        it = ITENS[iid]
+        if it["slot"] != "consumivel":
+            return "⚔️ *Isso é equipamento!* Equipa: _©equipar " + num + "_"
+        _pet_default(pet)
+        mochila.pop(int(num) - 1)
+        efeitos, extra_txt = it["efeito"], []
+        lvl = ""
+        if "fome" in efeitos:
+            qtd = int(efeitos.split("fome")[1].split("xp")[0])
+            pet["fome"] = min(100, pet.get("fome", 0) + qtd)
+            extra_txt.append("🍽️ Fome +" + str(qtd))
+        if "xp" in efeitos:
+            qtd = int(efeitos.split("xp")[1].split("fome")[0])
+            extra_txt.append("❤️ +" + str(qtd) + " XP")
+            lvl = _pet_ganha_xp(pet, qtd, chat=(de or grupo))
+        if efeitos == "atk1":
+            pet["atk"] += 1; extra_txt.append("⚔️ ATK +1 PERMANENTE")
+        if efeitos == "def1":
+            pet["def"] += 1; extra_txt.append("🛡️ DEF +1 PERMANENTE")
+        if efeitos == "vel1":
+            pet["vel"] += 1; extra_txt.append("💨 VEL +1 PERMANENTE")
+        _econ_salva(db)
+        return "\n".join([
+            "🧪 *" + pet["nome"] + " consumiu " + it["emoji"] + " " + it["nome"] + "!*",
+            "· " + " · ".join(extra_txt),
+        ]) + ("\n" + lvl if lvl else "")
     if cmd == "caminhos":
         linhas = ["🛤️ *CAMINHOS DE EVOLUÇÃO*", LINHA, "",
                   "No Nv.5 teu pet escolhe um caminho conforme a vida que ele leva:", ""]
@@ -1282,7 +1545,8 @@ def responder(texto, nome="", de="", grupo=""):
             "⭐ " + _pet_fase(pet) + " · *Nv." + str(pet["nivel"]) + "*",
             "❤️ XP: [" + barra_xp + "] " + str(pet["xp"]) + "/" + str(pet["nivel"] * 100),
             "⚔️ ATK " + str(pet["atk"]) + " · 🛡️ DEF " + str(pet["def"]) + " · 💨 VEL " + str(pet["vel"]),
-            "💪 *Poder total: " + str(pet["atk"] + pet["def"] + pet["vel"]) + "*",
+            "🎒 Arsenal: " + (", ".join(ITENS[i]["emoji"] + " " + ITENS[i]["nome"] for i in pet.get("equipado", {}).values() if isinstance(i, int)) or "vazio"),
+            "💪 *Poder total: " + str(sum(_pet_stats(pet))) + "*",
             "⚔️ Campanha: " + str(pet["vitorias"]) + "V · " + str(pet["derrotas"]) + "D",
             "🍽️ Fome: [" + barra + "] " + str(fome) + "/100 " + carinha,
             "",
@@ -1304,7 +1568,8 @@ def responder(texto, nome="", de="", grupo=""):
             pet["tipo"].split(" ")[0] + " *" + pet["nome"] + "* · Nv." + str(pet["nivel"]) + " · " + _pet_fase(pet),
             "🔥 " + PET_STATS.get(pet["tipo"].split(" ", 1)[1], PET_BASE)["poder"],
             "⚔️ ATK " + str(pet["atk"]) + " · 🛡️ DEF " + str(pet["def"]) + " · 💨 VEL " + str(pet["vel"]),
-            "💪 *Poder total: " + str(pet["atk"] + pet["def"] + pet["vel"]) + "*",
+            "🎒 Arsenal: " + (", ".join(ITENS[i]["emoji"] + " " + ITENS[i]["nome"] for i in pet.get("equipado", {}).values() if isinstance(i, int)) or "vazio"),
+            "💪 *Poder total: " + str(sum(_pet_stats(pet))) + "*",
             "⚔️ Campanha: " + str(pet["vitorias"]) + "V · " + str(pet["derrotas"]) + "D",
             "",
             "⚔️ _Arena: ©batalha_ · 🏋️ _Treino: ©treinar_",
@@ -1359,9 +1624,14 @@ def responder(texto, nome="", de="", grupo=""):
         w_atk = w_st["atk"] + w_nivel - 1
         w_def = w_st["def"] + w_nivel - 1
         emoji_w = "🐶🐱🐲🦊🐧🦄"[list(PET_STATS).index(w_esp)]
+        me_atk = _pet_stats(pet)[0]
+        b_equip = _bonus_equip(pet)
+        linha_arsenal = "🎒 *Arsenal:* " + ", ".join(
+            ITENS[i]["emoji"] + " " + ITENS[i]["nome"] + " (" + "+".join(str(ITENS[i].get(k, 0)) + k.upper()[0] for k in ("atk", "def", "vel") if ITENS[i].get(k)) + ")"
+            for i in (pet.get("equipado") or {}).values() if isinstance(i, int))
         rounds_txt, meus = [], 0
         for i in range(1, 4):
-            meu_hit = pet["atk"] + random.randint(1, 10)
+            meu_hit = me_atk + random.randint(1, 10)
             w_hit = w_atk + random.randint(1, 10)
             if meu_hit >= w_hit:
                 meus += 1
@@ -1374,8 +1644,15 @@ def responder(texto, nome="", de="", grupo=""):
             c["coins"] = c.get("coins", 0) + ganho
             pet["vitorias"] = pet.get("vitorias", 0) + 1
             lvl = _pet_ganha_xp(pet, 40, chat=(de or grupo))
+            loot = ""
+            if random.random() < 0.30:
+                iid_drop = _sorteia_drop()
+                if iid_drop is not None:
+                    c["perfil"].setdefault("mochila", []).append(iid_drop)
+                    d_it = ITENS[iid_drop]
+                    loot = "\n🎁 *LOOT! O selvagem deixou cair: " + d_it["emoji"] + " " + d_it["nome"] + "!* " + d_it["r"] + " (_na ©mochila_)"
             resultado = ("\n".join(rounds_txt) + "\n\n🏆 *VITÓRIA! " + pet["nome"] + " venceu o " + emoji_w + " " + w_esp + " selvagem (Nv." + str(w_nivel) + ")!*\n"
-                         "🎁 +" + str(ganho) + " N-Coins · +40 XP")
+                         "🎁 +" + str(ganho) + " N-Coins · +40 XP" + loot)
         else:
             pet["derrotas"] = pet.get("derrotas", 0) + 1
             lvl = _pet_ganha_xp(pet, 12, chat=(de or grupo))
@@ -1394,6 +1671,7 @@ def responder(texto, nome="", de="", grupo=""):
             "",
             pet["tipo"].split(" ")[0] + " *" + pet["nome"] + "* (Nv." + str(pet["nivel"]) + ") entrou na arena…",
             "🐾 Um " + emoji_w + " *" + w_esp + " selvagem* apareceu! (Nv." + str(w_nivel) + ")",
+        ] + ([linha_arsenal] if linha_arsenal else []) + [
             "",
             "🥊 *A batalha vai começar… aguenta o suspense!* (_o resultado chega em segundos_)",
         ])
