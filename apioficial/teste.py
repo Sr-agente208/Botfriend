@@ -32,6 +32,9 @@ ok(len(comandos.responder("!piada")) > 10, "!piada tem conteúdo")
 e = comandos.responder("!escolha pizza, hamburguer, sushi")
 ok(e.startswith("🤔") and any(x in e for x in ["pizza", "hamburguer", "sushi"]), "!escolha escolhe uma opção")
 ok("vírgula" in comandos.responder("!escolha sozinho"), "!escolha pede 2+ opções")
+ok("configura" in comandos.responder("!config").lower(), "!config mostra painel")
+ok("versão" in comandos.responder("!config").lower(), "!config mostra versão")
+ok("Comandos" in comandos.responder("!menu"), "menu estilizado")
 ok(comandos.responder("oi").startswith("E aí"), "saudação responde")
 
 # ============ 2) INTEGRAÇÃO: webhook + mock da Graph API ============

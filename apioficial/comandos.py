@@ -2,9 +2,16 @@
 
 responder(texto, nome) -> str  ·  funções puras para fácil teste.
 Aceita comandos com ou sem "!" e ignora diferença de acento/caixa.
+Mensagens estilizadas para o WhatsApp (*negrito*, _itálico_, ~riscado~).
 """
+import os
 import random
+import time
 import unicodedata
+
+VERSAO = "1.1.0"
+_INICIO = time.time()
+DONO = os.environ.get("DONO_NOME", "Sr. Agente 208")
 
 PIADAS = [
     "Por que o livro de matemática vive triste? Porque ele tem muitos problemas. 📘😢",
@@ -14,7 +21,7 @@ PIADAS = [
     "O que o zero disse para o oito? Belo cinto! 🥁",
     "Por que a plantinha não foi atendida no banco? Porque só tinha caule. 🌱",
     "Qual o cúmulo da paciência? Enxugar gelo com toalha de papel. 🧊",
-    "O que o Hippie disse para o do bar? A gente se vê na maconha. 🙃 (perdão, era pra ser 'a gente se vê')",
+    "Fui trocar meu computador de lugar… agora ele é um desktop. 🖥️😄",
 ]
 
 CONSELHOS = [
@@ -28,19 +35,71 @@ CONSELHOS = [
     "Se seu amigo pediu opinião e ficou bravo, ele queria plateia, não conselho. 🎭",
 ]
 
-MENU = (
-    "🤖 *Botfriend Oficial* (Cloud API da Meta)\n\n"
-    "Comandos disponíveis:\n"
-    "• *!ping* — eu tô vivo\n"
-    "• *!dado* [lados] — rola um dado (padrão 6)\n"
-    "• *!moeda* — cara ou coroa\n"
-    "• *!piada* — uma piada (de qualidade duvidosa)\n"
-    "• *!conselho* — sabedoria duvidosa\n"
-    "• *!escolha* opção1, opção2, ... — eu decido por você\n"
-    "• *!id* — seu número no formato da API\n\n"
-    "_Este bot roda na API oficial do WhatsApp (sem risco de ban!). 💚_\n"
-    "_Comandos de grupo (namorar, rpg, ranks) continuam no bot de grupo._"
-)
+FACE_DADO = {1: "⚀", 2: "⚁", 3: "⚂", 4: "⚃", 5: "⚄", 6: "⚅"}
+
+LINHA = "━━━━━━━━━━━━━━━━━━━━"
+
+
+def _uptime():
+    s = int(time.time() - _INICIO)
+    h, s = divmod(s, 3600)
+    m, s = divmod(s, 60)
+    if h:
+        return f"{h}h {m:02d}min"
+    if m:
+        return f"{m}min {s:02d}s"
+    return f"{s}s"
+
+
+MENU = "\n".join([
+    "✨ " + LINHA + " ✨",
+    "🤖 *Botfriend Oficial* 🤖",
+    "  _API Oficial do WhatsApp_",
+    "✨ " + LINHA + " ✨",
+    "",
+    "📜 *Comandos*",
+    "",
+    "🎮 *Diversão*",
+    "  🎲 *!dado* _[lados]_ — rola o dado",
+    "  🪙 *!moeda* — cara ou coroa",
+    "  🎯 *!escolha* _op1, op2…_ — eu decido",
+    "",
+    "😄 *Humor*",
+    "  😂 *!piada* — risada garantida (ou não)",
+    "  💡 *!conselho* — sabedoria duvidosa",
+    "",
+    "🛠️ *Sistema*",
+    "  🏓 *!ping* — tô vivo?",
+    "  ⚙️ *!config* — configurações do bot",
+    "  🆔 *!id* — teu número na API",
+    "",
+    LINHA,
+    "💚 _API oficial = *zero risco de ban*_",
+    "👥 _Grupo (namorar/rpg) = bot de grupo_",
+])
+
+CONFIG = "\n".join([
+    "⚙️ " + LINHA,
+    "   *CONFIGURAÇÕES DO BOT*",
+    LINHA,
+    "",
+    "🤖 *Nome:* Botfriend Oficial",
+    "🔧 *Versão:* " + VERSAO,
+    "📡 *Conexão:* Cloud API (Meta) ✅",
+    "🛡️ *Risco de ban:* zero 💚",
+    "👑 *Dono:* " + DONO,
+    "⏱️ *Online há:* " + _uptime(),
+    "",
+    "🎮 *Recursos ativos*",
+    "  ✅ Sorteios (dado, moeda, escolha)",
+    "  ✅ Piadas & conselhos",
+    "  ✅ Respostas com estilo 😎",
+    "  🚫 Moderação de grupo — _bot de grupo_",
+    "  🚫 Namoro/RPG — _bot de grupo_",
+    "",
+    LINHA,
+    "💡 _Novo comando? Fala com o dono!_",
+])
 
 
 def _sem_acento(t):
@@ -51,7 +110,7 @@ def responder(texto, nome=""):
     """Recebe o texto da mensagem e devolve a resposta do bot."""
     if not texto:
         return (
-            "Recebi tua mensagem, mas só falo com *texto* por enquanto! "
+            "Recebi tua mensagem, mas só falo com *texto* por enquanto! 🙊\n"
             "Manda *!menu* pra ver o que sei fazer. 🙂"
         )
     t = _sem_acento(texto.strip().lower())
@@ -62,31 +121,67 @@ def responder(texto, nome=""):
 
     if cmd in ("menu", "ajuda", "help", "start"):
         return MENU
+    if cmd in ("config", "configs", "configuracao", "configuracoes", "info", "status"):
+        return CONFIG
     if cmd == "ping":
-        return "🏓 Pong! Tô online via API oficial da Meta."
+        return (
+            "🏓 *Pong!*\n" + LINHA + "\n"
+            "✅ Status: *online*\n"
+            "📡 Via: Cloud API (Meta)\n"
+            "⚡ Latência: quase instantânea\n"
+            "⏱️ Online há: " + _uptime()
+        )
     if cmd == "oi" or cmd == "ola" or cmd == "bomdia" or cmd == "boanoite":
         ola = f"E aí, {nome}! " if nome else "E aí! "
-        return ola + "Manda *!menu* pra ver meus comandos. 😎"
+        return ola + "😎 Manda *!menu* pra ver meus comandos."
     if cmd == "dado":
         lados = 6
         if args and args[0].isdigit() and 2 <= int(args[0]) <= 1000:
             lados = int(args[0])
-        return f"🎲 Você rolou *{random.randint(1, lados)}* (d{lados})"
+        n = random.randint(1, lados)
+        face = FACE_DADO.get(n, "🎲") if lados == 6 else "🎲"
+        return (
+            f"🎲 *Rolar d{lados}...*\n"
+            "🔄 girando o dado...\n\n"
+            f"{face} Resultado: *{n}* (d{lados}) 🎯"
+        )
     if cmd == "moeda":
-        return "🪙 Deu *cara*!" if random.random() < 0.5 else "🪙 Deu *coroa*!"
+        lado = "cara" if random.random() < 0.5 else "coroa"
+        return (
+            "🪙 *Jogando a moeda...*\n"
+            "🔄 girando, girando...\n\n"
+            f"🎉 Deu *{lado}*! "
+            + ("🦅" if lado == "cara" else "👑")
+        )
     if cmd == "piada":
-        return random.choice(PIADAS)
+        return (
+            "🎭 *Piada duvidosa do dia:*\n\n"
+            "» " + random.choice(PIADAS) + "\n\n"
+            "🥁 _tadum..._ 😅"
+        )
     if cmd == "conselho":
-        return "💡 " + random.choice(CONSELHOS)
+        return (
+            "🧘 *O sábio diz:*\n\n"
+            "💡 " + random.choice(CONSELHOS)
+        )
     if cmd == "escolha":
         opcoes = [o.strip() for o in resto.replace(" ou ", ",").split(",") if o.strip()]
         if len(opcoes) < 2:
-            return "Me dá as opções separadas por vírgula: *!escolha pizza, hambúrguer, sushi* 🍕"
-        return f"🤔 Analisando friamente... a resposta é: *{random.choice(opcoes)}*"
+            return (
+                "🎯 Me dá as opções *separadas por vírgula*:\n"
+                "_!escolha pizza, hambúrguer, sushi_ 🍕🍔🍣"
+            )
+        lista = "\n  • ".join(opcoes)
+        return (
+            f"🤔 *Analisando friamente as {len(opcoes)} opções...*\n"
+            "  • " + lista + "\n\n"
+            "🤔 *Analisando friamente...*\n\n"
+            "✨ A resposta é: *" + random.choice(opcoes) + "* ✅"
+        )
     if cmd == "id":
         return "🆔 (o comando !id é respondido pelo app com teu número)"
 
     return (
-        "Não entendi essa! 🤷‍♂️\n"
-        "Manda *!menu* pra ver o que eu sei fazer."
+        "Não entendi essa! 🤔\n"
+        "Manda *!menu* pra ver o que eu sei fazer 👆"
     )
