@@ -80,7 +80,7 @@ def _premio(de, coins=0, xp=0, vitoria=False):
     _econ_salva(db)
     return "\n🎁 +" + str(coins) + " N-Coins · +" + str(xp) + " XP (Nível " + str(p["nivel"]) + ")"
 
-VERSAO = "1.6.0"
+VERSAO = "1.7.0"
 _INICIO = time.time()
 # identidade igual ao bot de grupo (DADOS DO KEISEN/INFO_KEISEN/media/INFO_KEISEN.json)
 NOME_DO_BOT = os.environ.get("NOME_DO_BOT", "WHITE LOTUS")
@@ -171,6 +171,39 @@ INTERACOES = {
     "tapa": "👋 *PLAP!* … Ei! Me deu um tapa?! Agora eu fico com a bochecha vermelha! 😤",
     "beijo": "😘 *Smack!* … Guardo esse aqui no coração! 💋❤️",
     "mordida": "🦷 *Nhac!* … Ai! Mordeu o bot?! Vou te cobrar isso em coins! 😾",
+    "chutar": "🦵 *CRAC!* … Ei! Chute no bot?! Meu circuito sentiu essa! 😾",
+    "soco": "👊 *POW!* … Uau, soco forte! Tô recompilando meus sentimentos… 😵‍💫",
+    "matar": "💀 *Morri!* … Últimas palavras: 'guardem meus coins…' 🔋 (_revive com ©ping_)",
+    "sentar": "🪑 *CRREEEK!* … MEU TECLADO! Senta não! 😱",
+}
+
+ALIASES_INT = {
+    "morder": "mordida", "beijar": "beijo", "abracar": "abraco",
+    "acariciar": "carinho", "socar": "soco", "mata": "matar",
+}
+
+ALVO_TEMPLATES = {
+    "carinho": "🥰 {a} fez carinho em {v}! Que fofo! 💖",
+    "abraco": "🤗 {a} deu um abraço BEM apertado em {v}! 💚",
+    "tapa": "👋 {a} deu um TAPA em {v}! *PLAP!* 💥",
+    "beijo": "😘 {a} deu um beijo em {v}! *Smack!* 💋",
+    "mordida": "🦷 {a} mordeu {v}! *Nhac!* 😬",
+    "chutar": "🦵 {a} meteu um chute em {v}! *CRAC!* 💥",
+    "soco": "👊 {a} meteu um SOCO em {v}! *POW!* 💢",
+    "matar": "💀 {a} matou {v}! Que violência… 🔪",
+    "sentar": "🪑 {a} sentou em {v}! Coitado… 😳",
+}
+
+REACTION_BOT = {
+    "carinho": "\n🤖 *Rrrr…* continua, eu gosto… 😊",
+    "abraco": "\n🤖 Melhor abraço do meu dia! 💚",
+    "tapa": "\n🤖 Tapa digital registrada! Devolvo em 8-bit! 😤",
+    "beijo": "\n🤖 *fica vermelho em binário* 01101100 💘",
+    "mordida": "\n🤖 AÍ! Tô chamando a polícia dos bots! 👮",
+    "chutar": "\n🤖 Ei! Cuide do meu circuito! 😾",
+    "soco": "\n🤖 Modo defesa ativado! 🛡️😂",
+    "matar": "\n🤖 Revivendo… backup restaurado! Tá me devendo uma agora 😤",
+    "sentar": "\n🤖 AAAAA! Meus componentes! 😱",
 }
 
 FACE_DADO = {1: "⚀", 2: "⚁", 3: "⚂", 4: "⚃", 5: "⚄", 6: "⚅"}
@@ -247,7 +280,9 @@ MENU = "\n".join([
     "  😏 *©cantada* — uma cantada pronta",
     "  🧠 *©curiosidades* — fato aleatório",
     "  🎲 *©brincadeira* — desafio pra você",
-    "  🥰 *©carinho* · 🤗 *©abraco* · 👋 *©tapa* · 😘 *©beijo*",
+    "  🥰 *©carinho* · 🤗 *©abraco* · 👋 *©tapa* · 😘 *©beijo* · 🦷 *©mordida*",
+    "  ⚔️ *Com alvo:* ©tapa _@pessoa_ · 💀 ©matar · 🦵 ©chutar · 👊 ©soco · 🪑 ©sentar",
+    "  🥴 *©bebado* · 🦹 *©roubar* (rouba o bot… se conseguir 😏)",
     "",
     "🥷 *RPG*",
     "  🗡️ *©rpg* — cria/ver teu herói",
@@ -319,7 +354,7 @@ CONFIG = "\n".join([
     "  ✅ Amor (namorar o bot, casamento!)",
     "  ✅ Utilidades (calc, anotações, verdade/desafio)",
     "  ✅ Núcleo de grupos (sorteio, times, regras)",
-    "  ✅ Interações (carinho, abraço, tapa, beijo)",
+    "  ✅ Interações com alvo (morder, matar, soco, chutar, roubar…)",
     "  ✅ Piadas, conselhos & curiosidades",
     "  ✅ Respostas com estilo 😎",
     "",
@@ -553,8 +588,52 @@ def responder(texto, nome="", de="", grupo=""):
             "🎯 " + random.choice(BRINCADEIRAS) + "\n\n"
             "_Coragem e manda a resposta! 😄_"
         )
+    alvo_int = " ".join(args) if args else ""
+    if alvo_int.startswith("@"):
+        alvo_int = alvo_int[1:]
+        if grupo:
+            membros_g = _grup().get(grupo, {}).get("membros", {})
+            for jid_m, nome_m in membros_g.items():
+                if jid_m.split("@")[0].startswith(alvo_int[:6]):
+                    alvo_int = nome_m
+                    break
+    if cmd in ALIASES_INT:
+        cmd = ALIASES_INT[cmd]
+    if cmd == "bebado":
+        return (
+            "🥴 *" + (nome or "Alguém") + " tá mais bêbado que bot em loop infinito!*\n"
+            "🍺 *Nível de álcool:* " + str(random.randint(80, 200)) + "%\n\n"
+            "_Corre pra cama! 😴_"
+        )
+    if cmd == "roubar":
+        if not de:
+            return "🦹 Manda ©roubar no privado! (roubo tem que ter identificação 😄)"
+        db = _econ()
+        c = db.setdefault(de, {"coins": 100, "banco": 0, "perfil": {}})
+        if not alvo_int:
+            if c.get("coins", 0) < 15:
+                return "\n".join([
+                    "🦹 *ROUBO FRACASSADO!*",
+                    "",
+                    "🤖 Peguei no flagra! Mas tu nem tem os 15 coins da fiança 😂",
+                    "💼 _Vai ©trabalhar em vez de crime!_",
+                ])
+            c["coins"] = c.get("coins", 0) - 15
+            _econ_salva(db)
+            return "\n".join([
+                "🦹 *" + (nome or "Você") + " tentou roubar o bot!* 🤖",
+                LINHA,
+                "",
+                "🚨 *Os seguranças digitais pegaram no flagra!*",
+                "💸 *Multa aplicada: -15 N-Coins*",
+                "",
+                "_Crime não compensa… mas pode tentar de novo depois 😏_",
+            ])
+        return "🦹 *" + (nome or "Alguém") + " tentou roubar " + alvo_int + "… e os seguranças pegaram no flagra!* 👮💸 _Fugiu sem nada! 😂_"
     if cmd in INTERACOES:
-        resp = INTERACOES[cmd]
+        if alvo_int:
+            return ALVO_TEMPLATES[cmd].format(a=(nome or "Alguém"), v=alvo_int)
+        resp = INTERACOES[cmd] + REACTION_BOT.get(cmd, "")
         if cmd in ("carinho", "abraco", "beijo"):
             return resp + ("\n\n_Amo tuas interações, " + nome + "! 💖_" if nome else "")
         return resp

@@ -111,6 +111,21 @@ ok("🎉" in comandos.responder("©sorteio", de="u13@s.whatsapp.net", grupo=G), 
 times = comandos.responder("©times 2", de="u14@s.whatsapp.net", grupo=G)
 ok("Time 1" in times and "u11" in times, "©times divide em times")
 ok("u11" in comandos.responder("©msgcount", de="u11@s.whatsapp.net", grupo=G), "©msgcount ranking de fala")
+# --- Lote 6: Interações completas ---
+ok("mordeu joao" in comandos.responder("©morder joão").lower(), "©morder com alvo")
+ok("Nhac" in comandos.responder("©mordida"), "©mordida no bot reage")
+ok("chute" in comandos.responder("©chutar").lower(), "©chutar no bot")
+ok("soco" in comandos.responder("©soco").lower(), "©soco no bot")
+ok("matou claudio" in comandos.responder("©matar cláudio").lower(), "©matar com alvo")
+ok("TECLADO" in comandos.responder("©sentar").upper(), "©sentar no bot")
+ok("bêbado" in comandos.responder("©bebado").lower(), "©bebado mede o nível")
+antes = comandos._conta("u17@s.whatsapp.net")["coins"]
+r = comandos.responder("©roubar", de="u17@s.whatsapp.net")
+depois = comandos._conta("u17@s.whatsapp.net")["coins"]
+ok("multa aplicada" in r.lower(), "©roubar no bot pega no flagra")
+ok(depois == antes - 15 or antes < 15, "©roubar cobra multa de 15")
+ok("segurança" in comandos.responder("©roubar morganny", de="u17b@s.whatsapp.net").lower(), "©roubar com alvo")
+ok("tapa" in comandos.responder("©tapa @joão").lower(), "©tapa com alvo com @")
 econ = comandos.responder("©saldo", de="u3@s.whatsapp.net")
 ok("EXTRATO" in econ and "N-Coins" in econ, "©saldo mostra extrato bancário")
 trab1 = comandos.responder("©trabalhar", de="u3@s.whatsapp.net")
