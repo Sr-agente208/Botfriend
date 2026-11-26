@@ -121,6 +121,34 @@ def processar(msg):
         log.info("respondi %s (%s)", de, mid)
 
 
+@app.get("/diag")
+def diag():
+    """Diagnóstico somente-leitura: o que o token alcança na Graph API."""
+    import requests as rq
+    out = {
+        "phone_number_id": sender.PHONE_ID or "(vazio)",
+        "token": (sender.TOKEN[:8] + "..." + sender.TOKEN[-4:]) if sender.TOKEN else "(vazio)",
+    }
+    chamadas = {
+        "numero_alvo": f"/{sender.PHONE_ID}?fields=id,display_phone_number,verified_name,account_mode",
+        "waba_do_numero": f"/{sender.PHONE_ID}/whatsapp_business_account?fields=id,name",
+        "numeros_waba_teste": "/1164994095250290/phone_numbers?fields=id,display_phone_number,verified_name",
+        "numeros_waba_1453": "/145315473613404/phone_numbers?fields=id,display_phone_number,verified_name",
+        "wabas_do_negocio_white": "/12329315396/owned_whatsapp_business_accounts?fields=id,name",
+        "negocios_do_token": "/me/businesses?fields=id,name",
+    }
+    for nome, caminho in chamadas.items():
+        try:
+            r = rq.get(sender.BASE + caminho, headers=sender._headers(), timeout=20)
+            try:
+                out[nome] = r.json()
+            except Exception:
+                out[nome] = {"status": r.status_code, "corpo": r.text[:300]}
+        except Exception as e:
+            out[nome] = {"erro": str(e)}
+    return jsonify(out)
+
+
 @app.errorhandler(Exception)
 def erro_geral(e):
     log.exception("erro não tratado: %s", e)
