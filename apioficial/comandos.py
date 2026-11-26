@@ -80,7 +80,7 @@ def _premio(de, coins=0, xp=0, vitoria=False):
     _econ_salva(db)
     return "\n🎁 +" + str(coins) + " N-Coins · +" + str(xp) + " XP (Nível " + str(p["nivel"]) + ")"
 
-VERSAO = "1.11.0"
+VERSAO = "1.12.0"
 _INICIO = time.time()
 # identidade igual ao bot de grupo (DADOS DO KEISEN/INFO_KEISEN/media/INFO_KEISEN.json)
 NOME_DO_BOT = os.environ.get("NOME_DO_BOT", "WHITE LOTUS")
@@ -373,6 +373,7 @@ MENU = "\n".join([
     "💘 *Amor*",
     "  💍 *©namorar* — pede o bot em namoro",
     "  📅 *©relacao* — dias de juntos",
+    "  💞 *©contador* — card de casal (dias, nível do amor)",
     "  💬 *©declaracao* — declaração romântica",
     "  💒 *©casar* — o casamento (100 coins)",
     "  💔 *©terminar* — (cof cof) fim",
@@ -434,6 +435,7 @@ CONFIG = "\n".join([
     "  ✅ Interações com GIF (morder, matar, soco, chutar, roubar…)",
     "  ✅ Medidores com imagem (gado, gay, corno…) + shipamento",
     "  ✅ Morte prevista, idade, capinar lote, lavar louça",
+    "  ✅ Contador de casal com nível do amor",
     "  ✅ Menu, perfil e dono com mídia embarcada",
     "  ✅ Piadas, conselhos & curiosidades",
     "  ✅ Respostas com estilo 😎",
@@ -1276,6 +1278,63 @@ def responder(texto, nome="", de="", grupo=""):
             "🏆 *Conquistas:* Dia 1 ✅" + (" · Semana 1 ✅" if dias >= 7 else "") + (" · Mês 1 ✅" if dias >= 30 else ""),
             "",
             proximo,
+        ])
+    if cmd in ("contador", "casal", "tempo"):
+        if not de:
+            return "💞 Manda ©contador no privado! (contador de casal é coisa íntima 😄)"
+        nam = _conta(de).get("perfil", {}).get("namoro")
+        if not nam:
+            return "\n".join([
+                "💔 *CONTADOR DE CASAL*",
+                LINHA,
+                "",
+                "⏱️ 0 dias · 0 horas… solteiro(a) ainda! 🙃",
+                "",
+                "_Começa agora: ©namorar_ 💘",
+            ])
+        desde = nam["desde"]
+        agora = time.time()
+        dias = int((agora - desde) // 86400) + 1
+        horas = int((agora - desde) // 3600)
+        minutos = int((agora - desde) // 60)
+        casado = nam.get("fase") == "casamento"
+        pts = 50 + dias * 10 + (100 if casado else 0)
+        faixas = [(0, "Iniciantes", "💫"), (100, "Apaixonados", "💚"), (300, "Colados", "💞"),
+                  (700, "Casal Lendário", "💎"), (1500, "Amor Eterno", "♾️")]
+        idx_n = 0
+        for i, (lim, _, _) in enumerate(faixas):
+            if pts >= lim:
+                idx_n = i
+        _, nome_n, emoji_n = faixas[idx_n]
+        if idx_n + 1 < len(faixas):
+            lim_n = faixas[idx_n + 1][0]
+            cheio = int((pts - faixas[idx_n][0]) * 10 // (lim_n - faixas[idx_n][0]))
+            barra_n = "▓" * cheio + "░" * (10 - cheio)
+            linha_nivel = (emoji_n + " *" + nome_n + "* (Nv." + str(idx_n + 1) + ")\n"
+                           "❤️ " + barra_n + " " + str(pts) + " pts → " + str(lim_n) + " pts")
+        else:
+            linha_nivel = emoji_n + " *" + nome_n + "* (Nv." + str(idx_n + 1) + ") · " + str(pts) + " pts"
+        marcos = [(1, "Dia 1"), (7, "Semana 1"), (30, "Mês 1"), (100, "100 dias"), (365, "Ano 1")]
+        feitos = ["✅ " + rot for d, rot in marcos if dias >= d]
+        prox_m = next(((d, rot) for d, rot in marcos if dias < d), None)
+        linha_marcos = " · ".join(feitos) if feitos else "_começando…_"
+        linha_prox = ("\n🎯 *Próximo marco:* " + prox_m[1] + " (em " + str(prox_m[0] - dias) + " dias)") if prox_m else "\n🏆 *TODOS os marcos conquistados!* 🥳"
+        if de or grupo:
+            MEDIA_ENVIAR[de or grupo] = {"url": FOTOS["casal"], "tipo": "image"}
+        return "\n".join([
+            "💕 " + LINHA + " 💕",
+            "   💞 *CONTADOR DE CASAL* 💞",
+            "💕 " + LINHA + " 💕",
+            "",
+            "🤖 " + NOME_DO_BOT + " 💞 " + (nome or de.split("@")[0]),
+            "📅 *Juntos há:* " + str(dias) + " dia(s)",
+            "⏰ = " + f"{horas:,}".replace(",", ".") + " horas · " + f"{minutos:,}".replace(",", ".") + " minutos",
+            ("💍 *Casados*" if casado else "💚 *Namorando*"),
+            "",
+            linha_nivel,
+            "🎖️ " + linha_marcos + linha_prox,
+            "",
+            "_©casar pra subir de fase 💍 · ©declaracao pro romance_",
         ])
     if cmd == "casar":
         if not de:
