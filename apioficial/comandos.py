@@ -80,7 +80,7 @@ def _premio(de, coins=0, xp=0, vitoria=False):
     _econ_salva(db)
     return "\n🎁 +" + str(coins) + " N-Coins · +" + str(xp) + " XP (Nível " + str(p["nivel"]) + ")"
 
-VERSAO = "1.17.0"
+VERSAO = "1.18.0"
 _INICIO = time.time()
 # identidade igual ao bot de grupo (DADOS DO KEISEN/INFO_KEISEN/media/INFO_KEISEN.json)
 NOME_DO_BOT = os.environ.get("NOME_DO_BOT", "WHITE LOTUS")
@@ -495,6 +495,9 @@ PET_STATS = {
     "raposa": {"atk": 7, "def": 6, "vel": 7, "poder": "🌙 Astúcia Mística"},
     "pinguim": {"atk": 5, "def": 8, "vel": 4, "poder": "❄️ Gelo Polar"},
     "unicórnio": {"atk": 8, "def": 6, "vel": 9, "poder": "✨ Luz Estelar"},
+    "lobo": {"atk": 8, "def": 6, "vel": 7, "poder": "🌪️ Uivo da Tempestade"},
+    "águia": {"atk": 7, "def": 5, "vel": 10, "poder": "🌬️ Voo Cortante"},
+    "sapo": {"atk": 5, "def": 9, "vel": 5, "poder": "💧 Manto de Lodo"},
 }
 PET_BASE = {"atk": 6, "def": 6, "vel": 6, "poder": "🌟 Energia Misteriosa"}
 
@@ -551,6 +554,19 @@ ITENS = [
 EMOJI_SLOT = {"arma": "⚔️", "armadura": "🛡️", "acessorio": "👟", "consumivel": "🧪"}
 
 
+ITEM_IMG = {8: "itens/lamina_dragao.png", 9: "itens/excalibur.png",
+            11: "itens/ceifadora.png", 23: "itens/manto_tita.png"}
+
+
+def _img_item(iid):
+    """Imagem-sticker do item (se já gerada)."""
+    import os
+    arq = ITEM_IMG.get(iid)
+    if arq and os.path.isfile(os.path.join(os.path.dirname(os.path.abspath(__file__)), "media", arq)):
+        return arq
+    return None
+
+
 def _bonus_equip(pet):
     """Soma dos bônus dos itens equipados."""
     tot = {"atk": 0, "def": 0, "vel": 0}
@@ -588,18 +604,19 @@ def _sorteia_drop():
 # ─── Caminhos de evolução (cada estilo de criação vira uma forma diferente!) ───
 CAMINHOS = {
     "guerreiro": {"emoji": "⚔️", "adulto": "Guerreiro", "alfa": "👑 Warlord",
-                  "img_a": "pets/adulto_guerreiro.jpg", "img_f": "pets/alfa_warlord.jpg",
+                  "img_a": "pets/adulto_guerreiro.jpg", "img_f": "pets/alfa_warlord.png",
                   "desc": "pra quem VENCE BATALHAS na arena"},
     "atleta": {"emoji": "💨", "adulto": "Atleta", "alfa": "👑 Relâmpago",
-               "img_a": "pets/adulto_atleta.jpg", "img_f": "pets/alfa_relampago.jpg",
+               "img_a": "pets/adulto_atleta.jpg", "img_f": "pets/alfa_relampago.png",
                "desc": "pra quem TREINA pesado todo dia"},
     "fofo": {"emoji": "🧸", "adulto": "Fofura", "alfa": "👑 Divino",
-             "img_a": "pets/adulto_fofo.jpg", "img_f": "pets/alfa_divino.jpg",
+             "img_a": "pets/adulto_fofo.jpg", "img_f": "pets/alfa_divino.png",
              "desc": "pra quem é bem ALIMENTADO e amado"},
 }
 
 PET_SLUG = {"cachorro": "cachorro", "gato": "gato", "dragãozinho": "dragao",
-            "raposa": "raposa", "pinguim": "pinguim", "unicórnio": "unicornio"}
+            "raposa": "raposa", "pinguim": "pinguim", "unicórnio": "unicornio",
+            "lobo": "lobo", "águia": "aguia", "sapo": "sapo"}
 
 
 def _pet_img(pet):
@@ -613,11 +630,12 @@ def _pet_img(pet):
         candidatos += [cam["img_f"], cam["img_a"]]
     elif nivel >= 5 and cam:
         candidatos += [cam["img_a"]]
-    candidatos.append("pets/filhote_" + slug + ".jpg")
+    candidatos.append("pets/filhote_" + slug)
     base = os.path.join(os.path.dirname(os.path.abspath(__file__)), "media")
-    for c in candidatos:
-        if os.path.isfile(os.path.join(base, c)):
-            return c
+    for c in [x[:-4] if x.endswith((".jpg", ".png")) else x for x in candidatos]:
+        for ext in (".jpg", ".png"):
+            if os.path.isfile(os.path.join(base, c + ext)):
+                return c + ext
     return "fotomenu.png"
 
 
@@ -1366,6 +1384,9 @@ def responder(texto, nome="", de="", grupo=""):
             return "🎒 *Mochila cheia!* (30 itens) _Usa ou vende algo… futuramente 😄_"
         mochila.append(int(num) - 1)
         _econ_salva(db)
+        img_item = _img_item(int(num) - 1)
+        if img_item and (de or grupo):
+            MEDIA_ENVIAR[de or grupo] = {"arquivo": img_item, "tipo": "image"}
         return "\n".join([
             "🛍️ *COMPRA EFETUADA!*",
             LINHA,
@@ -1421,6 +1442,9 @@ def responder(texto, nome="", de="", grupo=""):
         if antigo is not None and antigo != iid:
             mochila.append(antigo)
         _econ_salva(db)
+        img_item = _img_item(iid)
+        if img_item and (de or grupo):
+            MEDIA_ENVIAR[de or grupo] = {"arquivo": img_item, "tipo": "image"}
         extra = "+".join(str(it.get(k, 0)) + k.upper()[0] for k in ("atk", "def", "vel") if it.get(k))
         return "\n".join([
             "⚔️ *EQUIPADO!*",
@@ -1507,7 +1531,7 @@ def responder(texto, nome="", de="", grupo=""):
         p = c.setdefault("perfil", {})
         pet = p.get("pet")
         if not pet:
-            tipo = random.choice(["🐶 cachorro", "🐱 gato", "🐲 dragãozinho", "🦊 raposa", "🐧 pinguim", "🦄 unicórnio"])
+            tipo = random.choice(["🐶 cachorro", "🐱 gato", "🐲 dragãozinho", "🦊 raposa", "🐧 pinguim", "🦄 unicórnio", "🐺 lobo", "🦅 águia", "🐸 sapo"])
             nomes = ["Bidu", "Pipoca", "Fumaça", "Turbina", "Bolinha", "Nebulosa", "Amendoim", "Tempestade"]
             p["pet"] = {"nome": random.choice(nomes), "tipo": tipo, "fome": 70}
             pet = _pet_default(p["pet"])
@@ -1623,7 +1647,7 @@ def responder(texto, nome="", de="", grupo=""):
         w_nivel = max(1, pet["nivel"] + random.choice([-2, -1, 0, 1, 2]))
         w_atk = w_st["atk"] + w_nivel - 1
         w_def = w_st["def"] + w_nivel - 1
-        emoji_w = "🐶🐱🐲🦊🐧🦄"[list(PET_STATS).index(w_esp)]
+        emoji_w = "🐶🐱🐲🦊🐧🦄🐺🦅🐸"[list(PET_STATS).index(w_esp)]
         me_atk = _pet_stats(pet)[0]
         b_equip = _bonus_equip(pet)
         linha_arsenal = "🎒 *Arsenal:* " + ", ".join(
