@@ -80,7 +80,7 @@ def _premio(de, coins=0, xp=0, vitoria=False):
     _econ_salva(db)
     return "\n🎁 +" + str(coins) + " N-Coins · +" + str(xp) + " XP (Nível " + str(p["nivel"]) + ")"
 
-VERSAO = "1.9.0"
+VERSAO = "1.10.0"
 _INICIO = time.time()
 # identidade igual ao bot de grupo (DADOS DO KEISEN/INFO_KEISEN/media/INFO_KEISEN.json)
 NOME_DO_BOT = os.environ.get("NOME_DO_BOT", "WHITE LOTUS")
@@ -410,6 +410,7 @@ CONFIG = "\n".join([
     "  ✅ Núcleo de grupos (sorteio, times, regras)",
     "  ✅ Interações com GIF (morder, matar, soco, chutar, roubar…)",
     "  ✅ Medidores com imagem (gado, gay, corno…) + shipamento",
+    "  ✅ Menu, perfil e dono com mídia embarcada",
     "  ✅ Piadas, conselhos & curiosidades",
     "  ✅ Respostas com estilo 😎",
     "",
@@ -515,6 +516,7 @@ def responder(texto, nome="", de="", grupo=""):
     resto = texto.strip().split(None, 1)[1] if len(texto.strip().split(None, 1)) > 1 else ""
 
     if cmd in ("menu", "ajuda", "help", "start"):
+        MEDIA_ENVIAR[de or grupo] = {"arquivo": "fotomenu.png", "tipo": "image"}
         return MENU
     if cmd in ("config", "configs", "configuracao", "configuracoes", "info", "status"):
         return CONFIG
@@ -892,6 +894,7 @@ def responder(texto, nome="", de="", grupo=""):
     if cmd in ("perfil", "meuperfil"):
         if not de:
             return "🪪 Manda ©perfil no privado! (preciso saber quem é você 😄)"
+        MEDIA_ENVIAR[de or grupo] = {"arquivo": "fotoperfil.png", "tipo": "image"}
         c = _conta(de)
         p = c.get("perfil", {})
         fmt = lambda v: f"{v:,}".replace(",", ".")
@@ -1126,6 +1129,7 @@ def responder(texto, nome="", de="", grupo=""):
             "_Responde com a letra! (a, b, c ou d)_ ✍️",
         ])
     if cmd == "dono":
+        MEDIA_ENVIAR[de or grupo] = {"arquivo": "donos.mp4", "tipo": "video"}
         return "\n".join([
             "👑 " + LINHA,
             "   *MEU CRIADOR*",

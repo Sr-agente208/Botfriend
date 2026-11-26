@@ -21,7 +21,7 @@ import sender
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger("botfriend-oficial")
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder="media", static_url_path="/media")
 
 VERIFY_TOKEN = os.environ.get("VERIFY_TOKEN", "botfriend-troca-isso")
 APP_SECRET = os.environ.get("APP_SECRET", "")
@@ -127,15 +127,19 @@ def processar(msg, value=None):
         chat = grupo or de
         media = comandos.MEDIA_ENVIAR.pop(chat, None)
         if media:
+            url = media.get("url") or request.url_root.rstrip("/") + "/media/" + media["arquivo"]
+            legenda_curta = resposta if len(resposta) <= 1000 else resposta.split("\n\n")[0][:1000]
             try:
                 if media.get("tipo") == "image":
-                    sender.enviar_imagem(chat, media["url"], resposta, grupo=bool(grupo))
+                    sender.enviar_imagem(chat, url, legenda_curta, grupo=bool(grupo))
                 else:
-                    sender.enviar_video(chat, media["url"], resposta, grupo=bool(grupo))
+                    sender.enviar_video(chat, url, legenda_curta, grupo=bool(grupo))
                 log.info("respondi com mídia %s (%s)", chat, mid)
+                if len(resposta) > 1000:
+                    sender.enviar_texto(chat, resposta)  # texto completo vai na sequência
                 return
             except Exception:
-                log.exception("mídia falhou, cai pro texto")
+                log.exception("mídia falhou (%s), cai pro texto", url[-30:])
         if grupo:
             sender.enviar_grupo(grupo, resposta)
         else:
