@@ -33,6 +33,8 @@ e = comandos.responder("!escolha pizza, hamburguer, sushi")
 ok(e.startswith("🤔") and any(x in e for x in ["pizza", "hamburguer", "sushi"]), "!escolha escolhe uma opção")
 ok("vírgula" in comandos.responder("!escolha sozinho"), "!escolha pede 2+ opções")
 ok("configura" in comandos.responder("!config").lower(), "!config mostra painel")
+ok("Sr-agente208" in comandos.responder("!config"), "!config mostra dono real")
+ok("WHITE LOTUS" in comandos.responder("!menu"), "menu mostra nome real do bot")
 ok("versão" in comandos.responder("!config").lower(), "!config mostra versão")
 ok("Comandos" in comandos.responder("!menu"), "menu estilizado")
 ok(comandos.responder("oi").startswith("E aí"), "saudação responde")
@@ -102,7 +104,7 @@ try:
     ok(len(CAPTURADOS) == antes, "mensagem duplicada não gera resposta dupla")
 
     # --- comandos variados ---
-    for texto, esperado, mid in [("!menu", "Botfriend Oficial", "wamid.AAA2"), ("!dado 20", "d20", "wamid.AAA3"), ("qualquer besteira", "Não entendi", "wamid.AAA4")]:
+    for texto, esperado, mid in [("!menu", "WHITE LOTUS", "wamid.AAA2"), ("!dado 20", "d20", "wamid.AAA3"), ("qualquer besteira", "Não entendi", "wamid.AAA4")]:
         rq.post("http://127.0.0.1:5001/webhook", json=payload(texto, mid), timeout=5)
         time.sleep(0.6)
         ultimos = [c.get("text", {}).get("body", "") for c in CAPTURADOS if c.get("type") == "text"]

@@ -9,9 +9,12 @@ import random
 import time
 import unicodedata
 
-VERSAO = "1.1.0"
+VERSAO = "1.2.0"
 _INICIO = time.time()
-DONO = os.environ.get("DONO_NOME", "Sr. Agente 208")
+# identidade igual ao bot de grupo (DADOS DO KEISEN/INFO_KEISEN/media/INFO_KEISEN.json)
+NOME_DO_BOT = os.environ.get("NOME_DO_BOT", "WHITE LOTUS")
+DONO = os.environ.get("DONO_NOME", "Sr-agente208")
+NUMERO_DONO = os.environ.get("DONO_NUMERO", "5511986059638")
 
 PIADAS = [
     "Por que o livro de matemática vive triste? Porque ele tem muitos problemas. 📘😢",
@@ -53,7 +56,7 @@ def _uptime():
 
 MENU = "\n".join([
     "✨ " + LINHA + " ✨",
-    "🤖 *Botfriend Oficial* 🤖",
+    "🤖 *" + NOME_DO_BOT + "* 🤖",
     "  _API Oficial do WhatsApp_",
     "✨ " + LINHA + " ✨",
     "",
@@ -83,11 +86,12 @@ CONFIG = "\n".join([
     "   *CONFIGURAÇÕES DO BOT*",
     LINHA,
     "",
-    "🤖 *Nome:* Botfriend Oficial",
+    "🤖 *Nome:* " + NOME_DO_BOT,
     "🔧 *Versão:* " + VERSAO,
     "📡 *Conexão:* Cloud API (Meta) ✅",
     "🛡️ *Risco de ban:* zero 💚",
-    "👑 *Dono:* " + DONO,
+    "👑 *Dono:* " + DONO + " (" + NUMERO_DONO + ")",
+    "⌨️ *Prefixos:* ! e ©",
     "⏱️ *Online há:* " + _uptime(),
     "",
     "🎮 *Recursos ativos*",
@@ -115,7 +119,7 @@ def responder(texto, nome=""):
         )
     t = _sem_acento(texto.strip().lower())
     partes = t.split()
-    cmd = partes[0].lstrip("!")
+    cmd = partes[0].lstrip("!©")
     args = partes[1:]
     resto = texto.strip().split(None, 1)[1] if len(texto.strip().split(None, 1)) > 1 else ""
 
