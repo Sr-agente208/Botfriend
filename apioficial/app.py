@@ -65,7 +65,39 @@ def verificar_webhook():
 
 @app.get("/")
 def home():
-    return jsonify(servico="botfriend-oficial", status="ok", webhook="/webhook")
+    return jsonify(servico="botfriend-oficial", status="ok", webhook="/webhook", privacidade="/privacidade")
+
+
+POLITICA = """<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Política de Privacidade — White lotus</title>
+<style>body{font-family:-apple-system,Segoe UI,Roboto,sans-serif;background:#0b141a;color:#d1d7db;max-width:720px;margin:0 auto;padding:24px}h1{color:#25d366}h2{color:#fff}a{color:#53bdeb}</style></head><body>
+<h1>🤖 Política de Privacidade — Bot White lotus</h1>
+<p>Última atualização: 27 de novembro de 2026</p>
+<h2>1. Quem somos</h2>
+<p>O bot White lotus é um assistente de WhatsApp operado por <strong>Sr-agente208</strong> (portfolio empresarial 208.co), executado na WhatsApp Cloud API da Meta.</p>
+<h2>2. Dados que tratamos</h2>
+<ul>
+<li><strong>Número de telefone</strong> do usuário que conversa com o bot (identificação da conta e do estado dos jogos);</li>
+<li><strong>Nome de perfil</strong> do WhatsApp (exibição nos jogos e rankings);</li>
+<li><strong>Conteúdo das mensagens</strong> enviadas ao bot (processado para gerar respostas).</li>
+</ul>
+<h2>3. Para que usamos</h2>
+<p>Exclusivamente para o funcionamento dos comandos do bot: jogos, economia virtual (N-Coins), pets, anotações pessoais e interações. Nada é usado para publicidade ou venda de dados.</p>
+<h2>4. Armazenamento</h2>
+<p>Os dados de jogo (saldo, perfil, pet, anotações) ficam armazenados no servidor do bot e podem ser apagados a qualquer momento.</p>
+<h2>5. Compartilhamento</h2>
+<p>Nenhum dado é compartilhado com terceiros. As mensagens transitam pela infraestrutura da Meta (WhatsApp) sob a política de privacidade do próprio WhatsApp.</p>
+<h2>6. Seus direitos (LGPD)</h2>
+<p>Você pode solicitar exclusão dos seus dados de jogo apagando as anotações (©delanotacao), encerrando vínculos (©terminar) ou entrando em contato com o operador pelo próprio WhatsApp do bot.</p>
+<h2>7. Contato</h2>
+<p>Operador: Sr-agente208 — contato pelo WhatsApp oficial do bot.</p>
+</body></html>"""
+
+
+@app.get("/privacidade")
+def privacidade():
+    return POLITICA
 
 
 @app.post("/webhook")
